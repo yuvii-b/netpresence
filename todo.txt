@@ -1,0 +1,15 @@
+TODO
+
+- Remove unused legacy audio files:
+  - frontend/src/audio/fskEncoder.js
+  - frontend/src/audio/fskDecoder.js
+
+- Keep current audio flow files:
+  - frontend/src/audio/toneEncoder.js
+  - frontend/src/audio/toneDecoder.js
+  - frontend/src/components/TeacherDashboard.jsx
+  - frontend/src/components/StudentScanner.jsx
+
+- Optional follow-up cleanup:
+  - Review any remaining console.debug / log-only helpers
+  - Confirm backend route usage and remove dead API helper code if present
