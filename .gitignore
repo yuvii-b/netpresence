@@ -1,0 +1,15 @@
+# Python Virtual Environment & Cache
+backend/venv/
+backend/__pycache__/
+*.py[cod]
+backend/.env
+
+# Node.js dependencies & Vite builds
+frontend/node_modules/
+frontend/dist/
+frontend/.env.local
+
+# OS / IDE Junk
+.DS_Store
+.vscode/
+.idea/
