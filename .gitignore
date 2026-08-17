@@ -2,7 +2,10 @@
 backend/venv/
 backend/__pycache__/
 *.py[cod]
+
+# ENV
 backend/.env
+frontend/.env
 
 # Node.js dependencies & Vite builds
 frontend/node_modules/
@@ -13,3 +16,5 @@ frontend/.env.local
 .DS_Store
 .vscode/
 .idea/
+
+*.pdf

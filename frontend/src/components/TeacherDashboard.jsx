@@ -1,9 +1,17 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { ToneEncoder } from '../audio/toneEncoder';
+import { useState, useRef, useEffect } from 'react';
+import { ToneEncoder, ALPHABET } from '../audio/toneEncoder';
 import { startSession, stopSession, connectWebSocket } from '../services/api';
 
 function generateSessionId() {
   return `SESS-${Date.now().toString(36).toUpperCase()}`;
+}
+
+function sanitizeToken(raw) {
+  return raw
+    .toUpperCase()
+    .split('')
+    .filter((c) => ALPHABET.includes(c))
+    .join('');
 }
 
 export default function TeacherDashboard() {
@@ -11,9 +19,13 @@ export default function TeacherDashboard() {
   const [sessionId, setSessionId] = useState(null);
   const [isEmitting, setIsEmitting] = useState(false);
   const [students, setStudents] = useState([]);
+  const [errorMsg, setErrorMsg] = useState('');
   const encoderRef = useRef(new ToneEncoder());
   const sessionIdRef = useRef(sessionId);
-  sessionIdRef.current = sessionId;
+
+  useEffect(() => {
+    sessionIdRef.current = sessionId;
+  }, [sessionId]);
 
   useEffect(() => {
     const ws = connectWebSocket((data) => {
@@ -25,6 +37,8 @@ export default function TeacherDashboard() {
   }, []);
 
   const handleStartEmit = async () => {
+    setErrorMsg('');
+
     // iOS Safari only unlocks the AudioContext when it is created/resumed
     // synchronously inside the user-gesture (click). Do this BEFORE any await —
     // the network round-trip below would otherwise end the gesture window and
@@ -32,7 +46,13 @@ export default function TeacherDashboard() {
     await encoderRef.current.initContext();
 
     const newSessionId = generateSessionId();
-    await startSession(newSessionId, token);
+    try {
+      await startSession(newSessionId, token);
+    } catch (err) {
+      setErrorMsg(`Could not start session: ${err.message}`);
+      return;
+    }
+
     setSessionId(newSessionId);
     setStudents([]);
     setIsEmitting(true);
@@ -51,7 +71,7 @@ export default function TeacherDashboard() {
     setIsEmitting(false);
     encoderRef.current.stop();
     encoderRef.current = new ToneEncoder(); // fresh instance for next session
-    if (sessionId) stopSession(sessionId);
+    if (sessionId) stopSession(sessionId).catch(() => {});
   };
 
   return (
@@ -62,10 +82,11 @@ export default function TeacherDashboard() {
         type="text"
         maxLength={4}
         value={token}
-        onChange={(e) => setToken(e.target.value.toUpperCase())}
+        onChange={(e) => setToken(sanitizeToken(e.target.value))}
         disabled={isEmitting}
       />
       <br /><br />
+      {errorMsg && <p style={{ color: 'red' }}>{errorMsg}</p>}
       {!isEmitting ? (
         <button onClick={handleStartEmit} style={{ padding: '10px 20px', background: 'green', color: '#fff' }}>
           Start Session & Emit Sound

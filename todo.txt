@@ -1,15 +1,10 @@
 TODO
 
-- Remove unused legacy audio files:
-  - frontend/src/audio/fskEncoder.js
-  - frontend/src/audio/fskDecoder.js
+- Legacy fskEncoder.js / fskDecoder.js removed (were unused).
+- console.log/debug-only helpers reviewed and removed from live components.
+- Dead API helper (getActiveSession) removed from frontend/src/services/api.js.
 
-- Keep current audio flow files:
-  - frontend/src/audio/toneEncoder.js
-  - frontend/src/audio/toneDecoder.js
-  - frontend/src/components/TeacherDashboard.jsx
-  - frontend/src/components/StudentScanner.jsx
-
-- Optional follow-up cleanup:
-  - Review any remaining console.debug / log-only helpers
-  - Confirm backend route usage and remove dead API helper code if present
+Next up (see STATUS.md "Potential improvements" for the full backlog):
+- Token rotation + rolling session expiry.
+- Persist session/nonce state to MongoDB/Redis (deferred by choice for now — in-memory keeps local testing simple).
+- Auth (Week 5-6 per the 12-week plan).

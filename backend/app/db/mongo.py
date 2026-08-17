@@ -1,5 +1,9 @@
+import logging
+
 from motor.motor_asyncio import AsyncIOMotorClient
 from app.config import settings
+
+logger = logging.getLogger("netpresence.db")
 
 class Database:
     client: AsyncIOMotorClient = None
@@ -14,9 +18,9 @@ async def connect_to_mongo():
     await db_instance.db.attendance.create_index(
         [("session_id", 1), ("student_id", 1)], unique=True
     )
-    print("Connected to MongoDB.")
+    logger.info("Connected to MongoDB.")
 
 async def close_mongo_connection():
     if db_instance.client:
         db_instance.client.close()
-        print("Closed MongoDB Connection.")
+        logger.info("Closed MongoDB connection.")

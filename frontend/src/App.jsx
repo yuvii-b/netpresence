@@ -1,4 +1,3 @@
-import React from 'react';
 import TeacherDashboard from './components/TeacherDashboard';
 import StudentScanner from './components/StudentScanner';
 

@@ -5,7 +5,6 @@ const START_FREQ = 800;
 const END_FREQ = 900;
 const CANDIDATES = ALPHABET.split('').map(freqForChar).concat([START_FREQ, END_FREQ]);
 const WINDOW_MS = 100;      // small analysis window, no need to match tone length
-const DEBOUNCE_MS = 250;    // min gap before accepting the same symbol again
 
 // iOS can't fully disable its own AGC/noise suppression via getUserMedia
 // constraints, which lowers the SNR of a received tone — so it needs much

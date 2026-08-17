@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { ToneDecoder } from '../audio/toneDecoder';
 import { getOS, getDeviceType } from '../audio/platform';
 import { submitAttendance, listSessions } from '../services/api';
@@ -9,6 +9,7 @@ export default function StudentScanner() {
   const [statusMsg, setStatusMsg] = useState('');
   const [activeSessionId, setActiveSessionId] = useState(null);
   const decoderRef = useRef(null);
+  const mountedRef = useRef(true);
   const detectedOS = getOS();
   const detectedDeviceType = getDeviceType();
 
@@ -17,16 +18,23 @@ export default function StudentScanner() {
       const sessions = await listSessions();
       const active = Array.isArray(sessions) ? sessions.find((s) => s.status === 'active') : null;
       const id = active ? active.session_id : null;
-      setActiveSessionId(id);
+      if (mountedRef.current) setActiveSessionId(id);
       return id;
     } catch {
-      setActiveSessionId(null);
+      if (mountedRef.current) setActiveSessionId(null);
       return null;
     }
   };
 
   useEffect(() => {
+    mountedRef.current = true;
+    // One-time fetch on mount to seed the active-session indicator; the async
+    // setState is guarded by mountedRef above, so this is safe despite the rule.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     refreshActiveSession();
+    return () => {
+      mountedRef.current = false;
+    };
   }, []);
 
   const handleStartScan = async () => {
@@ -44,21 +52,17 @@ export default function StudentScanner() {
       let captured = false;
       await decoderRef.current.startListening(async (token) => {
         captured = true;
-        console.log('DECODED:', token);
         setStatusMsg(`Token captured: ${token}. Submitting...`);
         decoderRef.current.stop();
         setIsScanning(false);
 
         try {
-          const res = await submitAttendance(currentSessionId, studentId, token.trim());
-          if (res.status === 'success') {
-            setStatusMsg('Attendance marked successfully!');
-          } else {
-            setStatusMsg(`Submission Failed (Captured: "${token}"): ${res.detail || res.error}`);
-          }
+          await submitAttendance(currentSessionId, studentId, token.trim());
+          setStatusMsg('Attendance marked successfully!');
         } catch (err) {
           console.error(err);
-          setStatusMsg(`Submission error (Captured: "${token}"): could not reach server. Check the backend/ngrok URL in api.js.`);
+          const reason = err.status ? err.message : 'could not reach the server.';
+          setStatusMsg(`Submission failed (captured "${token}"): ${reason}`);
         }
       }, (debugData) => {
         if (!captured) {

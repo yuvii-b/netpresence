@@ -1,5 +1,8 @@
+import logging
 from fastapi import WebSocket
 from typing import List
+
+logger = logging.getLogger("netpresence.ws")
 
 class WebSocketManager:
     def __init__(self):
@@ -18,6 +21,7 @@ class WebSocketManager:
             try:
                 await connection.send_json(message)
             except Exception:
+                logger.warning("Dropping WebSocket connection after send failure.", exc_info=True)
                 self.disconnect(connection)
 
 ws_manager = WebSocketManager()
