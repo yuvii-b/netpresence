@@ -4,9 +4,11 @@ const START_FREQ = 800;
 const END_FREQ = 900;
 const CANDIDATES = ALPHABET.split('').map(freqForChar).concat([START_FREQ, END_FREQ]);
 const WINDOW_MS = 100;      // small analysis window, no need to match tone length
-const POWER_THRESHOLD = 8.0; // SNR threshold (loudest frequency must be 8x the average noise)
-const ABS_POWER_THRESHOLD = 0.0005; // Absolute power threshold to ignore tiny background hums
+const POWER_THRESHOLD = 1.05; // SNR threshold (loudest frequency must barely edge out the average noise)
+const ABS_POWER_THRESHOLD = 0.000001; // Absolute power threshold to ignore tiny background hums
 const DEBOUNCE_MS = 250;    // min gap before accepting the same symbol again
+
+// android power threshold = 4.0 and abs power threshold - 0.0001
 
 export class ToneDecoder {
   constructor() {

@@ -24,6 +24,17 @@ export class ToneEncoder {
       this.audioCtx = new AC();
     }
     if (this.audioCtx.state === 'suspended') await this.audioCtx.resume();
+
+    // iOS Safari unlock: play one silent buffer so the audio hardware is fully
+    // enabled. resume() alone is insufficient on older iOS versions.
+    if (!this._unlocked) {
+      const buffer = this.audioCtx.createBuffer(1, 1, 22050);
+      const src = this.audioCtx.createBufferSource();
+      src.buffer = buffer;
+      src.connect(this.audioCtx.destination);
+      src.start(0);
+      this._unlocked = true;
+    }
   }
 
   _playTone(freq, startTime, durationMs) {

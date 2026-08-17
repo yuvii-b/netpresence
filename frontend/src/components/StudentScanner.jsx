@@ -30,7 +30,7 @@ export default function StudentScanner() {
         }
       }, (debugData) => {
         if (!captured) {
-          setStatusMsg(`Listening... Freq: ${debugData.bestFreq}Hz, Power Ratio: ${debugData.bestPower.toFixed(2)} (Threshold: 8.0)`);
+          setStatusMsg(`Listening... Freq: ${debugData.bestFreq}Hz, Power Ratio: ${debugData.bestPower.toFixed(2)} (Threshold: 1.05)`);
         }
       });
     } catch (err) {

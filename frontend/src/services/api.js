@@ -1,5 +1,5 @@
-const API_BASE_URL = 'https://64a1-223-178-81-223.ngrok-free.app';
-const WS_BASE_URL = 'wss://64a1-223-178-81-223.ngrok-free.app/ws';
+const API_BASE_URL = 'https://f2b2-152-57-90-114.ngrok-free.app';
+const WS_BASE_URL = 'wss://f2b2-152-57-90-114.ngrok-free.app/ws';
 
 export async function startSession(sessionId, token) {
   const res = await fetch(`${API_BASE_URL}/api/sessions/start`, {

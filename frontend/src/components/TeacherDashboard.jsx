@@ -19,6 +19,12 @@ export default function TeacherDashboard() {
   }, []);
 
   const handleStartEmit = async () => {
+    // iOS Safari only unlocks the AudioContext when it is created/resumed
+    // synchronously inside the user-gesture (click). Do this BEFORE any await —
+    // the network round-trip below would otherwise end the gesture window and
+    // leave the speaker permanently muted on iOS.
+    await encoderRef.current.initContext();
+
     await startSession(sessionId, token);
     setIsEmitting(true);
     encoderRef.current.playing = true;
