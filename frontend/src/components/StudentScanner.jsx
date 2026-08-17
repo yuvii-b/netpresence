@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { ToneDecoder } from '../audio/toneDecoder';
+import { getOS, getDeviceType } from '../audio/platform';
 import { submitAttendance } from '../services/api';
 
 export default function StudentScanner() {
@@ -7,6 +8,8 @@ export default function StudentScanner() {
   const [studentId, setStudentId] = useState('STU-2024');
   const [statusMsg, setStatusMsg] = useState('');
   const decoderRef = useRef(null);
+  const detectedOS = getOS();
+  const detectedDeviceType = getDeviceType();
 
   const handleStartScan = async () => {
     setStatusMsg('Listening for tone sequence...');
@@ -30,7 +33,7 @@ export default function StudentScanner() {
         }
       }, (debugData) => {
         if (!captured) {
-          setStatusMsg(`Listening... Freq: ${debugData.bestFreq}Hz, Power Ratio: ${debugData.bestPower.toFixed(2)} (Threshold: 1.05)`);
+          setStatusMsg(`Listening... Freq: ${debugData.bestFreq}Hz, Power Ratio: ${debugData.bestPower.toFixed(2)} (Threshold: ${decoderRef.current.powerThreshold})`);
         }
       });
     } catch (err) {
@@ -49,6 +52,9 @@ export default function StudentScanner() {
   return (
     <div style={{ padding: '20px', border: '1px solid #ccc', borderRadius: '8px', marginTop: '20px' }}>
       <h2>Student Scanner</h2>
+      <p style={{ fontSize: '0.85em', color: '#666' }}>
+        Detected: {detectedOS} ({detectedDeviceType})
+      </p>
       <label>Student ID: </label>
       <input type="text" value={studentId} onChange={(e) => setStudentId(e.target.value)} />
       <br /><br />

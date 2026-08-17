@@ -1,14 +1,19 @@
 import { freqForChar, ALPHABET } from './toneEncoder';
+import { isIOS, getOS, getDeviceType } from './platform';
 
 const START_FREQ = 800;
 const END_FREQ = 900;
 const CANDIDATES = ALPHABET.split('').map(freqForChar).concat([START_FREQ, END_FREQ]);
 const WINDOW_MS = 100;      // small analysis window, no need to match tone length
-const POWER_THRESHOLD = 1.05; // SNR threshold (loudest frequency must barely edge out the average noise)
-const ABS_POWER_THRESHOLD = 0.000001; // Absolute power threshold to ignore tiny background hums
 const DEBOUNCE_MS = 250;    // min gap before accepting the same symbol again
 
-// android power threshold = 4.0 and abs power threshold - 0.0001
+// iOS can't fully disable its own AGC/noise suppression via getUserMedia
+// constraints, which lowers the SNR of a received tone — so it needs much
+// looser thresholds than Android/desktop to detect the same physical sound.
+const THRESHOLDS = {
+  ios: { power: 1.05, abs: 0.000001 },
+  default: { power: 4.0, abs: 0.0001 },
+};
 
 export class ToneDecoder {
   constructor() {
@@ -20,6 +25,12 @@ export class ToneDecoder {
     this.started = false;
     this.tokenChars = [];
     this.armed = true;
+
+    this.os = getOS();
+    this.deviceType = getDeviceType();
+    const profile = isIOS() ? THRESHOLDS.ios : THRESHOLDS.default;
+    this.powerThreshold = profile.power;
+    this.absPowerThreshold = profile.abs;
   }
 
   goertzel(samples, sampleRate, freq) {
@@ -80,7 +91,7 @@ export class ToneDecoder {
 
       if (onDebug) onDebug({ bestFreq, bestPower: snr });
 
-      if (snr < POWER_THRESHOLD || normPower < ABS_POWER_THRESHOLD) {
+      if (snr < this.powerThreshold || normPower < this.absPowerThreshold) {
         this.armed = true; // silence seen — arm for the next tone
         return;
       }
