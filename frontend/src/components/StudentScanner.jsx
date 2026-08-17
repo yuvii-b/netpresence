@@ -1,17 +1,41 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { ToneDecoder } from '../audio/toneDecoder';
 import { getOS, getDeviceType } from '../audio/platform';
-import { submitAttendance } from '../services/api';
+import { submitAttendance, listSessions } from '../services/api';
 
 export default function StudentScanner() {
   const [isScanning, setIsScanning] = useState(false);
   const [studentId, setStudentId] = useState('STU-2024');
   const [statusMsg, setStatusMsg] = useState('');
+  const [activeSessionId, setActiveSessionId] = useState(null);
   const decoderRef = useRef(null);
   const detectedOS = getOS();
   const detectedDeviceType = getDeviceType();
 
+  const refreshActiveSession = async () => {
+    try {
+      const sessions = await listSessions();
+      const active = Array.isArray(sessions) ? sessions.find((s) => s.status === 'active') : null;
+      const id = active ? active.session_id : null;
+      setActiveSessionId(id);
+      return id;
+    } catch {
+      setActiveSessionId(null);
+      return null;
+    }
+  };
+
+  useEffect(() => {
+    refreshActiveSession();
+  }, []);
+
   const handleStartScan = async () => {
+    const currentSessionId = await refreshActiveSession();
+    if (!currentSessionId) {
+      setStatusMsg('No active session found. Ask the teacher to start one and tap again.');
+      return;
+    }
+
     setStatusMsg('Listening for tone sequence...');
     setIsScanning(true);
     decoderRef.current = new ToneDecoder();
@@ -25,11 +49,16 @@ export default function StudentScanner() {
         decoderRef.current.stop();
         setIsScanning(false);
 
-        const res = await submitAttendance('SESS-101', studentId, token.trim());
-        if (res.status === 'success') {
-          setStatusMsg('Attendance marked successfully!');
-        } else {
-          setStatusMsg(`Submission Failed (Captured: "${token}"): ${res.detail || res.error}`);
+        try {
+          const res = await submitAttendance(currentSessionId, studentId, token.trim());
+          if (res.status === 'success') {
+            setStatusMsg('Attendance marked successfully!');
+          } else {
+            setStatusMsg(`Submission Failed (Captured: "${token}"): ${res.detail || res.error}`);
+          }
+        } catch (err) {
+          console.error(err);
+          setStatusMsg(`Submission error (Captured: "${token}"): could not reach server. Check the backend/ngrok URL in api.js.`);
         }
       }, (debugData) => {
         if (!captured) {
@@ -57,7 +86,11 @@ export default function StudentScanner() {
       </p>
       <label>Student ID: </label>
       <input type="text" value={studentId} onChange={(e) => setStudentId(e.target.value)} />
-      <br /><br />
+      <br />
+      <p style={{ fontSize: '0.85em', color: '#666' }}>
+        Active session: {activeSessionId || 'none detected'}
+      </p>
+      <br />
       {!isScanning ? (
         <button onClick={handleStartScan} style={{ padding: '10px 20px', background: 'blue', color: '#fff' }}>
           Tap to Verify Attendance

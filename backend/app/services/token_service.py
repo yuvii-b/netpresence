@@ -8,11 +8,18 @@ class TokenService:
         self.used_tokens = set()   # Nonces to prevent replay attacks
 
     def register_session(self, session_id: str, token: str):
-        expires_at = time.time() + settings.TOKEN_VALIDITY_SECONDS
-        self.active_sessions[session_id] = {
+        now = time.time()
+        expires_at = now + settings.TOKEN_VALIDITY_SECONDS
+        session = {
             "token": token,
+            "created_at": now,
             "expires_at": expires_at
         }
+        self.active_sessions[session_id] = session
+        return session
+
+    def end_session(self, session_id: str):
+        self.active_sessions.pop(session_id, None)
 
     def validate_submission(self, session_id: str, student_id: str, decoded_token: str):
         now = time.time()

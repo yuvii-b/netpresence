@@ -1,5 +1,5 @@
-const API_BASE_URL = 'https://f2b2-152-57-90-114.ngrok-free.app';
-const WS_BASE_URL = 'wss://f2b2-152-57-90-114.ngrok-free.app/ws';
+const API_BASE_URL = 'https://9ac8-223-178-87-74.ngrok-free.app';
+const WS_BASE_URL = 'wss://9ac8-223-178-87-74.ngrok-free.app/ws';
 
 export async function startSession(sessionId, token) {
   const res = await fetch(`${API_BASE_URL}/api/sessions/start`, {
@@ -15,6 +15,25 @@ export async function startSession(sessionId, token) {
 
 export async function getActiveSession(sessionId) {
   const res = await fetch(`${API_BASE_URL}/api/sessions/active/${sessionId}`, {
+    headers: {
+      'ngrok-skip-browser-warning': 'true'
+    }
+  });
+  return res.json();
+}
+
+export async function listSessions() {
+  const res = await fetch(`${API_BASE_URL}/api/sessions/list`, {
+    headers: {
+      'ngrok-skip-browser-warning': 'true'
+    }
+  });
+  return res.json();
+}
+
+export async function stopSession(sessionId) {
+  const res = await fetch(`${API_BASE_URL}/api/sessions/stop/${sessionId}`, {
+    method: 'POST',
     headers: {
       'ngrok-skip-browser-warning': 'true'
     }
