@@ -4,7 +4,7 @@ TODO
 - console.log/debug-only helpers reviewed and removed from live components.
 - Dead API helper (getActiveSession) removed from frontend/src/services/api.js.
 
-Next up (see STATUS.md "Potential improvements" for the full backlog):
+Next up (see docs/STATUS.md "Potential improvements" for the full backlog):
 - Token rotation + rolling session expiry.
 - Persist session/nonce state to MongoDB/Redis (deferred by choice for now — in-memory keeps local testing simple).
 - Auth (Week 5-6 per the 12-week plan).

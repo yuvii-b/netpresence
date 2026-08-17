@@ -7,7 +7,7 @@ An audible-tone attendance system: a teacher's browser emits a short encoded ton
 - **`backend/`** — FastAPI service backed by MongoDB (via Motor). Exposes REST endpoints for starting/stopping attendance sessions and submitting attendance, plus a `/ws` WebSocket that broadcasts live submission events to the teacher dashboard. Session/token/nonce state is kept in-process (see `app/services/token_service.py`) and is intentionally not persisted — it resets on every backend restart.
 - **`frontend/`** — React 19 + Vite single-page app with two components: `TeacherDashboard` (starts a session and plays the tone) and `StudentScanner` (listens via the mic, decodes the tone, and submits attendance). Tone encoding/decoding lives under `frontend/src/audio/` (Goertzel-algorithm based).
 
-See `STATUS.md` for a detailed, up-to-date gap analysis against the project's 12-week plan.
+See `docs/STATUS.md` for a detailed, up-to-date gap analysis against the project's 12-week plan. For the math behind the tone encoding/decoding and token logic, see `docs/MATH.md` for a concise explainer, or `docs/ALGORITHMS.md` for the full in-depth, layman-friendly derivation.
 
 ## Backend setup
 
@@ -39,4 +39,4 @@ VITE_WS_BASE_URL=ws://localhost:8000/ws
 
 ## Known limitations
 
-No authentication, in-memory-only session state, fixed (non-rolling) session expiry, and other deliberate deferrals for the current phase of the plan are tracked in `STATUS.md`.
+No authentication, in-memory-only session state, fixed (non-rolling) session expiry, and other deliberate deferrals for the current phase of the plan are tracked in `docs/STATUS.md`.
