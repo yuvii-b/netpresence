@@ -20,7 +20,7 @@ class20 lab6 exam`, or a TOML file in `netsim/presets/` or passed with `--toml`.
 | M6 baselines | done: `netsim/baselines.py` B0 manual, B1 beacon, B2 acoustic, B3/B4 ablations, B5 QR, same rooms and seeds |
 | M7 paper pipeline | done: `backend/paper/make.py` runs E01-E14 (`netsim/experiments/`), bootstrap CIs over classrooms, cached by config+code hash, tables (md/tex) and figures (pdf/png) |
 | M8 Windows CI hash parity | done in the workflow, NOT yet seen green: `tests.yml` jobs `paper` (ubuntu + windows, `paper.make --quick`) and `paper-parity` (`python -m paper.compare_hashes`); first CI run decides |
-| M9 loadtest | todo |
+| M9 loadtest | done: `python -m netsim.loadtest` (virtual phones with real keys against a real server over the real network), `paper/real/README.md` defines the measurement formats |
 
 ## Paper pipeline (M7)
 
@@ -53,6 +53,17 @@ unit, never the student); comparisons between variants are paired on the same se
 | E14 | energy per roll call (arithmetic on assumed currents) |
 
 Quick runs have few classrooms, so their CIs are wide: they prove the pipeline, not the conclusions.
+
+## Load test against a real server (M9)
+
+    python -m netsim.loadtest --local --phones 93                       # dry run, in-process server on mock Mongo
+    python -m netsim.loadtest --server http://192.168.1.20:8000 --token <TEACHER_TOKEN> --phones 93 [--enrol-code CODE] [--realtime]
+
+93 virtual phones enrol, check in and fire their reports at once (worst-case burst) using the app's exact retry ladder and 5 s
+request timeout; the script prints delivery, latency percentiles, status codes, close time, and whether the server's verdict equals
+the engine's on the same reports. The radio is SIMULATED, so this measures the server, database and network only - never copy its
+numbers into `paper/real/sessions.csv`. Enrolments stay in the database (ids `lt<run>-<n>`). `--calibrated` gives the phones
+ideal per-model offsets; the default is raw readings, like a fresh server.
 
 ## Provenance of every default
 `netsim/config.py` tags each field `measured`, `spec` or `assumed` (`config.TAGS`; a test fails if one is missing). Protocol
@@ -110,6 +121,12 @@ without the co-location check: 100% of relay proxies succeed.
   the default 8 hops / 15 m and ~0.3-0.5% with `ttl=12, max_path_m=25` (teacher-settable per session). Defaults are unchanged;
   the app should suggest a larger TTL above ~150 students. Needs the full run for tight CIs.
 * **Very small rooms are the weak end** (E07/E01, 10 phones): too few neighbours for k=2 disjoint paths; stated limitation, unchanged.
+
+* **A fresh server has no per-model offset table, and small classes feel it** (E04, quick run, 30% iPhones): false-absent with the
+  table is ~0-1% at 20-93 students; without it ~0.8-1.5% at 35-93 and ~34% [8, 80] at 20 students (3 classrooms, very wide).
+  The simulator's default `calibrate=True` assumes the table exists; E04 and `loadtest` (default) show the raw case. Candidate fix:
+  fit the offsets per model from the first sessions, or make the engine's self-calibration per model, not per platform. Needs the
+  full run before anyone acts on the 20-student number.
 
 ## Not modelled yet
 Server overload errors (429/5xx), relay/wormhole attacks,

@@ -125,3 +125,64 @@ def test_compare_hashes_flags_any_difference(tmp_path):
     pa, pb = tmp_path / "a.json", tmp_path / "b.json"
     pa.write_text(json.dumps(a)); pb.write_text(json.dumps(a))
     assert ch.main([str(pa), str(pb)]) == 0
+
+
+# ----------------------------------------------------------------------------------------------- M9 loadtest
+def test_loadtest_local_end_to_end(tmp_path, capsys):
+    from netsim import loadtest
+    out = tmp_path / "lt.json"
+    assert loadtest.main(["--local", "--phones", "93", "--out", str(out)]) == 0
+    r = json.loads(out.read_text())
+    assert r["report_burst"]["delivered"] == r["report_burst"]["of"] == 93
+    assert r["verdict"]["server_equals_engine"] is True and r["verdict"]["marked_absent_inside"] <= 5
+    assert "SIMULATED" in r["radio"]
+    assert "server == engine" in capsys.readouterr().out
+
+
+def test_loadtest_requires_exactly_one_target():
+    from netsim import loadtest
+    with pytest.raises(SystemExit):
+        loadtest.main(["--phones", "3"])
+
+
+def _mock_client(handler):
+    import httpx
+    return httpx.AsyncClient(transport=httpx.MockTransport(handler))
+
+
+def test_upload_retries_5xx_then_succeeds(monkeypatch):
+    import asyncio, time
+    import httpx
+    from netsim import loadtest
+    monkeypatch.setattr(loadtest.protocol, "RETRY_START_MS", 5)
+    monkeypatch.setattr(loadtest.protocol, "RETRY_MAX_MS", 20)
+    calls = []
+
+    def handler(req):
+        calls.append(1)
+        return httpx.Response(503 if len(calls) < 3 else 200, json={})
+
+    async def go():
+        st = {"attempts": 0, "codes": {}, "lat": []}
+        async with _mock_client(handler) as c:
+            ok = await loadtest.upload_report(c, "http://x/r", {}, st, time.time() + 5)
+        return ok, st
+    ok, st = asyncio.run(go())
+    assert ok and st["attempts"] == 3 and st["codes"] == {"503": 2, "200": 1} and len(st["lat"]) == 1
+
+
+def test_upload_does_not_retry_4xx_and_stops_at_deadline(monkeypatch):
+    import asyncio, time
+    import httpx
+    from netsim import loadtest
+    monkeypatch.setattr(loadtest.protocol, "RETRY_START_MS", 5)
+    monkeypatch.setattr(loadtest.protocol, "RETRY_MAX_MS", 20)
+
+    async def go(status, deadline):
+        st = {"attempts": 0, "codes": {}, "lat": []}
+        async with _mock_client(lambda req: httpx.Response(status, json={})) as c:
+            return await loadtest.upload_report(c, "http://x/r", {}, st, deadline), st
+    ok, st = asyncio.run(go(400, time.time() + 5))
+    assert not ok and st["attempts"] == 1                                # "report window closed" is final
+    ok, st = asyncio.run(go(503, time.time() + 0.05))
+    assert not ok and 1 < st["attempts"] < 20                            # keeps trying until the deadline, then stops

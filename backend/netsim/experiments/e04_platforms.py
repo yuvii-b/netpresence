@@ -3,11 +3,18 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-from netsim import plots
+from netsim import metrics, plots
 from netsim.experiments import common as C
+from netsim.runner import cached_map
+from netsim.server import trial
 
 SHARES = (0.0, 0.25, 0.5, 0.75, 1.0)
 ASYM = (0.0, 6.0, 12.0, 18.0)
+
+
+def job_raw(j):
+    cfg, p, seed, cal = j
+    return trial(cfg, p, seed, calibrate=cal)
 
 
 def run(ctx):
@@ -22,7 +29,17 @@ def run(ctx):
                 rs = C.trial_rows(ctx, f"e04/{share}/{x}/{cal}", cfg, replace(p, autocal=cal), n)
                 rows.append({"ios_share": share, "asym_db": x, "selfcal": cal, **C.rates(rs)})
                 check[f"{share}/{x}/{cal}"] = C.counts(rs)["false_absent"]
-    return {"rows": rows, "check": check}
+    # Does the server need a per-model offset table? calibrate=True models a table with every phone model in it (the simulator's
+    # default elsewhere); calibrate=False is a fresh server: raw readings, only the engine's per-platform self-calibration.
+    table_rows = []
+    for size in (20, 35, 60, 93):
+        cfg = replace(C.cfg_for("class93", students=size, ios_share=0.30), door_open=False)
+        for cal in (True, False):
+            rs = cached_map(f"e04/table/{size}/{cal}", job_raw, [(cfg, C.params_for(cfg), s, cal) for s in range(n)], ctx.cache, ctx.workers)
+            table_rows.append({"students": size, "model_table": cal,
+                               "far": metrics.ratio_ci([r["false_absent"] for r in rs], [r["inside"] for r in rs], seed=1)})
+            check[f"table/{size}/{cal}"] = sum(r["false_absent"] for r in rs)
+    return {"rows": rows, "table_rows": table_rows, "check": check}
 
 
 def plot(res, figdir):
@@ -48,7 +65,9 @@ def plot(res, figdir):
 def table(res):
     h = ["iOS share", "TX asymmetry (dB)", "self-cal", "false-absent"]
     rows = [[f"{int(100 * r['ios_share'])}%", r["asym_db"], "on" if r["selfcal"] else "off", C.pct(r["far"])] for r in res["rows"]]
-    return C.md_table(h, rows), C.latex_table(h, rows, "Mixed Android/iOS classes at 93 students, door closed.", "tab:e04")
+    h2 = ["students", "per-model offset table on the server", "false-absent (30% iOS)"]
+    rows2 = [[r["students"], "yes" if r["model_table"] else "NO (fresh server)", C.pct(r["far"])] for r in res["table_rows"]]
+    return C.md_table(h, rows) + "\n\n" + C.md_table(h2, rows2), C.latex_table(h, rows, "Mixed Android/iOS classes at 93 students, door closed.", "tab:e04")
 
 
 EXPERIMENT = {"id": "E04", "title": "Android/iOS mix", "question": "Does the system hold up for any mix of phones, and what does self-calibration buy?",
