@@ -27,7 +27,7 @@ class Settings:
     REPORT_GRACE_SECONDS: int = int(os.getenv("REPORT_GRACE_SECONDS", "15"))
     RSSI_REF_DBM: float = _f("RSSI_REF_DBM", -59.0)    # A: RSSI at 1 m
     PATH_LOSS_N: float = _f("PATH_LOSS_N", 3.0)        # n: path-loss exponent
-    MAX_EDGE_M: float = _f("MAX_EDGE_M", 3.0)          # ~10 ft hop
+    MAX_EDGE_M: float = _f("MAX_EDGE_M", 2.0)          # chosen from sim.run: best leak vs coverage trade-off
     TTL_HOPS: int = int(os.getenv("TTL_HOPS", "8"))
     MAX_PATH_M: float = _f("MAX_PATH_M", 15.0)         # cumulative metres bound
     K_WITNESS: int = int(os.getenv("K_WITNESS", "2"))

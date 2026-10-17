@@ -14,7 +14,7 @@ INF = float("inf")
 class Params:
     ref_dbm: float = -59.0     # A: RSSI at 1 m
     n: float = 3.0             # path-loss exponent
-    max_edge_m: float = 3.0    # an edge is only admitted within this estimated distance
+    max_edge_m: float = 2.0    # an edge is only admitted within this estimated distance
     ttl: int = 8               # max hops from a seed
     max_path_m: float = 15.0   # max cumulative estimated metres from a seed
     k: int = 2                 # independent mutual witnesses required per non-seed node
