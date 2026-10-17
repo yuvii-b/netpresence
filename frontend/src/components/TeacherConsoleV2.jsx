@@ -8,6 +8,7 @@ const rank = (r) => (r.review ? 0 : r.status === 'FLAGGED' ? 1 : r.status === 'P
 export default function TeacherConsoleV2() {
   const [token, setToken] = useState(getTeacherToken());
   const [room, setRoom] = useState('');
+  const [kWit, setKWit] = useState('');                // blank = server default (2); 1 for small tests
   const [session, setSession] = useState(null);
   const [roster, setRoster] = useState({});            // student_id -> name
   const [checkedIn, setCheckedIn] = useState([]);      // student_ids in arrival order
@@ -45,7 +46,7 @@ export default function TeacherConsoleV2() {
 
   const start = () => guard(async () => {
     setTeacherToken(token);
-    const [s, studs] = await Promise.all([v2.start({ room }), v2.students()]);
+    const [s, studs] = await Promise.all([v2.start({ room, ...(kWit ? { k: Number(kWit) } : {}) }), v2.students()]);
     setRoster(Object.fromEntries(studs.map((x) => [x.student_id, x.name])));
     setSession(s); setQ(''); setCheckedIn([]); setReports(0); setSeeds([]); setPick(new Set()); setResult(null); setHeadcount('');
     wsRef.current?.close();
@@ -66,6 +67,7 @@ export default function TeacherConsoleV2() {
         <div className="row">
           <input type="password" placeholder="Teacher token" value={token} onChange={(e) => setToken(e.target.value)} />
           <input placeholder="Room (optional)" value={room} onChange={(e) => setRoom(e.target.value)} />
+          <input type="number" min="1" max="10" style={{ width: 150 }} placeholder="Witnesses k (default 2)" title="Use 1 only for tiny tests with 2-3 phones" value={kWit} onChange={(e) => setKWit(e.target.value)} />
           <button className="primary" onClick={start}>{result ? 'Start new session' : 'Start roll call'}</button>
         </div>
       ) : null}
