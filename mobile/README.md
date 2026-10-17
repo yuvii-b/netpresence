@@ -4,8 +4,10 @@
 * `app/` - React Native 0.76 shell: enrol screen, one **Mark me present** button, BLE lab logger.
   * Android: `android/app/src/main/java/com/netpresence/NetPresenceModule.kt` (Keystore EC P-256, BLE advertise + LOW_LATENCY scan).
   * iOS: `ios/NetPresence/NetPresenceNative.{h,m}` (Secure Enclave P-256, CoreBluetooth, AllowDuplicates scan, foreground only).
-  * Android peers are identified by manufacturer data (0xFFFF + ASCII id) in the scan response; iOS peers by LocalName `NP-<id>`;
-    each side's scanner understands both.
+  * Both platforms advertise one 21-byte packet whose service UUID ends in the session's 32-bit id
+    (`6e657470-7265-7365-6e63-6500<id>`, see `docs/V2.md` section 2). Samples reach JS in 200 ms batches.
+  * Android reports clear errors for Bluetooth off, Location off (Android 11 and older), missing permission and phones
+    that cannot advertise; iOS reports Bluetooth state errors. The app shows them in plain language.
 
 ## Build
 ```bash
@@ -18,7 +20,7 @@ Enter the server URL (reachable from the phones, ideally the classroom LAN or an
 ## Verification status
 | Piece | Status |
 |---|---|
-| `core` unit tests (21) + live tests against real server | passing |
+| `core` unit tests (25) + live tests against real server (106 and 48 mixed Android/iOS virtual phones) | passing |
 | App TypeScript typecheck; Metro bundle for Android + iOS | passing |
 | Kotlin + Obj-C modules: syntax parse only (tree-sitter), GitHub workflow passes `actionlint` | passing (this does NOT prove they compile) |
 | Kotlin module, Obj-C module, Gradle/Xcode build, permissions flow | **never compiled or run** (no SDK/Xcode in the dev sandbox) |
@@ -41,6 +43,6 @@ Android release builds allow cleartext `http://` for LAN testing; remove `usesCl
 
 ## Design decisions worth knowing
 * React Native **old architecture** is used on purpose (`newArchEnabled=false`, `RCT_NEW_ARCH_ENABLED=0` for iOS): the native modules are legacy-style, which is the better-proven path.
-* The screen is kept awake during the 45 s window (native `setKeepAwake`): a locked phone stops scanning.
+* The screen is kept awake during the roll call (native `setKeepAwake`): a locked phone stops scanning.
 * Android 11 and older also need **Location services switched on** in system settings for Bluetooth scanning to return anything (OS rule, not the app). Android 12+ uses the Nearby devices permission instead.
 * Screens: see `docs/screens/app-light.png` and `app-dark.png` (rendered with the hardware mocked; a layout preview, not a device screenshot).

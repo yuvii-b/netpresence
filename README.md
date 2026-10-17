@@ -41,15 +41,12 @@ cd frontend && npm install && npm run dev      # VITE_API_BASE_URL=http://host:8
 
 ```bash
 cd backend
-python -m pytest -q                         # 43 tests: graph engine, API flow, WS, acoustic, simulator, 93-student room
-python -m sim.orientation                   # acceptance study, 13 pre-declared pass/fail criteria (exit code != 0 on failure)
-python -m sim.run                           # general sweeps -> sim/out/*.csv
-python -m tools.ui_e2e --fixture ../mobile/core/test/fixtures/scene93.json   # builds frontend, drives Chromium through a 106-phone session (needs Playwright + Chromium)
-
-cd ../mobile/core && npm install && npm test            # 21 unit tests
-NP_PYTHON=/path/to/venv/bin/python npm run test:live    # real TS phones against a real server
-cd ../app && npm install && npm run typecheck           # app + core typecheck; `npx react-native bundle` for a Metro check
+python -m tools.check          # everything that needs no phone, ~2.5 min, non-zero exit on any failure
+python -m tools.check --full   # + drives the teacher console in headless Chromium (needs Playwright)
 ```
+That runs: server/engine/simulator tests, the 93-student room study (`sim.orientation`, 13 criteria), the Android + iOS
+fleet study (`sim.platforms`, 6 criteria), and the TypeScript phone code against a live server. GitHub runs it on every
+push (`.github/workflows/tests.yml`).
 
 ## Honest status
 

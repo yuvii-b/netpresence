@@ -21,6 +21,7 @@ pip install -r requirements.txt -r requirements-dev.txt
 python -m tools.dev_server --host 0.0.0.0
 ```
 This uses a throw-away in-memory database (no MongoDB needed); the teacher token is `dev-teacher-token`.
+Optional: set `ENROL_CODE=SOMECODE` before starting, and phones must enter that class code to register.
 Leave the window open. Find the laptop's Wi-Fi IPv4 address (`ipconfig` / `ifconfig`), e.g. `192.168.1.4`.
 Server address for the phones: `http://192.168.1.4:8000`. Allow Python through the firewall for **private** networks.
 Check from a phone's browser: `http://192.168.1.4:8000/docs` must load.
@@ -55,7 +56,7 @@ Android 11 and older: also switch **Location** on in system settings.
 1. Open the app. Enter roll number, name and the server address, then **Get started**. (Once per phone.)
 2. Check **BLE lab** on two phones 1 m apart: each should list the other with rising sample counts.
 3. Teacher screen: for 2-3 phones type `1` in **Witnesses k** (the default needs at least two independent supporters per student), then **Start roll call**.
-4. On the phones tap **Mark me present**, keep the screen on for about 45 s.
+4. On the phones tap **Mark me present** within 20 s; keep the app open until the countdown ends (~25 s in total).
 5. Teacher screen: tick the verified seed students, optionally enter a headcount, **Close**. Review anything flagged.
 
 ## 6. Troubleshooting
@@ -66,12 +67,20 @@ Android 11 and older: also switch **Location** on in system settings.
 | Nobody shows up as nearby | Both screens on, 1-2 m apart, Bluetooth on; Android 11- needs Location on. |
 | Registration says already enrolled | Teacher resets the device (`DELETE /api/devices/{id}`). |
 
-## 7. Real deployment (later)
+## 7. Check everything without phones
+```
+cd backend
+python -m tools.check          # tests, 93-student room study, Android+iOS fleet study, phone code vs live server (~2.5 min)
+python -m tools.check --full   # + the teacher console in headless Chromium
+```
+GitHub runs the same command on every push (`.github/workflows/tests.yml`).
+
+## 8. Real deployment (later)
 Use MongoDB (Atlas free tier) instead of the in-memory database, set a long random `TEACHER_TOKEN`, put the API behind HTTPS
 (Render/Railway/Fly), restrict CORS in `backend/app/main.py`, and remove `usesCleartextTraffic` from the Android manifest.
 Free hosts sleep when idle: open the API's `/docs` a minute before class.
 
-## 8. Publishing this repo (maintainers)
+## 9. Publishing this repo (maintainers)
 ```
 git remote set-url origin https://github.com/<you>/netpresence.git
 git push -u origin v2-proximity-graph
