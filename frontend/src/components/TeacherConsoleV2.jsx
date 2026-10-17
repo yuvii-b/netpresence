@@ -123,7 +123,8 @@ export default function TeacherConsoleV2() {
               {[...result.rows].sort((a, b) => rank(a) - rank(b) || a.student_id.localeCompare(b.student_id, undefined, { numeric: true })).map((r) => (
                 <tr key={r.student_id} className={r.review ? 'review' : ''}>
                   <td>{r.name} <span className="hint">({r.student_id})</span></td>
-                  <td style={{ color: STATUS_COLOR[r.status], fontWeight: 600 }}>{r.status}{r.review ? ' · check' : ''}</td>
+                  <td style={{ color: STATUS_COLOR[r.status], fontWeight: 600 }}>{r.status}{r.review ? ' · check' : ''}
+                    {r.reason === 'co-located' && <div className="hint" style={{ fontWeight: 400 }}>same radio as {r.partner_name} ({r.partner}) — one phone sending two ids?</div>}</td>
                   <td>{r.hops ?? '–'}</td><td>{r.path_m ?? '–'}</td><td>{r.decided_by}</td>
                   <td>
                     {(r.status === 'FLAGGED' || r.review) && (

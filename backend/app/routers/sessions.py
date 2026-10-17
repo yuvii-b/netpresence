@@ -71,6 +71,7 @@ async def start_session(payload: StartSession, db=Depends(get_db)):
         near_m=payload.near_m if payload.near_m is not None else settings.NEAR_M,
         near_k=payload.near_k or settings.NEAR_K,
         autocal=settings.AUTOCAL if payload.autocal is None else payload.autocal,
+        colocation_db=settings.COLOCATION_DB if payload.colocation_db is None else payload.colocation_db,
     )
     doc = {
         "session_id": f"S-{uuid.uuid4().hex[:10]}",
@@ -199,6 +200,7 @@ async def _compute(db, s: dict) -> dict:
         reports[r["student_id"]] = seen
     groups = {stu: platform_of(m) for stu, m in models.items()}
     result = evaluate(s.get("seeds", []), reports, params, groups)
+    colocated = result.get("colocated", {})
 
     roster = {st["student_id"]: st["name"] async for st in db.students.find({}, {"_id": 0, "student_id": 1, "name": 1})}
     checked = set(by_eph.values())
@@ -208,8 +210,12 @@ async def _compute(db, s: dict) -> dict:
             info = result["present"][stu]
             rows.append({"student_id": stu, "name": name, "status": "PRESENT", "decided_by": "graph", **info})
         elif stu in checked:
-            rows.append({"student_id": stu, "name": name, "status": "FLAGGED", "decided_by": "graph",
-                         "reported": stu in reports})
+            row = {"student_id": stu, "name": name, "status": "FLAGGED", "decided_by": "graph", "reported": stu in reports}
+            if stu in colocated:           # looks like the same radio as another id: a relay or a copied id, never automatic
+                partner = colocated[stu]["partner"]
+                row.update(reason="co-located", partner=partner, partner_name=roster.get(partner, partner),
+                           spread_db=colocated[stu]["spread_db"])
+            rows.append(row)
         else:
             rows.append({"student_id": stu, "name": name, "status": "ABSENT", "decided_by": "graph"})
     return {"rows": rows, "edges": result["edges"], "params": params.as_dict()}

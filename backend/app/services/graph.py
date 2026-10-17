@@ -25,6 +25,11 @@ class Params:
     near_m: float = 0.0        # bench-mate rule: a non-seed needs >= near_k admitted links <= near_m (0 = off)
     near_k: int = 1
     autocal: bool = True       # self-calibrate each phone's TX/RX asymmetry from the session's own mutual readings
+    colocation_db: float = 2.5     # relay/Sybil defence: two ids whose readings at the common observers differ by less than this
+                                   # (robust sd, dB) are one radio, not two people (0 = off). Honest pairs differ by 3-12 dB.
+    colocation_min_obs: int = 10   # common observers needed before a pair is judged
+    colocation_overlap: float = 0.6     # a relay is heard by (nearly) the same observers as its source; a phone behind a wall is not
+    colocation_min_dbm: float = -100.0  # observers' readings below this (near the radio's noise floor, where values saturate) are ignored
 
     def as_dict(self) -> dict:
         return asdict(self)
@@ -125,6 +130,47 @@ def self_calibrate(reports: Reports, groups: dict[str, str] | None) -> tuple[Rep
     c = {v: cg[groups[v]] for v in reports if groups.get(v) in cg}
     fixed = {a: {b: r - c.get(a, 0.0) + c.get(b, 0.0) for b, r in seen.items()} for a, seen in reports.items()}
     return fixed, c
+
+
+def colocated_pairs(reports: Reports, p: Params) -> list[tuple[str, str, float, int]]:
+    """Pairs of ids that look like ONE radio. Returns (u, v, spread_db, observers) with spread_db < p.colocation_db.
+
+    Every honest observer o reports what it heard from u and from v. One transmitter advertising both ids (a relay: an
+    in-room accomplice carrying an absent friend's id) gives every observer the same channel, so r_ou - r_ov is the same
+    constant for all observers up to measurement noise (~2 dB). Two different people, even on one bench, differ by their own
+    shadowing and geometry (~4-7 dB). The spread is the robust sd (1.4826 x MAD) of the differences, so a constant TX-power
+    offset does not hide a relay and a few wild readings from lying observers cannot create or hide one.
+    Observers' readings are used, never the pair's own reports about each other."""
+    if p.colocation_db <= 0 or len(reports) < p.colocation_min_obs:
+        return []
+    obs = sorted(reports)
+    ids = sorted({b for seen in reports.values() for b in seen})
+    if len(ids) < 2:
+        return []
+    col = {v: i for i, v in enumerate(ids)}
+    R = np.full((len(obs), len(ids)), np.nan)
+    for i, o in enumerate(obs):
+        for b, r in reports[o].items():
+            if r >= p.colocation_min_dbm:
+                R[i, col[b]] = r
+    heard = np.isfinite(R).sum(0)                                  # observers that heard each id
+    iu, ju = np.triu_indices(len(ids), 1)
+    out = []
+    BLOCK = max(1, 3_000_000 // max(len(obs), 1))
+    for lo in range(0, len(iu), BLOCK):
+        a, b = iu[lo:lo + BLOCK], ju[lo:lo + BLOCK]
+        d = (R[:, a] - R[:, b]).T                                  # (pairs, observers), NaN where an observer missed one id
+        n = np.isfinite(d).sum(1)
+        ok = np.flatnonzero((n >= p.colocation_min_obs) & (n >= p.colocation_overlap * np.maximum(heard[a], heard[b])))
+        if not ok.size:
+            continue
+        d = d[ok]
+        with np.errstate(all="ignore"):
+            med = np.nanmedian(d, axis=1)
+            spread = 1.4826 * np.nanmedian(np.abs(d - med[:, None]), axis=1)
+        for k in np.flatnonzero(spread < p.colocation_db):
+            out.append((ids[a[ok[k]]], ids[b[ok[k]]], float(spread[k]), int(n[ok[k]])))
+    return out
 
 
 def build_edges(reports: Reports, p: Params) -> Edges:
@@ -276,6 +322,15 @@ def evaluate(seeds: Iterable[str], reports: Reports, p: Params, groups: dict[str
     seeds = list(dict.fromkeys(seeds))
     if p.autocal:
         reports, _ = self_calibrate(reports, groups)
+    seed_set = set(seeds)
+    colocated: dict[str, dict] = {}
+    for u, v, spread, m in colocated_pairs(reports, p):
+        for x, y in ((u, v), (v, u)):
+            if x not in seed_set and (x not in colocated or spread < colocated[x]["spread_db"]):
+                colocated[x] = {"partner": y, "spread_db": round(spread, 2), "observers": m}
+    if colocated:                       # one radio cannot vouch for, or be vouched as, two different people
+        reports = {a: {b: r for b, r in seen.items() if b not in colocated}
+                   for a, seen in reports.items() if a not in colocated}
     edges = build_edges(reports, p)
     alive = set(flood(seeds, edges, p)) | set(seeds)
     while True:
@@ -295,4 +350,4 @@ def evaluate(seeds: Iterable[str], reports: Reports, p: Params, groups: dict[str
         v: {"hops": reach[v][0], "path_m": round(reach[v][1], 2), "witnesses": len(adj.get(v, []))}
         for v in alive if v in reach
     }
-    return {"present": present, "edges": len(edges), "edge_list": edges}
+    return {"present": present, "edges": len(edges), "edge_list": edges, "colocated": colocated}

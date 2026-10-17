@@ -32,6 +32,9 @@ def synth_reports(cfg: RoomConfig, nodes: dict, wall: tuple, rng: random.Random,
     iu, ju, d, mean = pair_mean_rssi(cfg, nodes, wall, g_shadow, g_orient, stats)
 
     tap = tap_times(cfg, g_tap, N)
+    for i, k in enumerate(ids):                          # attackers choose their own timing (e.g. a relay taps at once)
+        if "tap_s" in nodes[k]:
+            tap[i] = nodes[k]["tap_s"]
     joined = tap <= cfg.window_s
     on = tap + cfg.startup_s                              # radio on
     overlap = np.maximum(0.0, cfg.window_s + cfg.tail_s - np.maximum(on[iu], on[ju])) * (joined[iu] & joined[ju])

@@ -60,6 +60,7 @@ class StartSession(BaseModel):
     near_m: Optional[float] = Field(None, ge=0, le=10)
     near_k: Optional[int] = Field(None, ge=1, le=10)
     autocal: Optional[bool] = None
+    colocation_db: Optional[float] = Field(default=None, ge=0, le=20)
     ref_dbm: Optional[float] = Field(None, ge=-100, le=0)
     n: Optional[float] = Field(None, ge=1, le=6)
 

@@ -56,3 +56,14 @@ def test_platform_detection_matches_what_the_apps_send():
     # every sim model name maps to the platform its profile claims
     for name, prof in RoomConfig().models.items():
         assert platform_of(name) == prof["platform"], name
+
+
+def test_native_scanners_report_every_uuid_match_not_just_the_first():
+    # the co-location defence (graph.colocated_pairs) and netsim's relay model rely on a phone reporting BOTH ids when one
+    # advert carries two NetPresence UUIDs
+    kt = P.ANDROID.read_text(encoding="utf-8")
+    line = next(l for l in kt.splitlines() if 'push("NP-" + u.substring(prefix.length)' in l)
+    assert "return" not in line.split("//")[0]
+    m = P.IOS.read_text(encoding="utf-8")
+    block = m[m.index("didDiscoverPeripheral"):m.index("peripheralManagerDidUpdateState")]
+    assert "return;" not in block

@@ -228,3 +228,67 @@ async def test_malformed_keys_are_rejected_not_crashing(client):
                 base64.b64encode(b"hello").decode()):
         r = await client.post("/api/devices/register", json={**d.register_body(), "public_key": bad})
         assert r.status_code == 400, (bad, r.status_code)
+
+
+async def test_relay_is_flagged_as_colocated_through_the_api(client):
+    """One in-room accomplice also sends an absent friend's id: every honest observer hears both ids through the same
+    channel, so the server flags the pair for the teacher instead of admitting the friend."""
+    import random
+    n = 14
+    s, devs = await make_room(client, n)
+    friend = Device("friend")
+    await enrol(client, [friend])
+    await checkin(client, s, friend)
+    acc = devs[3]
+    sid = s["session_id"]
+    R = random.Random(11)
+    pos = [(R.uniform(0, 3), R.uniform(0, 3)) for _ in range(n)]
+    shadow = {(a, b): R.gauss(0, 5) for a in range(n) for b in range(a + 1, n)}
+
+    def link(a, b):                                  # path loss from positions plus symmetric shadowing, in dBm
+        a, b = min(a, b), max(a, b)
+        return rssi(max(0.5, math.dist(pos[a], pos[b]))) + round(shadow[(a, b)])
+
+    for i, me in enumerate(devs):
+        nb = [{"peer_id": o.eph, "rssi_median": link(i, j), "sample_count": 20} for j, o in enumerate(devs) if o is not me]
+        if me is not acc:                            # honest observers hear the accomplice's radio under both ids
+            nb.append({"peer_id": friend.eph, "rssi_median": link(i, 3) + (i % 2), "sample_count": 20})
+        await client.post(f"/api/sessions/{sid}/report", json=me.report_body(sid, nb))
+    mirror = [{"peer_id": o.eph, "rssi_median": link(3, j), "sample_count": 20} for j, o in enumerate(devs) if o is not acc]
+    r = await client.post(f"/api/sessions/{sid}/report", json=friend.report_body(sid, mirror))
+    assert r.status_code == 200
+    await client.post(f"/api/sessions/{sid}/verify-seeds", json={"student_ids": ["stu0"]}, headers=TEACHER)
+    out = (await client.post(f"/api/sessions/{sid}/close", headers=TEACHER)).json()
+    rows = {r["student_id"]: r for r in out["rows"]}
+    assert rows["friend"]["status"] == "FLAGGED" and rows["friend"]["reason"] == "co-located"
+    assert rows["friend"]["partner"] == "stu3" and rows["friend"]["spread_db"] < 2.5
+    assert rows["stu3"]["status"] == "FLAGGED"
+    assert {k: v["status"] for k, v in rows.items() if v["status"] != "PRESENT"} == {"friend": "FLAGGED", "stu3": "FLAGGED"}
+    # the teacher decides
+    r = await client.post(f"/api/sessions/{sid}/adjudicate", json={"student_id": "stu3", "status": "PRESENT"}, headers=TEACHER)
+    assert r.status_code == 200
+
+
+async def test_colocation_can_be_switched_off_per_session(client):
+    devs = [Device(f"stu{i}") for i in range(8)]
+    await enrol(client, devs)
+    s = (await client.post("/api/sessions/start", json={"colocation_db": 0}, headers=TEACHER)).json()
+    assert s["params"]["colocation_db"] == 0
+    r = await client.post("/api/sessions/start", json={"colocation_db": -1}, headers=TEACHER)
+    assert r.status_code == 422
+
+
+async def test_a_replayed_report_is_refused_by_the_session_binding(client):
+    """A6: the signature covers the session id, so an old signed report cannot be resubmitted to a new roll call."""
+    devs = [Device(f"stu{i}") for i in range(3)]
+    await enrol(client, devs)
+    s1 = (await client.post("/api/sessions/start", json={}, headers=TEACHER)).json()
+    me = devs[0]
+    await checkin(client, s1, me)
+    nb = [{"peer_id": "0a1b2c3d", "rssi_median": -60, "sample_count": 9}]
+    old = me.report_body(s1["session_id"], nb)
+    assert (await client.post(f"/api/sessions/{s1['session_id']}/report", json=old)).status_code == 200
+    s2 = (await client.post("/api/sessions/start", json={}, headers=TEACHER)).json()
+    await checkin(client, s2, me)
+    r = await client.post(f"/api/sessions/{s2['session_id']}/report", json=old)
+    assert r.status_code == 401

@@ -30,15 +30,5 @@ def trial(cfg: RoomConfig, p: Params, seed: int, calibrate: bool = True) -> dict
 
 
 def collusion_trial(cfg: RoomConfig, p: Params, seed: int, colluders: int) -> bool:
-    """Remote friend 'R' with `colluders` in-room accomplices who fabricate mutual strong edges. True if R is marked present."""
-    rng = random.Random(seed)
-    nodes, seeds, wall = build_scene(cfg, rng)
-    reports = synth_reports(cfg, nodes, wall, rng)
-    ins = [k for k, v in nodes.items() if v["inside"] and k not in seeds]
-    reports["R"] = {}
-    for c in rng.sample(ins, min(colluders, len(ins))):
-        reports[c]["R"] = -60
-        reports["R"][c] = -60
-    groups = platforms(cfg, nodes)
-    groups["R"] = "android"
-    return "R" in evaluate(seeds, reports, p, groups)["present"]
+    from netsim import attacks
+    return attacks.collusion_trial(cfg, p, seed, colluders)

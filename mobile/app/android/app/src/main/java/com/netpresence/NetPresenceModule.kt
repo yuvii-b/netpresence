@@ -170,7 +170,7 @@ class NetPresenceModule(private val ctx: ReactApplicationContext) : ReactContext
           val uuids = r.scanRecord?.serviceUuids ?: return
           for (pu in uuids) {
             val u = pu.uuid.toString()                       // lower-case canonical form
-            if (u.length == 36 && u.startsWith(prefix)) { push("NP-" + u.substring(prefix.length), r.rssi); return }
+            if (u.length == 36 && u.startsWith(prefix)) push("NP-" + u.substring(prefix.length), r.rssi)   // EVERY match: one radio sending two ids is evidence
           }
         }
         override fun onBatchScanResults(results: MutableList<ScanResult>) { for (x in results) onScanResult(0, x) }

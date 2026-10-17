@@ -67,10 +67,36 @@ def pair_geometry(cfg: RoomConfig, nodes: dict, wall: tuple):
     crosses = (A[:, 0] < wall_x) != (B[:, 0] < wall_x)
     with np.errstate(divide="ignore", invalid="ignore"):
         tt = (wall_x - A[:, 0]) / (B[:, 0] - A[:, 0])
-    y_cross = A[:, 1] + tt * (B[:, 1] - A[:, 1])
+    with np.errstate(invalid="ignore"):
+        y_cross = A[:, 1] + tt * (B[:, 1] - A[:, 1])
     through_door = (door is not None) & (y_cross >= (door[0] if door else 0)) & (y_cross <= (door[1] if door else 0))
     walled = crosses & ~through_door
     return P, iu, ju, d, bodies, walled
+
+
+def _pair_index(N: int, i: np.ndarray, j: np.ndarray) -> np.ndarray:
+    """Index into the np.triu_indices(N, 1) pair list of the unordered pair (i, j)."""
+    a, b = np.minimum(i, j), np.maximum(i, j)
+    return a * (2 * N - a - 1) // 2 + (b - a - 1)
+
+
+def apply_clones(nodes: dict, mean: np.ndarray) -> np.ndarray:
+    """Relay attack support: a node with "clone_of": X is an extra advertising id emitted by the SAME radio as X, so every
+    observer sees it through exactly X's channel (same path loss, shadowing, bodies). The clone and its source do not hear
+    each other (one radio cannot receive its own transmission)."""
+    ids = list(nodes)
+    N = len(ids)
+    pos = {k: i for i, k in enumerate(ids)}
+    for k, v in nodes.items():
+        src = v.get("clone_of")
+        if src is None:
+            continue
+        f, a = pos[k], pos[src]
+        others = np.array([o for o in range(N) if o not in (f, a)])
+        if others.size:
+            mean[_pair_index(N, np.full(others.size, f), others)] = mean[_pair_index(N, np.full(others.size, a), others)]
+        mean[_pair_index(N, np.array([f]), np.array([a]))] = -200.0
+    return mean
 
 
 def pair_mean_rssi(cfg: RoomConfig, nodes: dict, wall: tuple, g_shadow: np.random.Generator,
@@ -84,7 +110,7 @@ def pair_mean_rssi(cfg: RoomConfig, nodes: dict, wall: tuple, g_shadow: np.rando
         mean, fallbacks = traces.draw_pair_means(cfg, d, bodies, walled, g_shadow)
         if stats is not None:
             stats["trace_fallbacks"] = int(fallbacks)
-        return iu, ju, d, mean
+        return iu, ju, d, apply_clones(nodes, mean)
     loss = cfg.body_db * np.minimum(bodies, cfg.body_cap) + np.where(walled, cfg.wall_db, 0.0)
     if g_orient is not None and cfg.orient_mix != (1.0, 0.0, 0.0, 0.0):
         lo = orientation_loss(cfg, len(P), g_orient)
@@ -96,4 +122,4 @@ def pair_mean_rssi(cfg: RoomConfig, nodes: dict, wall: tuple, g_shadow: np.rando
     else:
         raise ValueError(f"unknown shadow_model {cfg.shadow_model!r}")
     mean = cfg.A - 10 * cfg.n * np.log10(d) - loss + shadow
-    return iu, ju, d, mean
+    return iu, ju, d, apply_clones(nodes, mean)

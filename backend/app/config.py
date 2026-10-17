@@ -46,6 +46,7 @@ class Settings:
     NEAR_K: int = int(os.getenv("NEAR_K", "1"))
     # per-phone TX/RX asymmetry solved from the session's own two-way readings (sim.platforms: 12 dB Android/iOS
     # imbalance 35% -> 0% false-absent). Default ON.
+    COLOCATION_DB: float = float(os.getenv("COLOCATION_DB", "2.5"))   # relay/Sybil defence threshold (0 = off)
     AUTOCAL: bool = os.getenv("AUTOCAL", "1") not in ("0", "false", "False")
 
 

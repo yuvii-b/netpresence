@@ -166,8 +166,8 @@ RCT_EXPORT_METHOD(stopRadio : (RCTPromiseResolveBlock)resolve rejecter : (RCTPro
   for (CBUUID *u in uuids) {
     NSString *s = u.UUIDString;
     if (s.length == 36 && [s hasPrefix:kPrefix]) {
+      // EVERY match is reported: one radio sending two ids is evidence for the server's co-location check
       [self push:[@"NP-" stringByAppendingString:[[s substringFromIndex:kPrefix.length] lowercaseString]] rssi:rssi];
-      return;
     }
   }
 }
