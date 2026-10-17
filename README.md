@@ -8,6 +8,8 @@ and nobody can mark attendance from the corridor or from home.
 The original acoustic (FSK tone) system is kept as the baseline arm (`/api/acoustic`, "Acoustic (v1)" tab) so the two
 approaches can be compared on real phones.
 
+**Download and run:** see [`docs/INSTALL.md`](docs/INSTALL.md). Prebuilt apps (Android APK, unsigned iOS IPA) are attached to the repo's **Releases** page once a version tag is pushed.
+
 **Read first:** [`docs/V2.md`](docs/V2.md) (design, protocol, limits) and [`mobile/README.md`](mobile/README.md) (what is and is not verified).
 
 ## Layout

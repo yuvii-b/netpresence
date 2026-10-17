@@ -6,6 +6,7 @@ on:
     branches: [v2-proximity-graph, main]
     paths: ['mobile/**', '.github/workflows/mobile.yml']
   workflow_dispatch:
+  workflow_call:   # reused by release.yml
 
 jobs:
   core-tests:
