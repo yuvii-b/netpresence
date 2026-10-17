@@ -27,3 +27,13 @@ Enter the server URL (reachable from the phones, ideally the classroom LAN or an
 First device checklist: (1) enrol on one Android and one iPhone; (2) confirm the server accepts both signatures
 (iOS key is wrapped as SPKI to match); (3) run *BLE lab* between the two and confirm each hears the other; (4) run a real
 session with 4+ phones and compare against sim expectations.
+
+## Getting installable builds without a Mac or local SDK
+`.github/workflows/mobile.yml` builds in GitHub Actions (free macOS/Linux runners): push the repo to your own GitHub,
+open Actions -> "Mobile builds" -> latest run -> Artifacts.
+* `netpresence-android-apk` - install directly (enable "install unknown apps"). Signed with the debug key; test use only.
+* `netpresence-ios-unsigned-ipa` - unsigned. Install on an iPhone from Windows/Linux with Sideloadly or AltStore using a
+  free Apple ID (re-sign every 7 days; AltStore can refresh over Wi-Fi). A paid Apple Developer account ($99/yr) is only
+  needed for TestFlight (over-the-air install, 90-day builds).
+The workflow has not been run yet; the first run may need small fixes (send the log).
+Android release builds allow cleartext `http://` for LAN testing; remove `usesCleartextTraffic` before real deployment.

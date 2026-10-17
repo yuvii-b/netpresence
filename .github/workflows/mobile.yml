@@ -1,0 +1,66 @@
+name: Mobile builds
+# Builds an installable Android APK and an UNSIGNED iOS .ipa in the cloud, so no local Android SDK / Mac is needed.
+# Download the results from the run page: Actions -> "Mobile builds" -> the run -> Artifacts.
+on:
+  push:
+    branches: [v2-proximity-graph, main]
+    paths: ['mobile/**', '.github/workflows/mobile.yml']
+  workflow_dispatch:
+
+jobs:
+  core-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm ci || npm install
+        working-directory: mobile/core
+      - run: npm test && npm run typecheck
+        working-directory: mobile/core
+
+  android:
+    needs: core-tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 17 }
+      - run: npm install
+        working-directory: mobile/app
+      # Release variant embeds the JS bundle (works with no Metro server) and is signed with the debug key = installable.
+      - run: chmod +x gradlew && ./gradlew assembleRelease --no-daemon
+        working-directory: mobile/app/android
+      - uses: actions/upload-artifact@v4
+        with:
+          name: netpresence-android-apk
+          path: mobile/app/android/app/build/outputs/apk/release/app-release.apk
+
+  ios:
+    needs: core-tests
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm install
+        working-directory: mobile/app
+      - run: pod install
+        working-directory: mobile/app/ios
+      - name: Build unsigned app
+        working-directory: mobile/app/ios
+        run: |
+          xcodebuild -workspace NetPresence.xcworkspace -scheme NetPresence -configuration Release \
+            -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build
+      - name: Package .ipa (unsigned; re-signed on install by Sideloadly/AltStore)
+        working-directory: mobile/app/ios
+        run: |
+          mkdir -p Payload && cp -R build/Build/Products/Release-iphoneos/NetPresence.app Payload/
+          zip -qry NetPresence-unsigned.ipa Payload
+      - uses: actions/upload-artifact@v4
+        with:
+          name: netpresence-ios-unsigned-ipa
+          path: mobile/app/ios/NetPresence-unsigned.ipa
