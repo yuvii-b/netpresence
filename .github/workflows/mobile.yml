@@ -65,3 +65,30 @@ jobs:
         with:
           name: netpresence-ios-unsigned-ipa
           path: mobile/app/ios/NetPresence-unsigned.ipa
+
+  # Every push to a branch refreshes a rolling "latest" pre-release, so the newest APK/IPA is always on the Releases page.
+  # (Not run when this workflow is called by release.yml for a version tag: ref_type is 'tag' there.)
+  publish-latest:
+    needs: [android, ios]
+    if: github.event_name == 'push' && github.ref_type == 'branch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency:
+      group: publish-latest
+      cancel-in-progress: false
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+      - name: Replace the rolling "latest" release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp dist/netpresence-android-apk/app-release.apk NetPresence-android.apk
+          cp dist/netpresence-ios-unsigned-ipa/NetPresence-unsigned.ipa NetPresence-ios-unsigned.ipa
+          gh release delete latest --repo "$GITHUB_REPOSITORY" --cleanup-tag --yes || true
+          gh release create latest --repo "$GITHUB_REPOSITORY" --prerelease --target "$GITHUB_SHA" \
+            --title "Latest build (${GITHUB_SHA::7})" \
+            --notes "Automatic build of commit $GITHUB_SHA on branch $GITHUB_REF_NAME. Test builds: Android APK is debug-signed; the iOS IPA is unsigned and needs Sideloadly/AltStore." \
+            NetPresence-android.apk NetPresence-ios-unsigned.ipa

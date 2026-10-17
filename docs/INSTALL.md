@@ -77,5 +77,7 @@ git remote set-url origin https://github.com/<you>/netpresence.git
 git push -u origin v2-proximity-graph
 git tag v0.1.0 && git push origin v0.1.0        # builds both apps and creates the Release page
 ```
-In the repo's Settings -> Actions -> General, set **Workflow permissions** to "Read and write" so the release step can publish.
+Every push to a branch also refreshes a rolling **"Latest build"** pre-release (tag `latest`) with the newest APK and IPA,
+so testers can always grab the newest build from the Releases page. If publishing is refused ("Resource not accessible by
+integration"), set Settings -> Actions -> General -> **Workflow permissions** to "Read and write".
 Add a LICENSE of your choice; without one, others have no permission to reuse the code.
