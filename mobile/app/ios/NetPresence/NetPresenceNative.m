@@ -89,6 +89,10 @@ RCT_EXPORT_METHOD(deviceModel : (RCTPromiseResolveBlock)resolve rejecter : (RCTP
   resolve([NSString stringWithFormat:@"Apple %s", u.machine]); // e.g. "Apple iPhone14,5" - used as the calibration key
 }
 
+RCT_EXPORT_METHOD(setKeepAwake : (BOOL)on) {
+  dispatch_async(dispatch_get_main_queue(), ^{ [UIApplication sharedApplication].idleTimerDisabled = on; });
+}
+
 #pragma mark - radio
 
 RCT_EXPORT_METHOD(startRadio : (NSString *)name serviceUuid : (NSString *)uuid resolver : (RCTPromiseResolveBlock)resolve rejecter : (RCTPromiseRejectBlock)reject) {

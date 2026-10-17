@@ -81,6 +81,15 @@ class NetPresenceModule(private val ctx: ReactApplicationContext) : ReactContext
   @ReactMethod
   fun deviceModel(promise: Promise) = promise.resolve("${Build.MANUFACTURER} ${Build.MODEL}")
 
+  @ReactMethod
+  fun setKeepAwake(on: Boolean) {
+    val a = currentActivity ?: return
+    a.runOnUiThread {
+      if (on) a.window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+      else a.window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+    }
+  }
+
   // ---------------------------------------------------------------- radio
   private var scanner: BluetoothLeScanner? = null
   private var advertiser: BluetoothLeAdvertiser? = null

@@ -7,7 +7,11 @@ const N = NativeModules.NetPresenceNative as {
   deviceModel(): Promise<string>;
   startRadio(name: string, serviceUuid: string): Promise<void>;
   stopRadio(): Promise<void>;
+  setKeepAwake?(on: boolean): void;
 };
+
+/** Stops the screen locking mid roll-call (a locked iPhone stops scanning). No-op if the native side lacks it. */
+export const setKeepAwake = (on: boolean) => { try { N.setKeepAwake?.(on); } catch { /* cosmetic */ } };
 
 export const deviceModel = (): Promise<string> => N.deviceModel();
 
