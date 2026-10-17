@@ -29,3 +29,42 @@ jobs:
         working-directory: mobile/core
       - run: python -m tools.check
         working-directory: backend
+
+  # The paper pipeline: every experiment (few classrooms) on both OSes; the per-experiment hashes of the integer counts must be
+  # identical on Linux and Windows (numpy/random streams, float formatting, multiprocessing 'spawn').
+  paper:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: pip install -r requirements.txt -r requirements-dev.txt -r requirements-paper.txt
+        working-directory: backend
+      - run: python -m paper.make --quick --workers 2 --no-cache
+        working-directory: backend
+      - uses: actions/upload-artifact@v4
+        with:
+          name: paper-quick-${{ matrix.os }}
+          path: |
+            backend/paper/out/results/hashes.json
+            backend/paper/out/summary.md
+            backend/paper/out/tables
+            backend/paper/out/figures
+
+  paper-parity:
+    needs: paper
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - uses: actions/download-artifact@v4
+        with: { name: paper-quick-ubuntu-latest, path: parity/linux }
+      - uses: actions/download-artifact@v4
+        with: { name: paper-quick-windows-latest, path: parity/windows }
+      - run: python -m paper.compare_hashes ../parity/linux/results/hashes.json ../parity/windows/results/hashes.json
+        working-directory: backend

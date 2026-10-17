@@ -113,3 +113,15 @@ def test_bad_real_file_fails_loudly(tmp_path):
 
 def test_timing_is_not_part_of_the_hash():
     assert make.deterministic_part({"a": 1, "timing": {"seconds": 3}}) == {"a": 1}
+
+
+def test_compare_hashes_flags_any_difference(tmp_path):
+    from paper import compare_hashes as ch
+    a = {"quick": True, "code": "x", "hashes": {"E01": "aa", "E02": "bb"}}
+    assert ch.compare(a, {**a, "code": "y"}) == []
+    assert len(ch.compare(a, {"quick": True, "hashes": {"E01": "aa", "E02": "zz"}})) == 1
+    assert len(ch.compare(a, {"quick": True, "hashes": {"E01": "aa"}})) == 1
+    assert len(ch.compare(a, {**a, "quick": False})) == 1
+    pa, pb = tmp_path / "a.json", tmp_path / "b.json"
+    pa.write_text(json.dumps(a)); pb.write_text(json.dumps(a))
+    assert ch.main([str(pa), str(pb)]) == 0

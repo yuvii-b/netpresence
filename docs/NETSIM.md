@@ -19,7 +19,7 @@ class20 lab6 exam`, or a TOML file in `netsim/presets/` or passed with `--toml`.
 | M5 attacks + co-location defence | done: `netsim/attacks.py` (A2-A5, relay), `colocation_db` in the real engine/API/console, native scanners report every UUID match |
 | M6 baselines | done: `netsim/baselines.py` B0 manual, B1 beacon, B2 acoustic, B3/B4 ablations, B5 QR, same rooms and seeds |
 | M7 paper pipeline | done: `backend/paper/make.py` runs E01-E14 (`netsim/experiments/`), bootstrap CIs over classrooms, cached by config+code hash, tables (md/tex) and figures (pdf/png) |
-| M8 Windows CI hash parity | todo (the Windows job already runs `tools.check`) |
+| M8 Windows CI hash parity | done in the workflow, NOT yet seen green: `tests.yml` jobs `paper` (ubuntu + windows, `paper.make --quick`) and `paper-parity` (`python -m paper.compare_hashes`); first CI run decides |
 | M9 loadtest | todo |
 
 ## Paper pipeline (M7)
