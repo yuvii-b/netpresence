@@ -17,4 +17,7 @@ frontend/.env.local
 .vscode/
 .idea/
 
-*.pdf
+*.pdf__pycache__/
+.pytest_cache/
+*.pyc
+backend/sim/out/

@@ -1,27 +1,37 @@
 import logging
+from collections import defaultdict
+
 from fastapi import WebSocket
-from typing import List
 
 logger = logging.getLogger("netpresence.ws")
 
+ACOUSTIC_ROOM = "__acoustic__"
+
+
 class WebSocketManager:
+    """Room-scoped broadcast: a v2 teacher only receives events for their session."""
+
     def __init__(self):
-        self.active_connections: List[WebSocket] = []
+        self.rooms: dict[str, list[WebSocket]] = defaultdict(list)
 
-    async def connect(self, websocket: WebSocket):
+    async def connect(self, room: str, websocket: WebSocket):
         await websocket.accept()
-        self.active_connections.append(websocket)
+        self.rooms[room].append(websocket)
 
-    def disconnect(self, websocket: WebSocket):
-        if websocket in self.active_connections:
-            self.active_connections.remove(websocket)
+    def disconnect(self, room: str, websocket: WebSocket):
+        conns = self.rooms.get(room, [])
+        if websocket in conns:
+            conns.remove(websocket)
+        if not conns:
+            self.rooms.pop(room, None)
 
-    async def broadcast(self, message: dict):
-        for connection in list(self.active_connections):
+    async def broadcast(self, room: str, message: dict):
+        for connection in list(self.rooms.get(room, [])):
             try:
                 await connection.send_json(message)
             except Exception:
                 logger.warning("Dropping WebSocket connection after send failure.", exc_info=True)
-                self.disconnect(connection)
+                self.disconnect(room, connection)
+
 
 ws_manager = WebSocketManager()
