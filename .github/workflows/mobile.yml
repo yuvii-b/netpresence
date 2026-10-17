@@ -47,7 +47,7 @@ jobs:
         with: { node-version: 22 }
       - run: npm install
         working-directory: mobile/app
-      - run: pod install
+      - run: RCT_NEW_ARCH_ENABLED=0 pod install   # old architecture: our native modules are legacy-style
         working-directory: mobile/app/ios
       - name: Build unsigned app
         working-directory: mobile/app/ios

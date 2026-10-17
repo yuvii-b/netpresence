@@ -20,6 +20,7 @@ Enter the server URL (reachable from the phones, ideally the classroom LAN or an
 |---|---|
 | `core` unit tests (21) + live tests against real server | passing |
 | App TypeScript typecheck; Metro bundle for Android + iOS | passing |
+| Kotlin + Obj-C modules: syntax parse only (tree-sitter), GitHub workflow passes `actionlint` | passing (this does NOT prove they compile) |
 | Kotlin module, Obj-C module, Gradle/Xcode build, permissions flow | **never compiled or run** (no SDK/Xcode in the dev sandbox) |
 | Real BLE RSSI behaviour, Secure Enclave signing accepted by server | **unverified on devices** |
 | Obj-C file registered in `project.pbxproj` by hand | verify Xcode opens it and builds; re-add the files in Xcode if not |
@@ -37,3 +38,9 @@ open Actions -> "Mobile builds" -> latest run -> Artifacts.
   needed for TestFlight (over-the-air install, 90-day builds).
 The workflow has not been run yet; the first run may need small fixes (send the log).
 Android release builds allow cleartext `http://` for LAN testing; remove `usesCleartextTraffic` before real deployment.
+
+## Design decisions worth knowing
+* React Native **old architecture** is used on purpose (`newArchEnabled=false`, `RCT_NEW_ARCH_ENABLED=0` for iOS): the native modules are legacy-style, which is the better-proven path.
+* The screen is kept awake during the 45 s window (native `setKeepAwake`): a locked phone stops scanning.
+* Android 11 and older also need **Location services switched on** in system settings for Bluetooth scanning to return anything (OS rule, not the app). Android 12+ uses the Nearby devices permission instead.
+* Screens: see `docs/screens/app-light.png` and `app-dark.png` (rendered with the hardware mocked; a layout preview, not a device screenshot).
