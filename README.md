@@ -39,10 +39,10 @@ cd frontend && npm install && npm run dev      # VITE_API_BASE_URL=http://host:8
 
 ```bash
 cd backend
-pytest -q                                   # 43 tests: graph engine, API flow, WS, acoustic, simulator, 93-student room
+python -m pytest -q                         # 43 tests: graph engine, API flow, WS, acoustic, simulator, 93-student room
 python -m sim.orientation                   # acceptance study, 13 pre-declared pass/fail criteria (exit code != 0 on failure)
 python -m sim.run                           # general sweeps -> sim/out/*.csv
-python -m tools.ui_e2e                      # builds frontend, drives Chromium through a 106-phone session (needs Playwright + Chromium)
+python -m tools.ui_e2e --fixture ../mobile/core/test/fixtures/scene93.json   # builds frontend, drives Chromium through a 106-phone session (needs Playwright + Chromium)
 
 cd ../mobile/core && npm install && npm test            # 21 unit tests
 NP_PYTHON=/path/to/venv/bin/python npm run test:live    # real TS phones against a real server
