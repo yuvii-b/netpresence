@@ -17,7 +17,7 @@ class20 lab6 exam`, or a TOML file in `netsim/presets/` or passed with `--toml`.
 | M3 link layer | done: `--set ble_mode=des` packet-level advertising channel (`ble_des.py`) |
 | M4 phone + uplink | done: exact `NeighbourCollector` port + retry schedule + report size pinned to the real TypeScript by generated vectors; `uplink=wifi_good\|wifi_congested\|cell_4g` (mixes allowed) |
 | M5 attacks + co-location defence | done: `netsim/attacks.py` (A2-A5, relay), `colocation_db` in the real engine/API/console, native scanners report every UUID match |
-| M6 baselines | todo |
+| M6 baselines | done: `netsim/baselines.py` B0 manual, B1 beacon, B2 acoustic, B3/B4 ablations, B5 QR, same rooms and seeds |
 | M7 paper pipeline | todo |
 | M8 Windows CI hash parity | todo (the Windows job already runs `tools.check`) |
 | M9 loadtest | todo |
@@ -54,6 +54,14 @@ retry ladder (0.5 s doubling to 4 s until the report deadline). Reports that mis
 A6 replay is an API test; A7 id spoof is A4 for an absent classmate. The defence is server code (`graph.colocated_pairs`), not
 simulator code, so the simulator and the product use the same function. Parameters `colocation_db`, `colocation_min_obs`,
 `colocation_overlap`, `colocation_min_dbm`.
+
+## Baselines
+`netsim.baselines.BASELINES` runs each approach on the same classroom and seed and returns one record (false-absent, corridor
+admission, proxy success, time, per-seat outcomes). Every parameter is an `assumed` field of `BaselineParams` (E08/E10 sweep them);
+the acoustic detection threshold in particular is NOT measured. First comparison (93 students, door open, 30% iPhones, 12
+classrooms, assumed values): manual 0% / 48% proxy / 268 s; beacon 28% false-absent, 8% corridor; acoustic 30% false-absent;
+rotating QR 3% false-absent, 30% of forwarded-photo proxies succeed; NetPresence 0.3% / 0% / 0% proxies / 26 s; NetPresence
+without the co-location check: 100% of relay proxies succeed.
 
 ## Findings so far
 * **Relay attack with ONE accomplice defeated k=2** (>= 80% of friends admitted) before the co-location check; with it, relays are
