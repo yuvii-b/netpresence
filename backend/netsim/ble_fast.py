@@ -14,6 +14,7 @@ import numpy as np
 from netsim.channel import pair_mean_rssi
 from netsim.config import RoomConfig
 from netsim.phone import tap_times
+from sim import protocol
 
 
 def synth_reports(cfg: RoomConfig, nodes: dict, wall: tuple, rng: random.Random, calibrate: bool = True,
@@ -21,7 +22,7 @@ def synth_reports(cfg: RoomConfig, nodes: dict, wall: tuple, rng: random.Random,
     """Every phone's report: {reporter: {peer: median RSSI}} (and optionally the sample counts). Vectorised (numpy)."""
     # separate streams per noise source (common random numbers): changing the window only changes sample counts,
     # so comparisons between configurations are like-for-like
-    g_shadow, g_count, g_noise, g_det, g_tap, g_orient = (np.random.default_rng(x) for x in np.random.SeedSequence(rng.getrandbits(63)).spawn(6))
+    g_shadow, g_count, g_noise, g_det, g_tap, g_orient, g_up = (np.random.default_rng(x) for x in np.random.SeedSequence(rng.getrandbits(63)).spawn(7))
     ids = list(nodes)
     N = len(ids)
     prof = [cfg.models[nodes[k]["model"]] for k in ids]
@@ -35,8 +36,8 @@ def synth_reports(cfg: RoomConfig, nodes: dict, wall: tuple, rng: random.Random,
     on = tap + cfg.startup_s                              # radio on
     overlap = np.maximum(0.0, cfg.window_s + cfg.tail_s - np.maximum(on[iu], on[ju])) * (joined[iu] & joined[ju])
     if cfg.ble_mode == "des":
-        return _des_reports(cfg, ids, prof, iu, ju, mean, on, joined, rx, tx, g_count, g_noise, g_det, with_counts, calibrate,
-                            stats)
+        out, counts = _des_reports(cfg, ids, prof, iu, ju, mean, on, joined, rx, tx, g_count, g_noise, g_det, calibrate, stats)
+        return _finish(cfg, ids, out, counts, joined, g_up, with_counts, stats)
     if cfg.ble_mode != "fast":
         raise ValueError(f"unknown ble_mode {cfg.ble_mode!r}")
     # collisions: per channel the room carries sum(1/adv) adverts per ms; an advert survives if nothing overlaps it
@@ -56,12 +57,13 @@ def synth_reports(cfg: RoomConfig, nodes: dict, wall: tuple, rng: random.Random,
         for h, sr, val, cnt in zip(hear[ok], src[ok], np.rint(r[ok]), m[ok]):
             out[ids[h]][ids[sr]] = int(val)
             counts[ids[h]][ids[sr]] = int(cnt)
-    return (out, counts) if with_counts else out
+    return _finish(cfg, ids, out, counts, joined, g_up, with_counts, stats)
 
 
-def _des_reports(cfg, ids, prof, iu, ju, mean, on, joined, rx, tx, g_sched, g_noise, g_det, with_counts, calibrate, stats):
+def _des_reports(cfg, ids, prof, iu, ju, mean, on, joined, rx, tx, g_sched, g_noise, g_det, calibrate, stats):
     """Same report format as the fast model, produced by the packet-level advertising-channel simulation."""
     from netsim import ble_des
+    from netsim.phone import reports_from_samples
     N = len(ids)
     M = np.full((N, N), -200.0)
     M[iu, ju] = mean; M[ju, iu] = mean
@@ -69,11 +71,28 @@ def _des_reports(cfg, ids, prof, iu, ju, mean, on, joined, rx, tx, g_sched, g_no
     r, s, v, st = ble_des.simulate(cfg, M, prof, on, joined, g_sched, g_rx)
     if stats is not None:
         stats["des"] = st
-    ok = (g_det.random(N * N) < cfg.p_detect)
-    dn = g_noise.normal(0, cfg.dir_sigma, N * N)
-    out, counts = ble_des.median_reports(r, s, v, ids, cfg.min_samples, ok, dn)
-    for a in ids:
-        i = ids.index(a)
+    drop = ~(g_det.random(N * N) < cfg.p_detect)                          # pair never reported (OS hiccup)
+    dn = g_noise.normal(0, cfg.dir_sigma, N * N)                         # per-direction offset more samples cannot average away
+    out, counts = reports_from_samples(r, s, v + dn[r.astype(np.int64) * N + s], ids, cfg.min_samples, drop_pairs=drop)
+    for i, a in enumerate(ids):
         off = (rx[i] + tx[i]) if calibrate else 0.0
-        out[a] = {b: int(round(val - off)) for b, val in out[a].items()}
+        out[a] = {b: int(np.rint(val - off)) for b, val in out[a].items()}
+    return out, counts
+
+
+def _finish(cfg, ids, out, counts, joined, g_up, with_counts, stats):
+    """Uplink stage: reports that do not reach the server before the deadline are missing (that student is absent)."""
+    if cfg.uplink != "ideal":
+        from netsim import uplink
+        who = [i for i in range(len(ids)) if joined[i]]
+        # discovery ends, then radio stop + signing + send: 50-250 ms [assumed]
+        ready = cfg.window_s + cfg.tail_s + 0.05 + g_up.uniform(0.0, 0.2, len(who))
+        deadline = cfg.window_s + cfg.tail_s + protocol.GRACE_S
+        outcomes = uplink.simulate(ready, np.array([len(out[ids[i]]) for i in who]), deadline, cfg.uplink, g_up,
+                                   cfg.upload_jitter_s)
+        for i, o in zip(who, outcomes):
+            if o.delivered_at_s is None:
+                out.pop(ids[i], None); counts.pop(ids[i], None)
+        if stats is not None:
+            stats["uplink"] = uplink.summarise(outcomes, cfg.window_s + cfg.tail_s)
     return (out, counts) if with_counts else out

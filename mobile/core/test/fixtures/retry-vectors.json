@@ -1,0 +1,442 @@
+{
+ "request_timeout_ms": 5000,
+ "cases": [
+  {
+   "deadline_offset_ms": 0,
+   "failures": 1,
+   "attempts_at_ms": [
+    0
+   ],
+   "delivered": false
+  },
+  {
+   "deadline_offset_ms": 0,
+   "failures": 3,
+   "attempts_at_ms": [
+    0
+   ],
+   "delivered": false
+  },
+  {
+   "deadline_offset_ms": 0,
+   "failures": 1000,
+   "attempts_at_ms": [
+    0
+   ],
+   "delivered": false
+  },
+  {
+   "deadline_offset_ms": 400,
+   "failures": 1,
+   "attempts_at_ms": [
+    0
+   ],
+   "delivered": false
+  },
+  {
+   "deadline_offset_ms": 400,
+   "failures": 3,
+   "attempts_at_ms": [
+    0
+   ],
+   "delivered": false
+  },
+  {
+   "deadline_offset_ms": 400,
+   "failures": 1000,
+   "attempts_at_ms": [
+    0
+   ],
+   "delivered": false
+  },
+  {
+   "deadline_offset_ms": 499,
+   "failures": 1,
+   "attempts_at_ms": [
+    0
+   ],
+   "delivered": false
+  },
+  {
+   "deadline_offset_ms": 499,
+   "failures": 3,
+   "attempts_at_ms": [
+    0
+   ],
+   "delivered": false
+  },
+  {
+   "deadline_offset_ms": 499,
+   "failures": 1000,
+   "attempts_at_ms": [
+    0
+   ],
+   "delivered": false
+  },
+  {
+   "deadline_offset_ms": 500,
+   "failures": 1,
+   "attempts_at_ms": [
+    0,
+    500
+   ],
+   "delivered": true
+  },
+  {
+   "deadline_offset_ms": 500,
+   "failures": 3,
+   "attempts_at_ms": [
+    0,
+    500
+   ],
+   "delivered": false
+  },
+  {
+   "deadline_offset_ms": 500,
+   "failures": 1000,
+   "attempts_at_ms": [
+    0,
+    500
+   ],
+   "delivered": false
+  },
+  {
+   "deadline_offset_ms": 501,
+   "failures": 1,
+   "attempts_at_ms": [
+    0,
+    500
+   ],
+   "delivered": true
+  },
+  {
+   "deadline_offset_ms": 501,
+   "failures": 3,
+   "attempts_at_ms": [
+    0,
+    500
+   ],
+   "delivered": false
+  },
+  {
+   "deadline_offset_ms": 501,
+   "failures": 1000,
+   "attempts_at_ms": [
+    0,
+    500
+   ],
+   "delivered": false
+  },
+  {
+   "deadline_offset_ms": 1500,
+   "failures": 1,
+   "attempts_at_ms": [
+    0,
+    500
+   ],
+   "delivered": true
+  },
+  {
+   "deadline_offset_ms": 1500,
+   "failures": 3,
+   "attempts_at_ms": [
+    0,
+    500,
+    1500
+   ],
+   "delivered": false
+  },
+  {
+   "deadline_offset_ms": 1500,
+   "failures": 1000,
+   "attempts_at_ms": [
+    0,
+    500,
+    1500
+   ],
+   "delivered": false
+  },
+  {
+   "deadline_offset_ms": 3499,
+   "failures": 1,
+   "attempts_at_ms": [
+    0,
+    500
+   ],
+   "delivered": true
+  },
+  {
+   "deadline_offset_ms": 3499,
+   "failures": 3,
+   "attempts_at_ms": [
+    0,
+    500,
+    1500
+   ],
+   "delivered": false
+  },
+  {
+   "deadline_offset_ms": 3499,
+   "failures": 1000,
+   "attempts_at_ms": [
+    0,
+    500,
+    1500
+   ],
+   "delivered": false
+  },
+  {
+   "deadline_offset_ms": 3500,
+   "failures": 1,
+   "attempts_at_ms": [
+    0,
+    500
+   ],
+   "delivered": true
+  },
+  {
+   "deadline_offset_ms": 3500,
+   "failures": 3,
+   "attempts_at_ms": [
+    0,
+    500,
+    1500,
+    3500
+   ],
+   "delivered": true
+  },
+  {
+   "deadline_offset_ms": 3500,
+   "failures": 1000,
+   "attempts_at_ms": [
+    0,
+    500,
+    1500,
+    3500
+   ],
+   "delivered": false
+  },
+  {
+   "deadline_offset_ms": 7499,
+   "failures": 1,
+   "attempts_at_ms": [
+    0,
+    500
+   ],
+   "delivered": true
+  },
+  {
+   "deadline_offset_ms": 7499,
+   "failures": 3,
+   "attempts_at_ms": [
+    0,
+    500,
+    1500,
+    3500
+   ],
+   "delivered": true
+  },
+  {
+   "deadline_offset_ms": 7499,
+   "failures": 1000,
+   "attempts_at_ms": [
+    0,
+    500,
+    1500,
+    3500
+   ],
+   "delivered": false
+  },
+  {
+   "deadline_offset_ms": 7500,
+   "failures": 1,
+   "attempts_at_ms": [
+    0,
+    500
+   ],
+   "delivered": true
+  },
+  {
+   "deadline_offset_ms": 7500,
+   "failures": 3,
+   "attempts_at_ms": [
+    0,
+    500,
+    1500,
+    3500
+   ],
+   "delivered": true
+  },
+  {
+   "deadline_offset_ms": 7500,
+   "failures": 1000,
+   "attempts_at_ms": [
+    0,
+    500,
+    1500,
+    3500,
+    7500
+   ],
+   "delivered": false
+  },
+  {
+   "deadline_offset_ms": 7501,
+   "failures": 1,
+   "attempts_at_ms": [
+    0,
+    500
+   ],
+   "delivered": true
+  },
+  {
+   "deadline_offset_ms": 7501,
+   "failures": 3,
+   "attempts_at_ms": [
+    0,
+    500,
+    1500,
+    3500
+   ],
+   "delivered": true
+  },
+  {
+   "deadline_offset_ms": 7501,
+   "failures": 1000,
+   "attempts_at_ms": [
+    0,
+    500,
+    1500,
+    3500,
+    7500
+   ],
+   "delivered": false
+  },
+  {
+   "deadline_offset_ms": 10000,
+   "failures": 1,
+   "attempts_at_ms": [
+    0,
+    500
+   ],
+   "delivered": true
+  },
+  {
+   "deadline_offset_ms": 10000,
+   "failures": 3,
+   "attempts_at_ms": [
+    0,
+    500,
+    1500,
+    3500
+   ],
+   "delivered": true
+  },
+  {
+   "deadline_offset_ms": 10000,
+   "failures": 1000,
+   "attempts_at_ms": [
+    0,
+    500,
+    1500,
+    3500,
+    7500
+   ],
+   "delivered": false
+  },
+  {
+   "deadline_offset_ms": 15000,
+   "failures": 1,
+   "attempts_at_ms": [
+    0,
+    500
+   ],
+   "delivered": true
+  },
+  {
+   "deadline_offset_ms": 15000,
+   "failures": 3,
+   "attempts_at_ms": [
+    0,
+    500,
+    1500,
+    3500
+   ],
+   "delivered": true
+  },
+  {
+   "deadline_offset_ms": 15000,
+   "failures": 1000,
+   "attempts_at_ms": [
+    0,
+    500,
+    1500,
+    3500,
+    7500,
+    11500
+   ],
+   "delivered": false
+  },
+  {
+   "deadline_offset_ms": 25000,
+   "failures": 1,
+   "attempts_at_ms": [
+    0,
+    500
+   ],
+   "delivered": true
+  },
+  {
+   "deadline_offset_ms": 25000,
+   "failures": 3,
+   "attempts_at_ms": [
+    0,
+    500,
+    1500,
+    3500
+   ],
+   "delivered": true
+  },
+  {
+   "deadline_offset_ms": 25000,
+   "failures": 1000,
+   "attempts_at_ms": [
+    0,
+    500,
+    1500,
+    3500,
+    7500,
+    11500,
+    15500,
+    19500,
+    23500
+   ],
+   "delivered": false
+  }
+ ],
+ "body_bytes": [
+  {
+   "n": 0,
+   "bytes": 152
+  },
+  {
+   "n": 1,
+   "bytes": 209
+  },
+  {
+   "n": 10,
+   "bytes": 734
+  },
+  {
+   "n": 40,
+   "bytes": 2504
+  },
+  {
+   "n": 92,
+   "bytes": 5558
+  },
+  {
+   "n": 200,
+   "bytes": 11916
+  }
+ ]
+}

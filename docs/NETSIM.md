@@ -15,7 +15,7 @@ class20 lab6 exam`, or a TOML file in `netsim/presets/` or passed with `--toml`.
 | M1 skeleton | done: config + presets + provenance tags, scenario, channel, fast link layer, phone (tap), server wrapper |
 | M2 channel | done: `shadow_model=gudmundson`, `orient_mix/orient_db`, `channel=trace` + `netsim/traces.py`, BLE-lab CSV v2 in the app |
 | M3 link layer | done: `--set ble_mode=des` packet-level advertising channel (`ble_des.py`) |
-| M4 phone + uplink | todo |
+| M4 phone + uplink | done: exact `NeighbourCollector` port + retry schedule + report size pinned to the real TypeScript by generated vectors; `uplink=wifi_good\|wifi_congested\|cell_4g` (mixes allowed) |
 | M5 attacks + co-location defence | todo |
 | M6 baselines | todo |
 | M7 paper pipeline | todo |
@@ -41,12 +41,23 @@ fading, OS callback loss). A 93-phone DES run takes ~1 s. Without background tra
 pair than the fast model (fading drops weak links; checked in `tests/netsim/test_m3_ble_des.py`, tolerance 15%); end to end
 both give 0.28% false-absent and 0% corridor admission at 93 students over 20 classrooms.
 
+## Phone and uplink
+`netsim/phone.py` ports `aggregate.ts` exactly (round-half-up samples, median of integers, sort, cap). Vectors are produced by
+the real TypeScript (`mobile/core/test/fixtures/{collector,retry}-vectors.json`, regenerate with `UPDATE_VECTORS=1 npx vitest
+run test/netsim-vectors.test.ts`) and checked on both sides, so editing `aggregate.ts` or `submitReport` without the simulator
+fails a test. `--set uplink=wifi_congested` sends every report through a shared-medium Wi-Fi queue with loss, the per-request
+timeout (`REQUEST_TIMEOUT_MS`, now in `api.ts`: before, a lost packet could hang the report past the deadline) and the real
+retry ladder (0.5 s doubling to 4 s until the report deadline). Reports that miss the deadline make the student absent.
+
 ## Findings so far
+* **Uplink is not the bottleneck** (93 phones, 40 neighbours each, assumed profiles): 100% delivered on good Wi-Fi (p95 0.35 s),
+  99.95-100% on congested Wi-Fi (p95 2.9 s, 1.05 attempts each), 4G p95 1.5 s. Upload jitter 1-4 s does not raise delivery, it
+  only adds latency, so it is NOT added to the app. Re-check with `loadtest.py` on the real classroom network (M9).
 * **How phones are held matters.** A uniform extra loss (phone on a desk: ~2 dB per end) looks like a larger distance to the
   fixed edge threshold: at 60 students false-absent is 0.5% (hand), 12% (desk), 41% (mixed with pockets/bags), 98% (all in
   pockets). Simulated with assumed losses; E08 sweeps it, and a session-level offset estimate is the candidate fix.
 
 ## Not modelled yet
-The Wi-Fi/4G uplink, relay/wormhole attacks,
+Server overload errors (429/5xx), relay/wormhole attacks,
 baselines other than the existing studies. `sim.room`, `sim.orientation`, `sim.platforms` are thin wrappers over netsim and
 their acceptance criteria are unchanged.

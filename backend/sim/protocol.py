@@ -73,3 +73,6 @@ ADV_AIRTIME_MS = (1 + 4 + 2 + ADV_PAYLOAD_BYTES + 3) * 8 / 1000.0
 
 # scan window / interval the Android code asks for (AOSP table above); iOS dwell is an assumption in netsim.config
 ANDROID_SCAN_WINDOW_MS, ANDROID_SCAN_INTERVAL_MS = AOSP_SCAN_WINDOW_INTERVAL_MS[ANDROID_SCAN_MODE]
+
+# --- phone network client (TypeScript): per-request timeout, used by netsim.uplink ---------------------------------------
+REQUEST_TIMEOUT_MS = int(_find(CORE / "api.ts", r"REQUEST_TIMEOUT_MS = (\d+)", "REQUEST_TIMEOUT_MS"))

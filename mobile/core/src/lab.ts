@@ -17,7 +17,7 @@ export interface LabContext {
 /** "NP-1a2b3c4d" -> "1a2b3c4d"; anything else -> "" */
 export function ephOfName(name: string): string {
   const m = /^NP-([0-9a-f]{8})$/.exec(name);
-  return m ? m[1] : '';
+  return m ? m[1]! : '';
 }
 
 const clean = (s: string) => s.replace(/[,\r\n]/g, ' ');

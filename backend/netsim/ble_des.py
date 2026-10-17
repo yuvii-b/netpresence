@@ -161,23 +161,3 @@ def _coalesce(r, s, t, min_ms, ios):
         else:
             keep[i] = False
     return keep
-
-
-def median_reports(r: np.ndarray, s: np.ndarray, v: np.ndarray, ids: list[str], min_samples: int, ok_pair: np.ndarray,
-                   dir_noise: np.ndarray):
-    """Per ordered pair: median RSSI and sample count (>= min_samples). Median of an even count averages the middle two."""
-    out = {k: {} for k in ids}; counts = {k: {} for k in ids}
-    if not len(r):
-        return out, counts
-    N = len(ids)
-    key = r.astype(np.int64) * N + s
-    o = np.lexsort((v, key))
-    key, v = key[o], v[o]
-    uk, start, cnt = np.unique(key, return_index=True, return_counts=True)
-    for k, a, c in zip(uk, start, cnt):
-        if c < min_samples or not ok_pair[k]:
-            continue
-        mid = v[a + (c - 1) // 2: a + c // 2 + 1].mean() + dir_noise[k]
-        out[ids[k // N]][ids[k % N]] = mid
-        counts[ids[k // N]][ids[k % N]] = int(c)
-    return out, counts

@@ -10,6 +10,9 @@ export class ApiError extends Error {
   }
 }
 
+/** One request never waits longer than this: a lost packet on a congested classroom Wi-Fi must turn into a retry, not a hang. */
+export const REQUEST_TIMEOUT_MS = 5000;
+
 type Fetch = typeof fetch;
 
 export class NetPresenceApi {
@@ -17,24 +20,31 @@ export class NetPresenceApi {
 
   private async call<T>(method: string, path: string, body?: unknown, teacherToken?: string): Promise<T> {
     let res: Response;
-    try {
-      res = await this.fetchImpl(`${this.baseUrl}${path}`, {
-        method,
-        headers: {
-          'ngrok-skip-browser-warning': 'true',
-          ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
-          ...(teacherToken ? { 'X-Teacher-Token': teacherToken } : {}),
-        },
-        body: body !== undefined ? JSON.stringify(body) : undefined,
-      });
-    } catch (e) {
-      throw new ApiError(0, e instanceof Error ? e.message : 'network error');
-    }
     let json: any = null;
+    const ctl = typeof AbortController !== 'undefined' ? new AbortController() : undefined;
+    const timer = setTimeout(() => ctl?.abort(), REQUEST_TIMEOUT_MS);
     try {
-      json = await res.json();
-    } catch {
-      /* no body */
+      try {
+        res = await this.fetchImpl(`${this.baseUrl}${path}`, {
+          method,
+          headers: {
+            'ngrok-skip-browser-warning': 'true',
+            ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
+            ...(teacherToken ? { 'X-Teacher-Token': teacherToken } : {}),
+          },
+          body: body !== undefined ? JSON.stringify(body) : undefined,
+          signal: ctl?.signal,
+        });
+      } catch (e) {
+        throw new ApiError(0, ctl?.signal.aborted ? 'request timed out' : e instanceof Error ? e.message : 'network error');
+      }
+      try {
+        json = await res.json();
+      } catch {
+        /* no body */
+      }
+    } finally {
+      clearTimeout(timer);
     }
     if (!res.ok) {
       const d = json?.detail;

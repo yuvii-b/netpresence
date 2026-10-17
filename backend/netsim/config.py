@@ -87,6 +87,9 @@ class RoomConfig:
     ios_scan_dwell_ms: float = 30.0    # iOS scans continuously, hopping channel every dwell
     ios_min_report_ms: float = 0.0     # iOS may coalesce duplicate reports of one peer: at most one per this many ms (0 = all)
     rician_k_db: float = 3.0      # per-PDU fast fading
+    # --- uplink (M4). "ideal" = every report arrives; otherwise a profile or mix, e.g. "wifi_congested" or "wifi_good:0.7,cell_4g:0.3"
+    uplink: str = "ideal"
+    upload_jitter_s: float = 0.0  # each phone waits U(0, J) before its first upload attempt (J = 0 is what the app does today)
 
 
 TAGS: dict[str, str] = {
@@ -107,6 +110,7 @@ TAGS: dict[str, str] = {
     "shadow_model": "assumed", "d_corr": "assumed", "orient_mix": "assumed", "orient_db": "assumed",
     "channel": "spec", "trace_file": "spec", "trace_orientation": "spec",
     "ble_mode": "spec", "capture": "assumed", "capture_db": "assumed", "adv_delay_max_ms": "spec", "t_ifs_adv_ms": "assumed",
+    "uplink": "assumed", "upload_jitter_s": "spec",
     "p_bg": "assumed", "ios_scan_dwell_ms": "assumed", "ios_min_report_ms": "assumed", "rician_k_db": "assumed",
 }
 
