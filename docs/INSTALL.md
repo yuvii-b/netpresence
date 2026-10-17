@@ -29,7 +29,14 @@ Check from a phone's browser: `http://192.168.1.4:8000/docs` must load.
 ```
 cd frontend
 npm install
-echo VITE_API_BASE_URL=http://192.168.1.4:8000 > .env.local      # your IP
+```
+Create a file named `.env.local` inside `frontend` (Notepad, save as plain text; avoid `echo >` in PowerShell, it saves
+in an encoding Vite can't read) containing one line, with your own IP:
+```
+VITE_API_BASE_URL=http://192.168.1.4:8000
+```
+Then:
+```
 npm run dev
 ```
 Open the printed address and enter the teacher token `dev-teacher-token`.
