@@ -34,6 +34,11 @@ def synth_reports(cfg: RoomConfig, nodes: dict, wall: tuple, rng: random.Random,
     joined = tap <= cfg.window_s
     on = tap + cfg.startup_s                              # radio on
     overlap = np.maximum(0.0, cfg.window_s + cfg.tail_s - np.maximum(on[iu], on[ju])) * (joined[iu] & joined[ju])
+    if cfg.ble_mode == "des":
+        return _des_reports(cfg, ids, prof, iu, ju, mean, on, joined, rx, tx, g_count, g_noise, g_det, with_counts, calibrate,
+                            stats)
+    if cfg.ble_mode != "fast":
+        raise ValueError(f"unknown ble_mode {cfg.ble_mode!r}")
     # collisions: per channel the room carries sum(1/adv) adverts per ms; an advert survives if nothing overlaps it
     p_ok = math.exp(-2 * cfg.airtime_ms * float((1.0 / adv[joined]).sum()))
     out = {k: {} for k in ids}
@@ -51,4 +56,24 @@ def synth_reports(cfg: RoomConfig, nodes: dict, wall: tuple, rng: random.Random,
         for h, sr, val, cnt in zip(hear[ok], src[ok], np.rint(r[ok]), m[ok]):
             out[ids[h]][ids[sr]] = int(val)
             counts[ids[h]][ids[sr]] = int(cnt)
+    return (out, counts) if with_counts else out
+
+
+def _des_reports(cfg, ids, prof, iu, ju, mean, on, joined, rx, tx, g_sched, g_noise, g_det, with_counts, calibrate, stats):
+    """Same report format as the fast model, produced by the packet-level advertising-channel simulation."""
+    from netsim import ble_des
+    N = len(ids)
+    M = np.full((N, N), -200.0)
+    M[iu, ju] = mean; M[ju, iu] = mean
+    g_rx = np.random.default_rng(g_sched.integers(1 << 62))
+    r, s, v, st = ble_des.simulate(cfg, M, prof, on, joined, g_sched, g_rx)
+    if stats is not None:
+        stats["des"] = st
+    ok = (g_det.random(N * N) < cfg.p_detect)
+    dn = g_noise.normal(0, cfg.dir_sigma, N * N)
+    out, counts = ble_des.median_reports(r, s, v, ids, cfg.min_samples, ok, dn)
+    for a in ids:
+        i = ids.index(a)
+        off = (rx[i] + tx[i]) if calibrate else 0.0
+        out[a] = {b: int(round(val - off)) for b, val in out[a].items()}
     return (out, counts) if with_counts else out

@@ -77,6 +77,16 @@ class RoomConfig:
     channel: str = "parametric"   # "parametric" | "trace" (empirical RSSI tables from the BLE lab, netsim/traces.py)
     trace_file: str | None = None  # BLE-lab CSV v2 (file or directory of them) used when channel = "trace"
     trace_orientation: str = "desk"  # which orientation's rows of the trace file to draw from
+    # --- BLE link layer (M3). ble_mode "fast" = analytical Poisson model; "des" = packet-level discrete-event model.
+    ble_mode: str = "fast"
+    capture: bool = False         # des: the stronger of two overlapping PDUs survives if it is capture_db above the rest
+    capture_db: float = 6.0
+    adv_delay_max_ms: float = 10.0   # BLE Core Vol 6 B 4.4.2.2: advDelay ~ U(0, 10 ms) added to every advertising interval
+    t_ifs_adv_ms: float = 0.4     # gap between the 37 / 38 / 39 PDUs of one advertising event
+    p_bg: tuple = (0.05, 0.10, 0.05)   # chance a PDU on channel 37 / 38 / 39 hits 2.4 GHz background traffic (Wi-Fi ch. 6 ~ 38)
+    ios_scan_dwell_ms: float = 30.0    # iOS scans continuously, hopping channel every dwell
+    ios_min_report_ms: float = 0.0     # iOS may coalesce duplicate reports of one peer: at most one per this many ms (0 = all)
+    rician_k_db: float = 3.0      # per-PDU fast fading
 
 
 TAGS: dict[str, str] = {
@@ -96,6 +106,8 @@ TAGS: dict[str, str] = {
     "models": "assumed", "model_mix": "assumed", "ios_share": "assumed", "n_seeds": "spec",
     "shadow_model": "assumed", "d_corr": "assumed", "orient_mix": "assumed", "orient_db": "assumed",
     "channel": "spec", "trace_file": "spec", "trace_orientation": "spec",
+    "ble_mode": "spec", "capture": "assumed", "capture_db": "assumed", "adv_delay_max_ms": "spec", "t_ifs_adv_ms": "assumed",
+    "p_bg": "assumed", "ios_scan_dwell_ms": "assumed", "ios_min_report_ms": "assumed", "rician_k_db": "assumed",
 }
 
 

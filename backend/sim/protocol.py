@@ -70,3 +70,6 @@ IOS_MODEL_PREFIX = _find(IOS, r'stringWithFormat:@"(\w+) %s", u\.machine', "iOS 
 # --- on-air size -> airtime (BLE Core spec, LE 1M PHY) -------------------------------------------------------------------
 ADV_PAYLOAD_BYTES = 6 + 3 + 18      # AdvA + flags AD + 128-bit service UUID AD
 ADV_AIRTIME_MS = (1 + 4 + 2 + ADV_PAYLOAD_BYTES + 3) * 8 / 1000.0
+
+# scan window / interval the Android code asks for (AOSP table above); iOS dwell is an assumption in netsim.config
+ANDROID_SCAN_WINDOW_MS, ANDROID_SCAN_INTERVAL_MS = AOSP_SCAN_WINDOW_INTERVAL_MS[ANDROID_SCAN_MODE]

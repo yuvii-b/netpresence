@@ -14,7 +14,7 @@ class20 lab6 exam`, or a TOML file in `netsim/presets/` or passed with `--toml`.
 |---|---|
 | M1 skeleton | done: config + presets + provenance tags, scenario, channel, fast link layer, phone (tap), server wrapper |
 | M2 channel | done: `shadow_model=gudmundson`, `orient_mix/orient_db`, `channel=trace` + `netsim/traces.py`, BLE-lab CSV v2 in the app |
-| M3 link layer | todo: packet-level BLE (`ble_des.py`) |
+| M3 link layer | done: `--set ble_mode=des` packet-level advertising channel (`ble_des.py`) |
 | M4 phone + uplink | todo |
 | M5 attacks + co-location defence | todo |
 | M6 baselines | todo |
@@ -34,12 +34,19 @@ held, people between them, wall). `python -m netsim.traces lab.csv` shows covera
 `--set channel=trace --set trace_file=lab.csv`; pairs without a nearby measurement fall back to the parametric model and are
 counted in `trace_fallbacks`.
 
+## Link layers
+`ble_mode=fast` (default, analytical Poisson counts) and `ble_mode=des` (every advertising PDU on channels 37/38/39, scanner
+window/channel hopping from the Kotlin code, half duplex, collisions with optional capture, 2.4 GHz background, Rician
+fading, OS callback loss). A 93-phone DES run takes ~1 s. Without background traffic DES delivers ~7-10% fewer samples per
+pair than the fast model (fading drops weak links; checked in `tests/netsim/test_m3_ble_des.py`, tolerance 15%); end to end
+both give 0.28% false-absent and 0% corridor admission at 93 students over 20 classrooms.
+
 ## Findings so far
 * **How phones are held matters.** A uniform extra loss (phone on a desk: ~2 dB per end) looks like a larger distance to the
   fixed edge threshold: at 60 students false-absent is 0.5% (hand), 12% (desk), 41% (mixed with pockets/bags), 98% (all in
   pockets). Simulated with assumed losses; E08 sweeps it, and a session-level offset estimate is the candidate fix.
 
 ## Not modelled yet
-Packet-level collisions and capture, the Wi-Fi/4G uplink, relay/wormhole attacks,
+The Wi-Fi/4G uplink, relay/wormhole attacks,
 baselines other than the existing studies. `sim.room`, `sim.orientation`, `sim.platforms` are thin wrappers over netsim and
 their acceptance criteria are unchanged.
