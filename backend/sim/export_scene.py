@@ -10,8 +10,8 @@ import argparse
 import json
 import random
 
-from app.services.graph import Params, adaptive_edge_m, evaluate
-from sim.room import RoomConfig, build_scene, synth_reports
+from app.services.graph import platform_of, Params, adaptive_edge_m, evaluate
+from sim.room import RoomConfig, build_scene, link_budget, synth_reports
 
 
 def export(students: int, seed: int, remote: int, door_open: bool):
@@ -31,10 +31,11 @@ def export(students: int, seed: int, remote: int, door_open: bool):
     for a in away:       # remote cheaters: one-sided claims of strong links to six random students
         people[a] = {"model": "ref", "inside": False, "remote": True,
                      "samples": {p: [-55] * 8 for p in rng.sample(inside, 6)}}
-    offsets = {m: -b for m, b in cfg.models.items()}
+    offsets = {m: -link_budget(cfg, m) for m in cfg.models}
     calibrated = {k: {p: int(r) + offsets[nodes[k]["model"]] for p, r in d.items()} for k, d in raw.items()}
     params = Params(max_edge_m=adaptive_edge_m(len(nodes) + remote))
-    present = sorted(evaluate(seeds, calibrated, params)["present"])
+    groups = {k: platform_of(v["model"]) for k, v in nodes.items()}   # exactly what the server derives
+    present = sorted(evaluate(seeds, calibrated, params, groups)["present"])
     return {
         "students": students, "seed": seed, "seeds": seeds, "calibration_offsets": offsets,
         "people": people, "expected_present": present,

@@ -10,6 +10,7 @@ import os
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 
+from app.routers.sessions import advertise_uuid
 from app.services import crypto
 
 
@@ -31,7 +32,8 @@ def main(out="../../docs/test-vectors.json"):
     sig = {k: base64.b64encode(key.sign(v.encode(), ec.ECDSA(hashes.SHA256()))).decode() for k, v in msgs.items()}
     for k in msgs:
         assert crypto.verify(pub, msgs[k], sig[k])
-    doc = {"public_key_spki_b64": pub, "neighbours": neighbours, "messages": msgs, "signatures_by_python": sig}
+    doc = {"public_key_spki_b64": pub, "neighbours": neighbours, "messages": msgs, "signatures_by_python": sig,
+           "advertise_uuid": [{"eph_id": e, "uuid": advertise_uuid(e)} for e in ("00000000", "1a2b3c4d", "ffffffff")]}
     path = os.path.join(os.path.dirname(__file__), out)
     with open(path, "w") as f:
         json.dump(doc, f, indent=2)

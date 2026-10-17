@@ -1,6 +1,9 @@
+import hmac
+
 from fastapi import APIRouter, Depends, HTTPException
 from pymongo.errors import DuplicateKeyError
 
+from app.config import settings
 from app.db.mongo import get_db
 from app.deps import require_teacher
 from app.models.schemas import Calibration as CalibrationBody, DeviceRegister
@@ -12,7 +15,10 @@ router = APIRouter(prefix="/api/devices", tags=["Devices"])
 @router.post("/register", status_code=201)
 async def register_device(payload: DeviceRegister, db=Depends(get_db)):
     """Enrol a student's device key. Proof of possession: signature over register:{id}:{model}.
-    An existing student_id can't be overwritten (anti-hijack); a teacher must delete it first."""
+    An existing student_id can't be overwritten (anti-hijack); a teacher must delete it first.
+    If the server sets ENROL_CODE, the phone must also present the class code (constant-time comparison)."""
+    if settings.ENROL_CODE and not hmac.compare_digest((payload.enrol_code or "").encode(), settings.ENROL_CODE.encode()):
+        raise HTTPException(status_code=403, detail="Wrong or missing class code.")
     if not crypto.verify(payload.public_key, crypto.register_message(payload.student_id, payload.model), payload.signature):
         raise HTTPException(status_code=400, detail="Invalid key or signature.")
     try:

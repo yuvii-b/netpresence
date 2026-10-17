@@ -15,7 +15,7 @@ from app.models.schemas import Adjudicate, CheckIn, CloseRequest, Report, StartS
 from app.services import crypto
 from dataclasses import replace
 
-from app.services.graph import Params, adaptive_edge_m, evaluate
+from app.services.graph import platform_of, Params, adaptive_edge_m, evaluate
 from app.services.ws_manager import ws_manager
 
 import hmac
@@ -25,6 +25,16 @@ router = APIRouter(prefix="/api/sessions", tags=["Sessions (v2)"])
 # Fixed 128-bit service UUID every NetPresence phone advertises; the per-session
 # ephemeral id travels in the (permitted-on-iOS) local name as "NP-<eph_id>".
 SERVICE_UUID = "6e657470-7265-7365-6e63-650000000001"
+
+
+def advertise_uuid(eph: str) -> str:
+    """Per-phone service UUID: the fixed 96-bit NetPresence prefix + the 32-bit ephemeral id.
+    Android filters on the prefix with a mask; iOS scans and matches the prefix in code."""
+    return SERVICE_UUID[:-12] + "6500" + eph
+
+
+def _discovery_end(s: dict) -> float:
+    return s.get("discovery_ends_at", s["window_ends_at"])   # sessions created before the tail existed
 
 
 def _params(doc: dict) -> Params:
@@ -60,6 +70,7 @@ async def start_session(payload: StartSession, db=Depends(get_db)):
         independent=settings.INDEPENDENT if payload.independent is None else payload.independent,
         near_m=payload.near_m if payload.near_m is not None else settings.NEAR_M,
         near_k=payload.near_k or settings.NEAR_K,
+        autocal=settings.AUTOCAL if payload.autocal is None else payload.autocal,
     )
     doc = {
         "session_id": f"S-{uuid.uuid4().hex[:10]}",
@@ -67,8 +78,9 @@ async def start_session(payload: StartSession, db=Depends(get_db)):
         "room": payload.room,
         "status": "open",
         "created_at": now,
-        "window_ends_at": now + window,
-        "report_deadline": now + window + settings.REPORT_GRACE_SECONDS,
+        "window_ends_at": now + window,                                   # check-in closes
+        "discovery_ends_at": now + window + settings.DISCOVERY_TAIL_SECONDS,  # phones stop scanning
+        "report_deadline": now + window + settings.DISCOVERY_TAIL_SECONDS + settings.REPORT_GRACE_SECONDS,
         "params": params.as_dict(),
         "seeds": [],
         "adaptive": payload.max_edge_m is None,   # density-based edge threshold unless the teacher fixed one
@@ -76,7 +88,7 @@ async def start_session(payload: StartSession, db=Depends(get_db)):
     # Only one open session at a time keeps "which session am I joining" unambiguous for students.
     await db.sessions.update_many({"status": "open"}, {"$set": {"status": "closed"}})
     await db.sessions.insert_one(dict(doc))
-    return {k: doc[k] for k in ("session_id", "nonce", "window_ends_at", "report_deadline", "params")}
+    return {k: doc[k] for k in ("session_id", "nonce", "window_ends_at", "discovery_ends_at", "report_deadline", "params")}
 
 
 @router.get("/open")
@@ -87,7 +99,7 @@ async def open_session(db=Depends(get_db)):
         return {"status": "none"}
     return {
         "status": "open", "session_id": s["session_id"], "nonce": s["nonce"],
-        "window_ends_at": s["window_ends_at"], "report_deadline": s["report_deadline"],
+        "window_ends_at": s["window_ends_at"], "discovery_ends_at": _discovery_end(s), "report_deadline": s["report_deadline"],
         "service_uuid": SERVICE_UUID, "server_time": time.time(),   # lets phones correct their clock skew
     }
 
@@ -127,7 +139,8 @@ async def checkin(session_id: str, payload: CheckIn, db=Depends(get_db)):
         await ws_manager.broadcast(session_id, {"type": "CHECKIN", "student_id": payload.student_id, "name": st["name"]})
     return {
         "eph_id": eph, "advertise_name": f"NP-{eph}", "service_uuid": SERVICE_UUID,
-        "window_ends_at": s["window_ends_at"], "report_deadline": s["report_deadline"],
+        "advertise_uuid": advertise_uuid(eph),   # identity carried IN the service UUID: one 21-byte advert, both OSes
+        "window_ends_at": s["window_ends_at"], "discovery_ends_at": _discovery_end(s), "report_deadline": s["report_deadline"],
         "server_time": time.time(),
     }
 
@@ -184,7 +197,8 @@ async def _compute(db, s: dict) -> dict:
             if peer and peer != r["student_id"]:
                 seen[peer] = n["rssi_median"] + off
         reports[r["student_id"]] = seen
-    result = evaluate(s.get("seeds", []), reports, params)
+    groups = {stu: platform_of(m) for stu, m in models.items()}
+    result = evaluate(s.get("seeds", []), reports, params, groups)
 
     roster = {st["student_id"]: st["name"] async for st in db.students.find({}, {"_id": 0, "student_id": 1, "name": 1})}
     checked = set(by_eph.values())

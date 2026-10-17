@@ -194,3 +194,37 @@ async def test_server_time_is_exposed_for_clock_skew_correction(client):
     assert abs(o["server_time"] - time.time()) < 5 and o["window_ends_at"] > o["server_time"]
     c = await checkin(client, s, devs[0])
     assert abs(c["server_time"] - time.time()) < 5
+
+
+async def test_fast_timing_and_identity_in_the_service_uuid(client):
+    from app.config import settings
+    from app.routers.sessions import SERVICE_UUID
+    a = Device("t1")
+    await enrol(client, [a])
+    s = (await client.post("/api/sessions/start", json={}, headers=TEACHER)).json()
+    assert abs(s["discovery_ends_at"] - s["window_ends_at"] - settings.DISCOVERY_TAIL_SECONDS) < 1e-6
+    assert s["report_deadline"] > s["discovery_ends_at"]
+    r = await checkin(client, s, a)
+    assert r["advertise_uuid"].startswith(SERVICE_UUID[:-12] + "6500") and r["advertise_uuid"].endswith(r["eph_id"])
+    assert r["discovery_ends_at"] == s["discovery_ends_at"]
+    opened = (await client.get("/api/sessions/open")).json()
+    assert opened["discovery_ends_at"] == s["discovery_ends_at"]
+
+
+async def test_enrolment_code_when_configured(client, monkeypatch):
+    from app.config import settings
+    monkeypatch.setattr(settings, "ENROL_CODE", "BLUE42")
+    d = Device("c1")
+    assert (await client.post("/api/devices/register", json=d.register_body())).status_code == 403
+    assert (await client.post("/api/devices/register", json={**d.register_body(), "enrol_code": "blue42"})).status_code == 403
+    assert (await client.post("/api/devices/register", json={**d.register_body(), "enrol_code": "BLUE42"})).status_code == 201
+
+
+async def test_malformed_keys_are_rejected_not_crashing(client):
+    import base64
+    d = Device("m1")
+    for bad in (base64.b64encode(b"\x04" + b"\x00" * 64).decode(),            # not a point on P-256
+                base64.b64encode(b"\x30\x03\x02\x01\x01").decode(),             # DER garbage
+                base64.b64encode(b"hello").decode()):
+        r = await client.post("/api/devices/register", json={**d.register_body(), "public_key": bad})
+        assert r.status_code == 400, (bad, r.status_code)

@@ -6,3 +6,4 @@ pymongo==4.17.0
 python-dotenv==1.2.3
 websockets==17.0.1
 cryptography>=43
+numpy>=1.26

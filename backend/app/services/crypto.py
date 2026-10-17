@@ -10,7 +10,7 @@ import base64
 import binascii
 import json
 
-from cryptography.exceptions import InvalidSignature
+from cryptography.exceptions import InvalidSignature, UnsupportedAlgorithm
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 
@@ -37,7 +37,7 @@ def verify(public_key_b64: str, message: str, signature_b64: str) -> bool:
         key = load_public_key(public_key_b64)
         key.verify(_b64(signature_b64), message.encode(), ec.ECDSA(hashes.SHA256()))
         return True
-    except (InvalidSignature, ValueError):
+    except (InvalidSignature, UnsupportedAlgorithm, ValueError, TypeError):   # any malformed key/signature = reject
         return False
 
 

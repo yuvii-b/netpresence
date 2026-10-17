@@ -28,8 +28,22 @@
     "report": "report:S-1a2b3c4d5e:21CT042:[[\"0a1b2c3d\",-60,3],[\"0a1b2c3d\",-58,14],[\"7c7c7c7c\",-64,20],[\"ff00aa11\",-71,9]]"
   },
   "signatures_by_python": {
-    "register": "MEQCIH3MWjwmMhI7ScXojyuRyFCysdIM8yvjmISchVE9uXA8AiAnrmVBXj5GeNQJA6ytvLv5zusQbNnVCxK3fum+3Z2UAQ==",
-    "checkin": "MEUCIB83J4cxbwsNH0OP0GHn+HnsN1MLDku35rliXI2acJ5AAiEA3f5BdZ8/Kv/3ltlGs6Boo+w5qgb+e+YvdKZStyDt+D0=",
-    "report": "MEYCIQCZuBL9O4vuOLjBZyhj8rHFm74EcWXaUTHBUhCMFzCk9QIhAIYjIWt2o9GtDBRGgi8eXu5jJJznBmskXcAOpyVlzdoE"
-  }
+    "register": "MEYCIQDIr3NOQgc7L7ZLDrOrp6n8xgOpt4Wo2VR2MYdCJusbewIhAPGeyacJ9KQRnivIi2GNa0x+f3KtyUa0oM+j2pl9s6Bg",
+    "checkin": "MEYCIQCMoOcKiDBXpzZmZaqNC/cltg0BT4DU2q9CAQvNKMx4wwIhAMmGzJLXZf5wJmp20zXLfqcVZ1PjralrKtd58AeRZO0A",
+    "report": "MEQCID1KR/e3riPDpa/CBQzKZJ81JJW46wAdIaUOYCz8Tnx6AiAvrUj4ys2JwEo7jXKfABejFenxwL8wwApCyHSpurprQA=="
+  },
+  "advertise_uuid": [
+    {
+      "eph_id": "00000000",
+      "uuid": "6e657470-7265-7365-6e63-650000000000"
+    },
+    {
+      "eph_id": "1a2b3c4d",
+      "uuid": "6e657470-7265-7365-6e63-65001a2b3c4d"
+    },
+    {
+      "eph_id": "ffffffff",
+      "uuid": "6e657470-7265-7365-6e63-6500ffffffff"
+    }
+  ]
 }

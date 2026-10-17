@@ -45,6 +45,7 @@ class DeviceRegister(BaseModel):
     model: str = Field(..., pattern=MODEL_PATTERN)
     public_key: str = Field(..., pattern=B64)
     signature: str = Field(..., pattern=B64)   # over register:{student_id}:{model}
+    enrol_code: Optional[str] = Field(None, max_length=64)   # required when the server sets ENROL_CODE
 
 
 class StartSession(BaseModel):
@@ -58,6 +59,7 @@ class StartSession(BaseModel):
     independent: Optional[bool] = None
     near_m: Optional[float] = Field(None, ge=0, le=10)
     near_k: Optional[int] = Field(None, ge=1, le=10)
+    autocal: Optional[bool] = None
     ref_dbm: Optional[float] = Field(None, ge=-100, le=0)
     n: Optional[float] = Field(None, ge=1, le=6)
 

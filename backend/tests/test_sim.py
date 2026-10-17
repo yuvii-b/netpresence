@@ -17,10 +17,10 @@ def test_open_door_leak_is_small_with_disjoint_paths_and_large_without():
     cfg = RoomConfig(door_open=True)
     fa, fp = _rates(cfg, Params(independent=True))
     _, fp_loose = _rates(cfg, Params(independent=False))
-    # 3x8x4 room, door open (80 classes): k-witness alone leaks 9-29% of corridor phones depending on head-count,
-    # disjoint paths 0.5-3.4%; leaks are bursty (a class either leaks several phones or none)
+    # 3x8x4 room, door open: k-witness alone leaks ~8% of corridor phones, disjoint paths ~2% (measured with the
+    # sample-count radio model); leaks are bursty (a class either leaks several phones or none)
     assert fa < 0.02 and fp < 0.08
-    assert fp_loose > 0.10 and fp_loose > 3 * fp
+    assert fp_loose > 0.05 and fp_loose > 3 * fp
 
 
 def test_sparse_room_keeps_coverage():

@@ -62,7 +62,7 @@ def test_column_fill_seats_front_first_column_by_column():
 
 # ---------------------------------------------------------------- adaptive profile
 def test_adaptive_edge_threshold_profile():
-    assert [adaptive_edge_m(n) for n in (101, 70, 69, 50, 49, 28)] == [2.0, 2.0, 2.5, 2.5, 3.0, 3.0]
+    assert [adaptive_edge_m(n) for n in (101, 70, 69, 50, 49, 30, 29, 12)] == [2.0, 2.0, 2.5, 2.5, 3.0, 3.0, 3.5, 3.5]
 
 
 def test_adaptive_fixes_the_sparse_room_without_hurting_the_full_one():
@@ -88,7 +88,7 @@ async def test_full_class_collusion_and_headcount():
     k2 = await run_scenario(BASE, seed=12, remote=0, accomplices=2)
     k1 = await run_scenario(BASE, seed=12, remote=0, accomplices=1)
     assert (k1["friend_present"], k2["friend_present"]) == (0, 1)      # exactly k accomplices are needed
-    r = await run_scenario(RoomConfig(students=93, door_open=True), seed=100, remote=0, params={"independent": False}, headcount=True)
+    r = await run_scenario(RoomConfig(students=93, door_open=True), seed=100, remote=0, params={"independent": False, "max_edge_m": 3.0}, headcount=True)
     assert r["corridor_present"] > 0 and r["corridor_caught"] / r["corridor_present"] >= 0.5
 
 

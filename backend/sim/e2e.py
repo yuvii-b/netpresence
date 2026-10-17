@@ -26,7 +26,7 @@ from app.config import settings
 from app.db.mongo import db_instance, ensure_indexes
 from app.main import app
 from app.services import crypto
-from sim.room import RoomConfig, build_scene, synth_reports
+from sim.room import RoomConfig, build_scene, link_budget, synth_reports
 from sim.phone import Device
 
 TEACHER = {"X-Teacher-Token": settings.TEACHER_TOKEN}
@@ -63,8 +63,8 @@ async def run_scenario(cfg: RoomConfig, seed: int, remote: int = 5, accomplices:
             return r.json()
 
         # server-side per-model calibration (what the lab measurement would produce)
-        for m, bias in cfg.models.items():
-            await client.put("/api/devices/calibration", json={"model": m, "rssi_offset_db": -bias}, headers=TEACHER)
+        for m in cfg.models:
+            await client.put("/api/devices/calibration", json={"model": m, "rssi_offset_db": -link_budget(cfg, m)}, headers=TEACHER)
         await asyncio.gather(*[post("/api/devices/register", json=d.register_body()) for d in devices.values()])
 
         t0 = time.perf_counter()
@@ -81,7 +81,7 @@ async def run_scenario(cfg: RoomConfig, seed: int, remote: int = 5, accomplices:
         if accomplices:
             for c in rng.sample([k for k in inside if k not in seeds], accomplices):
                 # worst case: the attacker knows the server's calibration and pre-compensates their phone's bias
-                fake = int(-60 + cfg.models[nodes[c]["model"]])
+                fake = int(-60 + link_budget(cfg, nodes[c]["model"]))
                 claims[c].append({"peer_id": devices["friend"].eph, "rssi_median": fake, "sample_count": 20})
                 claims.setdefault("friend", []).append({"peer_id": devices[c].eph, "rssi_median": -60, "sample_count": 20})
         for k in away:   # one-sided lies: strong links to random in-room students nobody confirms

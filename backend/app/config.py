@@ -18,13 +18,20 @@ class Settings:
 
     # Shared secret the teacher app/dashboard sends as `X-Teacher-Token`.
     TEACHER_TOKEN: str = os.getenv("TEACHER_TOKEN", "dev-teacher-token")
+    # Optional class enrolment code the teacher tells the class in person. When set, a phone can only enrol a roll
+    # number if it also knows the code - stops someone outside the class squatting on roll numbers before their owners.
+    ENROL_CODE: str = os.getenv("ENROL_CODE", "")
 
     # --- v1 acoustic ---
     TOKEN_VALIDITY_SECONDS: int = int(os.getenv("TOKEN_VALIDITY_SECONDS", "60"))
 
     # --- v2 proximity graph (defaults; overridable per session) ---
-    WINDOW_SECONDS: int = int(os.getenv("WINDOW_SECONDS", "45"))      # check-in + discovery
-    REPORT_GRACE_SECONDS: int = int(os.getenv("REPORT_GRACE_SECONDS", "15"))
+    # Roll-call timing, chosen with sim.platforms (students tap over several seconds, median ~4 s):
+    #   check-in open WINDOW_SECONDS; every phone keeps discovering DISCOVERY_TAIL_SECONDS after check-in closes, so a
+    #   student who taps at the last second still overlaps everyone for that long; then REPORT_GRACE_SECONDS to upload.
+    WINDOW_SECONDS: int = int(os.getenv("WINDOW_SECONDS", "20"))
+    DISCOVERY_TAIL_SECONDS: int = int(os.getenv("DISCOVERY_TAIL_SECONDS", "5"))
+    REPORT_GRACE_SECONDS: int = int(os.getenv("REPORT_GRACE_SECONDS", "10"))
     RSSI_REF_DBM: float = _f("RSSI_REF_DBM", -59.0)    # A: RSSI at 1 m
     PATH_LOSS_N: float = _f("PATH_LOSS_N", 3.0)        # n: path-loss exponent
     MAX_EDGE_M: float = _f("MAX_EDGE_M", 2.0)          # chosen from sim.run: best leak vs coverage trade-off
@@ -37,6 +44,9 @@ class Settings:
     # Bench-mate rule (off by default: it cut corridor leakage only 42%->29% in simulation and cost coverage in sparse rooms)
     NEAR_M: float = _f("NEAR_M", 0.0)
     NEAR_K: int = int(os.getenv("NEAR_K", "1"))
+    # per-phone TX/RX asymmetry solved from the session's own two-way readings (sim.platforms: 12 dB Android/iOS
+    # imbalance 35% -> 0% false-absent). Default ON.
+    AUTOCAL: bool = os.getenv("AUTOCAL", "1") not in ("0", "false", "False")
 
 
 settings = Settings()

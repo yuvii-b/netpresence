@@ -22,11 +22,12 @@ async def test_collusion_succeeds_exactly_at_k():
 
 
 async def test_headcount_check_catches_leaks_when_the_cascade_rule_is_off():
-    # force leaks (independent=False + open door), then let the teacher's headcount surface them
-    runs = [await run_scenario(OPEN, seed=s, remote=0, params={"independent": False}, headcount=True) for s in range(100, 106)]
+    # force leaks (no disjoint-path rule, looser 3 m edge, open door), then let the teacher's headcount surface them
+    runs = [await run_scenario(OPEN, seed=s, remote=0, params={"independent": False, "max_edge_m": 3.0}, headcount=True)
+            for s in range(100, 106)]
     leaked = sum(r["corridor_present"] for r in runs)
     caught = sum(r["corridor_caught"] for r in runs)
-    assert leaked > 0 and caught / leaked >= 0.5                # measured ~74%
+    assert leaked > 0 and caught / leaked >= 0.5                # measured 26 of 33 (79%)
 
 
 async def test_api_pipeline_reproduces_graph_engine_exactly():
