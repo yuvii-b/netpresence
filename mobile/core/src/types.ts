@@ -13,9 +13,12 @@ export interface RadioSample {
   rssi: number;
 }
 
-/** BLE: advertise `name` + `serviceUuid` while continuously scanning, reporting every advertisement heard. */
+/**
+ * BLE: advertise `advertiseUuid` (identity inside the service UUID, see ble.ts) while continuously scanning, reporting
+ * every NetPresence advertisement heard as { name: "NP-<eph>", rssi }.
+ */
 export interface Radio {
-  start(advertiseName: string, serviceUuid: string, onSample: (s: RadioSample) => void): Promise<void>;
+  start(advertiseName: string, advertiseUuid: string, onSample: (s: RadioSample) => void): Promise<void>;
   stop(): Promise<void>;
 }
 
@@ -40,6 +43,7 @@ export interface OpenSession {
   session_id?: string;
   nonce?: string;
   window_ends_at?: number;
+  discovery_ends_at?: number;
   report_deadline?: number;
   service_uuid?: string;
   server_time?: number;
@@ -50,7 +54,11 @@ export interface Joined {
   ephId: string;
   advertiseName: string;
   serviceUuid: string;
-  /** Local-clock deadlines (epoch ms), already corrected for phone/server clock skew. */
+  /** Per-phone service UUID to advertise (prefix + eph id). */
+  advertiseUuid: string;
+  /** Local-clock deadlines (epoch ms), already corrected for phone/server clock skew. Discovery runs until
+   * discoveryEndsAtMs, which is a few seconds AFTER check-in closes, so even the last student to tap overlaps
+   * everyone for that long. */
   discoveryEndsAtMs: number;
   reportDeadlineMs: number;
 }

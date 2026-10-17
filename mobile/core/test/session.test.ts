@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { ApiError, NetPresenceApi } from '../src/api';
 import { checkinMessage, reportMessage } from '../src/canonical';
 import { discover, joinSession, markPresent, NoOpenSession, submitReport } from '../src/session';
+import { advertiseUuid } from '../src/ble';
 import type { Clock, Joined, KeyStore } from '../src/types';
 import { ReplayRadio } from '../src/node';
 
@@ -29,11 +30,12 @@ describe('joinSession', () => {
     const serverNow = (clock.t - 20_000) / 1000; // server is 20 s behind the phone
     const { f, calls } = fakeFetch([
       () => ({ status: 200, body: { status: 'open', session_id: 'S-1', nonce: 'N1' } }),
-      () => ({ status: 200, body: { eph_id: 'deadbeef', advertise_name: 'NP-deadbeef', service_uuid: 'U', window_ends_at: serverNow + 45, report_deadline: serverNow + 60, server_time: serverNow } }),
+      () => ({ status: 200, body: { eph_id: 'deadbeef', advertise_name: 'NP-deadbeef', service_uuid: 'U', window_ends_at: serverNow + 40, discovery_ends_at: serverNow + 45, report_deadline: serverNow + 60, server_time: serverNow } }),
     ]);
     const j = await joinSession(new NetPresenceApi('http://x', f), keys, 'stu', clock);
     expect(calls[1]!.body.signature).toBe(`sig(${checkinMessage('S-1', 'N1')})`);
-    expect(j.discoveryEndsAtMs - clock.t).toBeCloseTo(45_000, -1); // 45 s of window left in PHONE time, not 25 s
+    expect(j.discoveryEndsAtMs - clock.t).toBeCloseTo(45_000, -1); // discovery runs to the TAIL (45 s), not check-in close (40 s), in PHONE time
+    expect(j.advertiseUuid).toBe('6e657470-7265-7365-6e63-6500deadbeef');  // derived when an older server omits it
     expect(j.reportDeadlineMs - clock.t).toBeCloseTo(60_000, -1);
   });
   it('throws NoOpenSession when nothing is running', async () => {
@@ -43,6 +45,7 @@ describe('joinSession', () => {
 });
 
 const joined = (clock: Clock): Joined => ({ sessionId: 'S-1', ephId: 'aaaaaaaa', advertiseName: 'NP-aaaaaaaa', serviceUuid: 'U',
+  advertiseUuid: advertiseUuid('aaaaaaaa'),
   discoveryEndsAtMs: clock.now() + 10_000, reportDeadlineMs: clock.now() + 25_000 });
 
 describe('discover', () => {
@@ -50,7 +53,7 @@ describe('discover', () => {
     const clock = new VirtualClock();
     const radio = new ReplayRadio([1, 2, 3, 4].map(() => ({ name: 'NP-0a1b2c3d', rssi: -61 })));
     const r = await discover(radio, joined(clock), clock);
-    expect(radio.started).toEqual({ name: 'NP-aaaaaaaa', uuid: 'U' });
+    expect(radio.started).toEqual({ name: 'NP-aaaaaaaa', uuid: '6e657470-7265-7365-6e63-6500aaaaaaaa' });   // identity in the UUID
     expect(radio.stopped).toBe(1);
     expect(r.neighbours).toEqual([{ peer_id: '0a1b2c3d', rssi_median: -61, sample_count: 4 }]);
     expect(r.discoveryMs).toBeGreaterThanOrEqual(10_000);

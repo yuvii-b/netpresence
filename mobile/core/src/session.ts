@@ -1,15 +1,17 @@
 import { NeighbourCollector } from './aggregate';
+import { advertiseUuid } from './ble';
 import { ApiError, NetPresenceApi } from './api';
 import { checkinMessage, registerMessage, reportMessage } from './canonical';
 import type { Clock, Joined, KeyStore, Neighbour, Radio } from './types';
 import { systemClock } from './types';
 
 /** One-time enrolment: binds this phone's hardware key to the student id. */
-export async function enroll(api: NetPresenceApi, keys: KeyStore, who: { studentId: string; name: string; model: string }) {
+export async function enroll(api: NetPresenceApi, keys: KeyStore, who: { studentId: string; name: string; model: string; enrolCode?: string }) {
   return api.register({
     student_id: who.studentId, name: who.name, model: who.model,
     public_key: await keys.publicKeyB64(),
     signature: await keys.signB64(registerMessage(who.studentId, who.model)),
+    ...(who.enrolCode ? { enrol_code: who.enrolCode } : {}),
   });
 }
 
@@ -30,7 +32,8 @@ export async function joinSession(api: NetPresenceApi, keys: KeyStore, studentId
     ephId: res.eph_id,
     advertiseName: res.advertise_name,
     serviceUuid: res.service_uuid,
-    discoveryEndsAtMs: res.window_ends_at * 1000 - skewMs,
+    advertiseUuid: res.advertise_uuid ?? advertiseUuid(res.eph_id),   // older servers: derive it
+    discoveryEndsAtMs: (res.discovery_ends_at ?? res.window_ends_at) * 1000 - skewMs,
     reportDeadlineMs: res.report_deadline * 1000 - skewMs,
   };
 }
@@ -41,7 +44,7 @@ export async function discover(
 ): Promise<{ neighbours: Neighbour[]; peersHeard: number; discoveryMs: number }> {
   const collector = new NeighbourCollector(joined.ephId);
   const started = clock.now();
-  await radio.start(joined.advertiseName, joined.serviceUuid, (s) => collector.add(s));
+  await radio.start(joined.advertiseName, joined.advertiseUuid, (s) => collector.add(s));
   try {
     while (clock.now() < joined.discoveryEndsAtMs) {
       await clock.sleep(Math.min(opts.pollMs ?? 250, Math.max(1, joined.discoveryEndsAtMs - clock.now())));

@@ -3,7 +3,7 @@ import { ActivityIndicator, Platform, Pressable, SafeAreaView, ScrollView, Statu
 import { ApiError, NetPresenceApi, NoOpenSession, enroll } from '../core/src';
 import { Phase, runRollCall } from './src/flow';
 import Lab from './src/Lab';
-import { NativeRadio, deviceModel, nativeKeys, setKeepAwake } from './src/native';
+import { NativeRadio, describeRadioError, deviceModel, nativeKeys, setKeepAwake } from './src/native';
 import RollButton from './src/RollButton';
 import { Profile, clearProfile, loadProfile, saveProfile } from './src/storage';
 import { useTheme } from './src/theme';
@@ -52,6 +52,7 @@ function Mark() {
 function Setup({ onDone }: { onDone: (p: Profile) => void }) {
   const t = useTheme();
   const [form, setForm] = useState<Profile>({ baseUrl: 'http://192.168.', studentId: '', name: '' });
+  const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const ready = form.studentId.trim().length > 0 && form.name.trim().length > 0 && form.baseUrl.trim().length > 8;
@@ -70,7 +71,7 @@ function Setup({ onDone }: { onDone: (p: Profile) => void }) {
       return;
     }
     try {
-      await enroll(api, nativeKeys, { studentId: form.studentId.trim(), name: form.name.trim(), model: await deviceModel() });
+      await enroll(api, nativeKeys, { studentId: form.studentId.trim(), name: form.name.trim(), model: await deviceModel(), enrolCode: code.trim() || undefined });
       const p = { baseUrl: base, studentId: form.studentId.trim(), name: form.name.trim() };
       await saveProfile(p); onDone(p);
     } catch (e: any) {
@@ -90,6 +91,7 @@ function Setup({ onDone }: { onDone: (p: Profile) => void }) {
         <Field label="FULL NAME" placeholder="As on the register" value={form.name} onChangeText={(name) => setForm({ ...form, name })} />
         <Field label="SERVER ADDRESS" placeholder="http://192.168.1.4:8000" autoCapitalize="none" keyboardType="url" value={form.baseUrl}
           onChangeText={(baseUrl) => setForm({ ...form, baseUrl })} hint="Your teacher or test laptop. Use http:// for a laptop on the same Wi-Fi." />
+        <Field label="CLASS CODE (IF YOUR TEACHER GAVE ONE)" placeholder="optional" autoCapitalize="characters" value={code} onChangeText={setCode} />
         {err ? <Banner kind="err" text={err} /> : null}
         <Button title={busy ? 'Setting up…' : 'Get started'} onPress={go} disabled={busy || !ready} />
       </Card>
@@ -125,10 +127,11 @@ function Home({ profile, onLab, onSwitch }: { profile: Profile; onLab: () => voi
         onNearby: setNearby,
       });
       setHeard(r.peersHeard); Vibration.vibrate(Platform.OS === 'android' ? [0, 60, 60, 60] : 60);
+      if (radio.lastError) setMsg(describeRadioError(radio.lastError));   // e.g. this phone cannot broadcast
     } catch (e: any) {
       setPhase('error');
       setMsg(e instanceof NoOpenSession ? 'No roll call is open yet. Wait for your teacher to start it, then tap again.'
-        : radio.lastError ? `Bluetooth problem (${radio.lastError}). Make sure Bluetooth is on and allowed for this app.`
+        : radio.lastError ? describeRadioError(radio.lastError)
         : e instanceof ApiError && e.status === 0 ? `Lost connection to ${profile.baseUrl}. Check your Wi-Fi and try again.`
         : e?.message ?? String(e));
     } finally { setKeepAwake(false); }
@@ -165,9 +168,10 @@ function Home({ profile, onLab, onSwitch }: { profile: Profile; onLab: () => voi
       <Text style={[s.status, { color: t.text }]}>{status}</Text>
       {phase === 'listening' && (<>
         <View style={{ alignSelf: 'center' }}><Chip text={`${nearby} phone${nearby === 1 ? '' : 's'} nearby`} tone={nearby > 0 ? 'ok' : 'neutral'} /></View>
-        <Banner kind="warn" text="Keep this screen on and stay seated until the countdown ends." />
+        <Banner kind="warn" text="Keep the app open and stay seated until the countdown ends." />
       </>)}
       {phase === 'done' && <Banner kind="ok" text={`Heard ${heard} phone${heard === 1 ? '' : 's'} around you. Your teacher confirms the final list.`} />}
+      {phase === 'done' && msg ? <Banner kind="warn" text={msg} /> : null}
       {phase === 'error' && (<><Banner kind="err" text={msg} /><Button title="Try again" onPress={mark} /></>)}
       {phase === 'done' && <Button kind="ghost" title="Done" onPress={() => setPhase('idle')} />}
     </ScrollView>

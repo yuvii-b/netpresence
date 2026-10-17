@@ -34,7 +34,18 @@ export async function ensureBlePermissions(): Promise<void> {
   }
 }
 
-/** Errors from the native side arrive as pseudo-samples named "NP-ERR-..."; surface them instead of hearing nothing. */
+const RADIO_ERRORS: Record<string, string> = {
+  'NP-ERR-BT-OFF': 'Bluetooth is off. Turn it on and try again.',
+  'NP-ERR-BT-UNAUTHORIZED': 'Bluetooth is not allowed for NetPresence. Allow it in Settings.',
+  'NP-ERR-BT-UNSUPPORTED': 'This phone does not support Bluetooth Low Energy.',
+  'NP-ERR-ADV-UNSUPPORTED': 'This phone cannot broadcast over Bluetooth, so classmates cannot hear it. Ask your teacher to mark you.',
+};
+export const describeRadioError = (code: string) => RADIO_ERRORS[code] ?? `Bluetooth problem (${code}).`;
+
+/**
+ * The native side sends samples in batches ("NPSamples", every 200 ms) so ~900 adverts/s in a full room cost ~5 bridge
+ * events/s. Native errors arrive as pseudo-samples named "NP-ERR-..."; they are kept in lastError, not counted.
+ */
 export class NativeRadio implements Radio {
   private sub?: { remove(): void };
   lastError: string | null = null;
@@ -42,16 +53,26 @@ export class NativeRadio implements Radio {
   async start(name: string, uuid: string, onSample: (s: RadioSample) => void) {
     await ensureBlePermissions();
     this.lastError = null;
-    this.sub = new NativeEventEmitter(NativeModules.NetPresenceNative).addListener('NPSample', (s: RadioSample) => {
-      if (s.name.startsWith('NP-ERR-')) this.lastError = s.name;
-      else onSample(s);
+    this.sub?.remove();
+    this.sub = new NativeEventEmitter(NativeModules.NetPresenceNative).addListener('NPSamples', (batch: RadioSample[]) => {
+      for (const s of batch) {
+        if (s.name.startsWith('NP-ERR-')) this.lastError = s.name;
+        else onSample(s);
+      }
     });
-    await N.startRadio(name, uuid);
+    try {
+      await N.startRadio(name, uuid);
+    } catch (e) {
+      this.sub.remove();
+      this.sub = undefined;
+      throw e;
+    }
   }
 
   async stop() {
+    await N.stopRadio();                                   // native flushes its last batch first
+    await new Promise<void>((r) => setTimeout(r, 50));     // let that final event arrive before unsubscribing
     this.sub?.remove();
     this.sub = undefined;
-    await N.stopRadio();
   }
 }

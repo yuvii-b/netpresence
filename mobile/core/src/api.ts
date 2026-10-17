@@ -43,7 +43,7 @@ export class NetPresenceApi {
     return json as T;
   }
 
-  register(body: { student_id: string; name: string; model: string; public_key: string; signature: string }) {
+  register(body: { student_id: string; name: string; model: string; public_key: string; signature: string; enrol_code?: string }) {
     return this.call<{ status: string }>('POST', '/api/devices/register', body);
   }
   openSession() {
@@ -51,8 +51,8 @@ export class NetPresenceApi {
   }
   checkin(sessionId: string, studentId: string, signature: string) {
     return this.call<{
-      eph_id: string; advertise_name: string; service_uuid: string;
-      window_ends_at: number; report_deadline: number; server_time: number;
+      eph_id: string; advertise_name: string; service_uuid: string; advertise_uuid?: string;
+      window_ends_at: number; discovery_ends_at?: number; report_deadline: number; server_time: number;
     }>('POST', `/api/sessions/${sessionId}/checkin`, { student_id: studentId, signature });
   }
   report(sessionId: string, studentId: string, neighbours: Neighbour[], signature: string) {
@@ -64,7 +64,7 @@ export class NetPresenceApi {
   // teacher helpers (used by tests and tooling; the teacher UI is the web console)
   teacher = {
     startSession: (token: string, opts: object = {}) =>
-      this.call<{ session_id: string; nonce: string; window_ends_at: number; report_deadline: number }>('POST', '/api/sessions/start', opts, token),
+      this.call<{ session_id: string; nonce: string; window_ends_at: number; discovery_ends_at: number; report_deadline: number }>('POST', '/api/sessions/start', opts, token),
     verifySeeds: (token: string, sessionId: string, studentIds: string[]) =>
       this.call<{ seeds: string[] }>('POST', `/api/sessions/${sessionId}/verify-seeds`, { student_ids: studentIds }, token),
     close: (token: string, sessionId: string, headcount?: number) =>

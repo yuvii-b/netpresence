@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { ScrollView, Share, StyleSheet, Text } from 'react-native';
-import { NativeRadio, deviceModel } from './native';
+import { advertiseUuid } from '../../core/src';
+import { NativeRadio, deviceModel, describeRadioError } from './native';
 import { useTheme } from './theme';
 import { Banner, Button, Card, Field } from './ui';
 
@@ -23,7 +24,8 @@ export default function Lab() {
     try {
       const model = (await deviceModel()).replace(/,/g, ' ');
       rows.current = []; setCount(0); setPeers({});
-      await radio.start('NP-LAB00000', '6e657470-7265-7365-6e63-650000000001', (s) => {
+      const eph = Array.from({ length: 8 }, () => '0123456789abcdef'[Math.floor(Math.random() * 16)]).join('');
+      await radio.start(`NP-${eph}`, advertiseUuid(eph), (s) => {
         if (s.rssi >= 0) return;
         rows.current.push(`${model},${dist},${s.rssi}`);
         if (rows.current.length % 10 === 0) setCount(rows.current.length);
@@ -46,7 +48,7 @@ export default function Lab() {
         {Object.entries(peers).map(([k, v]) => <Text key={k} style={{ color: t.sub }}>{k}: {v}</Text>)}
         <Button kind="ghost" title="Export CSV" onPress={share} disabled={running || !rows.current.length} />
       </Card>
-      {err || radio.lastError ? <Banner kind="err" text={err || radio.lastError || ''} /> : null}
+      {err || radio.lastError ? <Banner kind="err" text={err || describeRadioError(radio.lastError || '')} /> : null}
     </ScrollView>
   );
 }

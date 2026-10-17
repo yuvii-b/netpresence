@@ -6,13 +6,17 @@
 
 static NSString *const kKeyTag = @"netpresence.device.key";
 
+// On air (identical to Android): one advertisement whose 128-bit service UUID ends in the 32-bit ephemeral id.
+static NSString *const kPrefix = @"6E657470-7265-7365-6E63-6500";   // CBUUID.UUIDString is upper-case
+
 @interface NetPresenceNative () <CBCentralManagerDelegate, CBPeripheralManagerDelegate>
 @property (nonatomic, strong) CBCentralManager *central;
 @property (nonatomic, strong) CBPeripheralManager *peripheral;
-@property (nonatomic, copy) NSString *advName;
-@property (nonatomic, strong) CBUUID *svc;
+@property (nonatomic, strong) CBUUID *advUUID;
 @property (nonatomic, assign) BOOL running;
 @property (nonatomic, assign) BOOL hasListeners;
+@property (nonatomic, strong) NSMutableArray<NSDictionary *> *buffer;   // batched to JS every 200 ms
+@property (nonatomic, strong) NSTimer *flushTimer;
 @end
 
 @implementation NetPresenceNative
@@ -20,7 +24,7 @@ static NSString *const kKeyTag = @"netpresence.device.key";
 RCT_EXPORT_MODULE();
 
 + (BOOL)requiresMainQueueSetup { return NO; }
-- (NSArray<NSString *> *)supportedEvents { return @[ @"NPSample" ]; }
+- (NSArray<NSString *> *)supportedEvents { return @[ @"NPSamples" ]; }
 - (void)startObserving { self.hasListeners = YES; }
 - (void)stopObserving { self.hasListeners = NO; }
 
@@ -96,54 +100,88 @@ RCT_EXPORT_METHOD(setKeepAwake : (BOOL)on) {
 #pragma mark - radio
 
 RCT_EXPORT_METHOD(startRadio : (NSString *)name serviceUuid : (NSString *)uuid resolver : (RCTPromiseResolveBlock)resolve rejecter : (RCTPromiseRejectBlock)reject) {
-  self.advName = name;
-  self.svc = [CBUUID UUIDWithString:uuid];
-  self.running = YES;
-  // Delegates fire on the main queue; state-restoration is deliberately not used (foreground-only by design).
-  self.central = [[CBCentralManager alloc] initWithDelegate:self queue:dispatch_get_main_queue()];
-  self.peripheral = [[CBPeripheralManager alloc] initWithDelegate:self queue:dispatch_get_main_queue()];
-  resolve(nil);
+  NSUUID *parsed = [[NSUUID alloc] initWithUUIDString:uuid];
+  if (!parsed || ![parsed.UUIDString hasPrefix:kPrefix]) { reject(@"E_ARG", @"Bad advertise UUID", nil); return; }
+  dispatch_async(dispatch_get_main_queue(), ^{
+    [self stopInternal];
+    self.advUUID = [CBUUID UUIDWithNSUUID:parsed];
+    self.buffer = [NSMutableArray array];
+    self.running = YES;
+    // Delegates fire on the main queue; foreground-only by design (no state restoration, no background modes).
+    self.central = [[CBCentralManager alloc] initWithDelegate:self queue:dispatch_get_main_queue()];
+    self.peripheral = [[CBPeripheralManager alloc] initWithDelegate:self queue:dispatch_get_main_queue()];
+    self.flushTimer = [NSTimer scheduledTimerWithTimeInterval:0.2 target:self selector:@selector(flush) userInfo:nil repeats:YES];
+    resolve(nil);
+  });
 }
 
 RCT_EXPORT_METHOD(stopRadio : (RCTPromiseResolveBlock)resolve rejecter : (RCTPromiseRejectBlock)reject) {
-  self.running = NO;
   dispatch_async(dispatch_get_main_queue(), ^{
-    [self.central stopScan]; [self.peripheral stopAdvertising];
-    self.central = nil; self.peripheral = nil;
+    [self stopInternal];
+    resolve(nil);
   });
-  resolve(nil);
 }
 
-- (void)emitName:(NSString *)n rssi:(NSNumber *)r {
-  if (self.hasListeners) [self sendEventWithName:@"NPSample" body:@{ @"name" : n, @"rssi" : r }];
+- (void)stopInternal {   // main queue only
+  self.running = NO;
+  [self.flushTimer invalidate]; self.flushTimer = nil;
+  [self.central stopScan]; [self.peripheral stopAdvertising];
+  self.central.delegate = nil; self.peripheral.delegate = nil;
+  self.central = nil; self.peripheral = nil;
+  [self flush];
+}
+
+- (void)invalidate {   // bridge teardown / reload: never leave the radio on
+  [super invalidate];  // RCTEventEmitter requires it (NS_REQUIRES_SUPER)
+  dispatch_async(dispatch_get_main_queue(), ^{ [self stopInternal]; });
+}
+
+- (void)push:(NSString *)n rssi:(NSNumber *)r {
+  if (self.buffer.count < 20000) [self.buffer addObject:@{ @"name" : n, @"rssi" : r }];
+}
+
+- (void)flush {
+  if (self.buffer.count == 0) return;
+  NSArray *batch = [self.buffer copy];
+  [self.buffer removeAllObjects];
+  if (self.hasListeners) [self sendEventWithName:@"NPSamples" body:batch];
 }
 
 - (void)centralManagerDidUpdateState:(CBCentralManager *)c {
   if (c.state == CBManagerStatePoweredOn && self.running) {
-    // AllowDuplicates is mandatory: without it iOS reports each peer once and we get no RSSI series.
-    [c scanForPeripheralsWithServices:@[ self.svc ] options:@{CBCentralManagerScanOptionAllowDuplicatesKey : @YES}];
-  } else if (c.state == CBManagerStateUnauthorized || c.state == CBManagerStatePoweredOff) {
-    [self emitName:[NSString stringWithFormat:@"NP-ERR-CENTRAL-%ld", (long)c.state] rssi:@(-1)];
+    // nil services: CoreBluetooth cannot filter on a UUID prefix, so match it below. Foreground scanning with nil
+    // services is allowed. AllowDuplicates is mandatory: without it iOS reports each peer once (no RSSI series).
+    [c scanForPeripheralsWithServices:nil options:@{CBCentralManagerScanOptionAllowDuplicatesKey : @YES}];
+  } else if (c.state == CBManagerStateUnauthorized) {
+    [self push:@"NP-ERR-BT-UNAUTHORIZED" rssi:@(-1)];
+  } else if (c.state == CBManagerStatePoweredOff) {
+    [self push:@"NP-ERR-BT-OFF" rssi:@(-1)];
+  } else if (c.state == CBManagerStateUnsupported) {
+    [self push:@"NP-ERR-BT-UNSUPPORTED" rssi:@(-1)];
   }
 }
 
 - (void)centralManager:(CBCentralManager *)c didDiscoverPeripheral:(CBPeripheral *)p advertisementData:(NSDictionary<NSString *, id> *)ad RSSI:(NSNumber *)rssi {
-  NSString *n = ad[CBAdvertisementDataLocalNameKey]; // iOS peers
-  if (![n hasPrefix:@"NP-"]) {
-    NSData *m = ad[CBAdvertisementDataManufacturerDataKey]; // Android peers: 0xFFFF company id then ASCII eph
-    if (m.length > 2) {
-      NSString *eph = [[NSString alloc] initWithData:[m subdataWithRange:NSMakeRange(2, m.length - 2)] encoding:NSASCIIStringEncoding];
-      if (eph.length) n = [@"NP-" stringByAppendingString:eph];
+  NSArray<CBUUID *> *uuids = ad[CBAdvertisementDataServiceUUIDsKey];
+  for (CBUUID *u in uuids) {
+    NSString *s = u.UUIDString;
+    if (s.length == 36 && [s hasPrefix:kPrefix]) {
+      [self push:[@"NP-" stringByAppendingString:[[s substringFromIndex:kPrefix.length] lowercaseString]] rssi:rssi];
+      return;
     }
   }
-  if ([n hasPrefix:@"NP-"]) [self emitName:n rssi:rssi];
 }
 
 - (void)peripheralManagerDidUpdateState:(CBPeripheralManager *)p {
   if (p.state == CBManagerStatePoweredOn && self.running) {
-    // iOS cannot set TX power or custom payload bytes; LocalName + service UUID is all we get (foreground only).
-    [p startAdvertising:@{CBAdvertisementDataLocalNameKey : self.advName, CBAdvertisementDataServiceUUIDsKey : @[ self.svc ]}];
+    // Service UUID only - no LocalName - so the whole identity fits in the primary advertisement.
+    // iOS cannot set TX power or custom payload bytes (foreground only).
+    [p startAdvertising:@{CBAdvertisementDataServiceUUIDsKey : @[ self.advUUID ]}];
   }
+}
+
+- (void)peripheralManagerDidStartAdvertising:(CBPeripheralManager *)p error:(NSError *)error {
+  if (error) [self push:[NSString stringWithFormat:@"NP-ERR-ADV-%ld", (long)error.code] rssi:@(-1)];
 }
 
 @end
