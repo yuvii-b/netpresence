@@ -54,16 +54,18 @@ def pair_geometry(cfg: RoomConfig, nodes: dict, wall: tuple):
     Q = P[q_idx]
     bodies = np.zeros(d.shape, dtype=int)
     sel = np.flatnonzero(d < cfg.body_max_m)
-    if sel.size and Q.size:
-        a, b = A[sel], B[sel]
+    BLOCK = max(1, 3_000_000 // max(len(Q), 1))          # pairs per block: keeps memory flat for large rooms
+    for lo in range(0, sel.size if Q.size else 0, BLOCK):
+        blk = sel[lo:lo + BLOCK]
+        a, b = A[blk], B[blk]
         ab = b - a
         L2 = np.maximum((ab ** 2).sum(1), 1e-12)
         rel = Q[None, :, :] - a[:, None, :]
         t = np.clip((rel * ab[:, None, :]).sum(2) / L2[:, None], 0.0, 1.0)
         diff = rel - t[..., None] * ab[:, None, :]
         near = (diff ** 2).sum(2) < cfg.body_radius ** 2
-        near &= (q_idx[None, :] != iu[sel][:, None]) & (q_idx[None, :] != ju[sel][:, None])   # endpoints excluded
-        bodies[sel] = near.sum(1)
+        near &= (q_idx[None, :] != iu[blk][:, None]) & (q_idx[None, :] != ju[blk][:, None])   # endpoints excluded
+        bodies[blk] = near.sum(1)
     crosses = (A[:, 0] < wall_x) != (B[:, 0] < wall_x)
     with np.errstate(divide="ignore", invalid="ignore"):
         tt = (wall_x - A[:, 0]) / (B[:, 0] - A[:, 0])

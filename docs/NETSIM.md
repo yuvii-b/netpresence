@@ -18,9 +18,41 @@ class20 lab6 exam`, or a TOML file in `netsim/presets/` or passed with `--toml`.
 | M4 phone + uplink | done: exact `NeighbourCollector` port + retry schedule + report size pinned to the real TypeScript by generated vectors; `uplink=wifi_good\|wifi_congested\|cell_4g` (mixes allowed) |
 | M5 attacks + co-location defence | done: `netsim/attacks.py` (A2-A5, relay), `colocation_db` in the real engine/API/console, native scanners report every UUID match |
 | M6 baselines | done: `netsim/baselines.py` B0 manual, B1 beacon, B2 acoustic, B3/B4 ablations, B5 QR, same rooms and seeds |
-| M7 paper pipeline | todo |
+| M7 paper pipeline | done: `backend/paper/make.py` runs E01-E14 (`netsim/experiments/`), bootstrap CIs over classrooms, cached by config+code hash, tables (md/tex) and figures (pdf/png) |
 | M8 Windows CI hash parity | todo (the Windows job already runs `tools.check`) |
 | M9 loadtest | todo |
+
+## Paper pipeline (M7)
+
+    cd backend
+    pip install -r requirements-paper.txt          # matplotlib; tables and numbers work without it
+    python -m paper.make --quick                   # every experiment, few classrooms: ~1.5 min (CI)
+    python -m paper.make                           # full run (hours on a laptop; results are cached, re-runs are instant)
+    python -m paper.make --only E03,E09 --workers 4
+
+Output goes to `backend/paper/out/` (git-ignored): `results/E*.json` (all numbers), `tables/E*.{md,tex}`, `figures/*.{pdf,png}`,
+`summary.md`, and `results/hashes.json` (one hash per experiment over the integer counts, identical on Windows and Linux and for any
+`--workers`; wall-clock timing is excluded). Statistics: pooled rates with a bootstrap CI over classrooms (the classroom is the
+unit, never the student); comparisons between variants are paired on the same seeds.
+
+| id | question |
+|---|---|
+| E01 | accuracy vs head-count, door open/closed |
+| E02 | what each mechanism buys (ablations incl. relay admission) |
+| E03 | attacks A3/A4/A5 and the ROC of `colocation_db` |
+| E04 | Android/iOS mix x TX asymmetry, self-calibration on/off |
+| E05 | check-in window x tap delay; waiting time vs calling names |
+| E06 | uplink profile x jitter x head-count |
+| E07 | BLE contention: fast vs packet-level model, adv interval, capture |
+| E08 | tornado over assumed parameters |
+| E09 | all baselines side by side |
+| E10 | per-seat heatmaps (who gets missed) |
+| E11 | 50-500 students, TTL bottleneck, compute time |
+| E12 | simulator vs real phones (`paper/real/sessions.csv`; says "NO REAL DATA" when absent) |
+| E13 | trace-driven vs parametric channel (trace is labelled SYNTHETIC unless `paper/real/traces/*.csv` exists) |
+| E14 | energy per roll call (arithmetic on assumed currents) |
+
+Quick runs have few classrooms, so their CIs are wide: they prove the pipeline, not the conclusions.
 
 ## Provenance of every default
 `netsim/config.py` tags each field `measured`, `spec` or `assumed` (`config.TAGS`; a test fails if one is missing). Protocol
@@ -73,6 +105,11 @@ without the co-location check: 100% of relay proxies succeed.
 * **How phones are held matters.** A uniform extra loss (phone on a desk: ~2 dB per end) looks like a larger distance to the
   fixed edge threshold: at 60 students false-absent is 0.5% (hand), 12% (desk), 41% (mixed with pockets/bags), 98% (all in
   pockets). Simulated with assumed losses; E08 sweeps it, and a session-level offset estimate is the candidate fix.
+
+* **Large halls hit the default TTL, not the radio** (E11, quick run): at 200 students (17 bench rows) false-absent is ~9-15% with
+  the default 8 hops / 15 m and ~0.3-0.5% with `ttl=12, max_path_m=25` (teacher-settable per session). Defaults are unchanged;
+  the app should suggest a larger TTL above ~150 students. Needs the full run for tight CIs.
+* **Very small rooms are the weak end** (E07/E01, 10 phones): too few neighbours for k=2 disjoint paths; stated limitation, unchanged.
 
 ## Not modelled yet
 Server overload errors (429/5xx), relay/wormhole attacks,
