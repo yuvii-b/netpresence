@@ -166,3 +166,22 @@ async def test_single_colluder_cannot_vouch_with_k2(client):
     await client.post(f"/api/sessions/{s['session_id']}/verify-seeds", json={"student_ids": ["stu0"]}, headers=TEACHER)
     out = (await client.post(f"/api/sessions/{s['session_id']}/close", headers=TEACHER)).json()
     assert {r["student_id"]: r["status"] for r in out["rows"]}["friend"] == "FLAGGED"
+
+
+async def test_headcount_flags_least_corroborated_present(client):
+    s, devs = await make_room(client, 5)
+    # stu4 is only weakly corroborated: linked to stu0 and stu1 only; the rest form a tight clique
+    for me, nb in full_mesh(devs):
+        if me.student_id == "stu4":
+            nb = [x for x in nb if x["peer_id"] in (devs[0].eph, devs[1].eph)]
+        elif me.student_id in ("stu2", "stu3"):
+            nb = [x for x in nb if x["peer_id"] != devs[4].eph]
+        await client.post(f"/api/sessions/{s['session_id']}/report", json=me.report_body(s["session_id"], nb))
+    await client.post(f"/api/sessions/{s['session_id']}/verify-seeds", json={"student_ids": ["stu0"]}, headers=TEACHER)
+    out = (await client.post(f"/api/sessions/{s['session_id']}/close", headers=TEACHER, json={"headcount": 4})).json()
+    assert out["counts"]["PRESENT"] == 5 and out["gap"] == 1 and out["review"] == 1
+    assert [r["student_id"] for r in out["rows"] if r.get("review")] == ["stu4"]
+    # teacher confirms; the review flag clears
+    await client.post(f"/api/sessions/{s['session_id']}/adjudicate", json={"student_id": "stu4", "status": "ABSENT"}, headers=TEACHER)
+    res = (await client.get(f"/api/sessions/{s['session_id']}/result", headers=TEACHER)).json()
+    assert res["review"] == 0 and res["gap"] == 1 and res["headcount"] == 4

@@ -32,6 +32,11 @@ class Settings:
     MAX_PATH_M: float = _f("MAX_PATH_M", 15.0)         # cumulative metres bound
     K_WITNESS: int = int(os.getenv("K_WITNESS", "2"))
     AGREE_DELTA_DB: float = _f("AGREE_DELTA_DB", 8.0)  # |rssi_ab - rssi_ba| bound
+    # k vertex-disjoint paths from the seeds (default ON: corridor leakage with an open door 46% -> 4% in simulation)
+    INDEPENDENT: bool = os.getenv("INDEPENDENT", "1") not in ("0", "false", "False")
+    # Bench-mate rule (off by default: it cut corridor leakage only 42%->29% in simulation and cost coverage in sparse rooms)
+    NEAR_M: float = _f("NEAR_M", 0.0)
+    NEAR_K: int = int(os.getenv("NEAR_K", "1"))
 
 
 settings = Settings()

@@ -9,9 +9,13 @@ from pymongo.errors import DuplicateKeyError
 from app.config import settings
 from app.db.mongo import get_db
 from app.deps import require_teacher
-from app.models.schemas import Adjudicate, CheckIn, Report, StartSession, VerifySeeds
+from typing import Optional
+
+from app.models.schemas import Adjudicate, CheckIn, CloseRequest, Report, StartSession, VerifySeeds
 from app.services import crypto
-from app.services.graph import Params, evaluate
+from dataclasses import replace
+
+from app.services.graph import Params, adaptive_edge_m, evaluate
 from app.services.ws_manager import ws_manager
 
 import hmac
@@ -53,6 +57,9 @@ async def start_session(payload: StartSession, db=Depends(get_db)):
         max_path_m=payload.max_path_m or settings.MAX_PATH_M,
         k=payload.k or settings.K_WITNESS,
         delta_db=payload.delta_db or settings.AGREE_DELTA_DB,
+        independent=settings.INDEPENDENT if payload.independent is None else payload.independent,
+        near_m=payload.near_m if payload.near_m is not None else settings.NEAR_M,
+        near_k=payload.near_k or settings.NEAR_K,
     )
     doc = {
         "session_id": f"S-{uuid.uuid4().hex[:10]}",
@@ -64,6 +71,7 @@ async def start_session(payload: StartSession, db=Depends(get_db)):
         "report_deadline": now + window + settings.REPORT_GRACE_SECONDS,
         "params": params.as_dict(),
         "seeds": [],
+        "adaptive": payload.max_edge_m is None,   # density-based edge threshold unless the teacher fixed one
     }
     # Only one open session at a time keeps "which session am I joining" unambiguous for students.
     await db.sessions.update_many({"status": "open"}, {"$set": {"status": "closed"}})
@@ -161,6 +169,8 @@ async def _compute(db, s: dict) -> dict:
     sid = s["session_id"]
     params = _params(s)
     checkins = await db.checkins.find({"session_id": sid}, {"_id": 0}).to_list(length=5000)
+    if s.get("adaptive"):
+        params = replace(params, max_edge_m=adaptive_edge_m(len(checkins)))
     by_eph = {c["eph_id"]: c["student_id"] for c in checkins}
     models = {c["student_id"]: c["model"] for c in checkins}
     offsets = {c["model"]: c["rssi_offset_db"] async for c in db.device_calibration.find({}, {"_id": 0})}
@@ -187,37 +197,61 @@ async def _compute(db, s: dict) -> dict:
                          "reported": stu in reports})
         else:
             rows.append({"student_id": stu, "name": name, "status": "ABSENT", "decided_by": "graph"})
-    return {"rows": rows, "edges": result["edges"]}
+    return {"rows": rows, "edges": result["edges"], "params": params.as_dict()}
 
 
 @router.post("/{session_id}/close", dependencies=[Depends(require_teacher)])
-async def close_session(session_id: str, db=Depends(get_db)):
+async def close_session(session_id: str, payload: Optional[CloseRequest] = None, db=Depends(get_db)):
     s = await _get_session(db, session_id)
     if not s.get("seeds"):
         raise HTTPException(status_code=400, detail="Verify at least one seed (front-bench student) first.")
     out = await _compute(db, s)
+    headcount = payload.headcount if payload else None
+    gap = _flag_for_review(out["rows"], s["seeds"], headcount)
     for row in out["rows"]:
         await db.attendance.update_one(
             {"session_id": session_id, "student_id": row["student_id"]},
             {"$set": {**row, "session_id": session_id}}, upsert=True)
-    await db.sessions.update_one({"session_id": session_id}, {"$set": {"status": "closed", "closed_at": time.time()}})
-    summary = _summary(out["rows"], out["edges"])
+    await db.sessions.update_one({"session_id": session_id}, {"$set": {
+        "status": "closed", "closed_at": time.time(), "headcount": headcount, "gap": gap,
+        "params_used": out["params"]}})
+    summary = _summary(out["rows"], out["edges"], headcount, gap)
+    summary["params"] = out["params"]
     await ws_manager.broadcast(session_id, {"type": "RESULT", **summary})
     return summary
 
 
-def _summary(rows: list[dict], edges: int | None = None) -> dict:
+def _flag_for_review(rows: list[dict], seeds: list[str], headcount: Optional[int]) -> int:
+    """Headcount reconciliation. If more are PRESENT than the teacher counted, mark the `gap` least-corroborated
+    non-seed PRESENT students (fewest witnesses, then longest path) with review=True. Returns the gap (0 if none).
+    Targets the failure RSSI cannot resolve on its own - a phone in an open doorway looks like a back-bench student."""
+    if headcount is None:
+        return 0
+    present = [r for r in rows if r["status"] == "PRESENT"]
+    gap = len(present) - headcount
+    if gap <= 0:
+        return 0
+    cand = sorted((r for r in present if r["student_id"] not in seeds), key=lambda r: (r["witnesses"], -r["path_m"]))
+    for r in cand[:gap]:
+        r["review"] = True
+    return gap
+
+
+def _summary(rows: list[dict], edges: int | None = None, headcount: int | None = None, gap: int = 0) -> dict:
     counts = {"PRESENT": 0, "FLAGGED": 0, "ABSENT": 0}
     for r in rows:
         counts[r["status"]] += 1
-    return {"counts": counts, "edges": edges, "rows": rows}
+    return {"counts": counts, "edges": edges, "headcount": headcount, "gap": gap,
+            "review": sum(1 for r in rows if r.get("review")), "rows": rows}
 
 
 @router.get("/{session_id}/result", dependencies=[Depends(require_teacher)])
 async def get_result(session_id: str, db=Depends(get_db)):
-    await _get_session(db, session_id)
+    sess = await _get_session(db, session_id)
     rows = await db.attendance.find({"session_id": session_id}, {"_id": 0}).sort("student_id", 1).to_list(length=5000)
-    return _summary(rows)
+    summary = _summary(rows, None, sess.get("headcount"), sess.get("gap", 0))
+    summary["params"] = sess.get("params_used")
+    return summary
 
 
 @router.post("/{session_id}/adjudicate", dependencies=[Depends(require_teacher)])
@@ -225,7 +259,7 @@ async def adjudicate(session_id: str, payload: Adjudicate, db=Depends(get_db)):
     await _get_session(db, session_id)
     res = await db.attendance.update_one(
         {"session_id": session_id, "student_id": payload.student_id},
-        {"$set": {"status": payload.status, "decided_by": "teacher"}})
+        {"$set": {"status": payload.status, "decided_by": "teacher", "review": False}})
     if res.matched_count == 0:
         raise HTTPException(status_code=404, detail="No attendance row; close the session first.")
     await ws_manager.broadcast(session_id, {"type": "ADJUDICATED", "student_id": payload.student_id, "status": payload.status})

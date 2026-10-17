@@ -55,6 +55,9 @@ class StartSession(BaseModel):
     max_path_m: Optional[float] = Field(None, gt=0, le=100)
     k: Optional[int] = Field(None, ge=1, le=10)
     delta_db: Optional[float] = Field(None, gt=0, le=40)
+    independent: Optional[bool] = None
+    near_m: Optional[float] = Field(None, ge=0, le=10)
+    near_k: Optional[int] = Field(None, ge=1, le=10)
     ref_dbm: Optional[float] = Field(None, ge=-100, le=0)
     n: Optional[float] = Field(None, ge=1, le=6)
 
@@ -78,6 +81,12 @@ class Report(BaseModel):
 
 class VerifySeeds(BaseModel):
     student_ids: list[str] = Field(..., min_length=1, max_length=20)
+
+
+class CloseRequest(BaseModel):
+    """Optional teacher headcount. If the server marks more students present than she counted in the room,
+    the surplus is resolved by flagging the least-corroborated PRESENT students for review."""
+    headcount: Optional[int] = Field(None, ge=0, le=500)
 
 
 class Adjudicate(BaseModel):

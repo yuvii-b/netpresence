@@ -19,9 +19,23 @@ class Params:
     max_path_m: float = 15.0   # max cumulative estimated metres from a seed
     k: int = 2                 # independent mutual witnesses required per non-seed node
     delta_db: float = 8.0      # max |rssi_ab - rssi_ba|
+    independent: bool = True   # require k VERTEX-DISJOINT paths from the seeds (stops clusters vouching for each other)
+    near_m: float = 0.0        # bench-mate rule: a non-seed needs >= near_k admitted links <= near_m (0 = off)
+    near_k: int = 1
 
     def as_dict(self) -> dict:
         return asdict(self)
+
+
+def adaptive_edge_m(n_checkins: int) -> float:
+    """Edge-distance threshold by crowd density. A sparse room has few neighbours within 2 m, so the fixed default
+    strands real students; a larger threshold restores coverage at a leakage cost, which is only worth paying when
+    the room is empty enough to need it. Boundaries from sim.orientation (3 bench columns x 8 x 4, <=93 students)."""
+    if n_checkins >= 70:
+        return 2.0
+    if n_checkins >= 50:
+        return 2.5
+    return 3.0
 
 
 def rssi_to_distance(rssi_dbm: float, p: Params) -> float:
@@ -91,6 +105,78 @@ def flood(seeds: Iterable[str], edges: Edges, p: Params, alive: set[str] | None 
     return best
 
 
+def disjoint_paths_many(seeds: Iterable[str], adj: dict[str, list[tuple[str, float]]], targets: Iterable[str],
+                        limit: int) -> dict[str, int]:
+    """For each target: max number (capped at `limit`) of internally vertex-disjoint paths from the seed set.
+
+    Unit-capacity vertex splitting + augmenting paths (Edmonds-Karp). Seeds are teacher-verified, so several paths
+    may start at the same seed; every non-seed vertex can carry at most one path (Menger's theorem).
+    The residual network is built once and copied per target."""
+    seeds = set(seeds)
+    INFC = limit + 1
+    base: dict[tuple, int] = {}
+    nbr: dict = {}
+
+    def add(u, v, c):
+        base[(u, v)] = base.get((u, v), 0) + c
+        base.setdefault((v, u), 0)
+        nbr.setdefault(u, []).append(v)
+        nbr.setdefault(v, []).append(u)
+
+    for u, lst in adj.items():
+        add(("in", u), ("out", u), INFC if u in seeds else 1)
+        for w, _ in lst:
+            add(("out", u), ("in", w), 1)
+    for sd in seeds:
+        if sd in adj:
+            add("S", ("in", sd), INFC)
+
+    out: dict[str, int] = {}
+    for target in targets:
+        if target in seeds:
+            out[target] = limit
+            continue
+        sink = ("in", target)
+        if "S" not in nbr or sink not in nbr:
+            out[target] = 0
+            continue
+        cap = dict(base)
+        flow = 0
+        while flow < limit:
+            parent = {"S": None}
+            queue = ["S"]
+            for u in queue:
+                if sink in parent:
+                    break
+                for w in nbr[u]:
+                    if w not in parent and cap[(u, w)] > 0:
+                        parent[w] = u
+                        queue.append(w)
+            if sink not in parent:
+                break
+            w = sink
+            while parent[w] is not None:
+                u = parent[w]
+                cap[(u, w)] -= 1
+                cap[(w, u)] += 1
+                w = u
+            flow += 1
+        out[target] = flow
+    return out
+
+
+def disjoint_paths(seeds: Iterable[str], adj: dict[str, list[tuple[str, float]]], target: str, limit: int) -> int:
+    return disjoint_paths_many(seeds, adj, [target], limit)[target]
+
+
+def _supported(nbrs: list[tuple[str, float]], p: Params) -> bool:
+    """k independent witnesses, and (if enabled) at least near_k of them very close - a real student on a
+    shared bench has a bench-mate within ~1 m; a phone on the far side of a wall or aisle does not."""
+    if len(nbrs) < p.k:
+        return False
+    return p.near_m <= 0 or sum(1 for _, d in nbrs if d <= p.near_m) >= p.near_k
+
+
 def evaluate(seeds: Iterable[str], reports: Reports, p: Params) -> dict:
     """Run edge admission, flood, and iterative k-witness pruning.
 
@@ -102,7 +188,11 @@ def evaluate(seeds: Iterable[str], reports: Reports, p: Params) -> dict:
     alive = set(flood(seeds, edges, p)) | set(seeds)
     while True:
         adj = _adjacency(edges, alive)
-        drop = {v for v in alive if v not in seeds and len(adj.get(v, [])) < p.k}
+        drop = {v for v in alive if v not in seeds and not _supported(adj.get(v, []), p)}
+        if p.independent:
+            sub = {v: adj.get(v, []) for v in alive}
+            flows = disjoint_paths_many(seeds, sub, [v for v in alive if v not in seeds and v not in drop], p.k)
+            drop |= {v for v, f in flows.items() if f < p.k}
         if not drop:
             break
         alive -= drop

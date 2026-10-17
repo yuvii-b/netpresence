@@ -74,3 +74,30 @@ def test_disconnected_node_never_present():
     rep = sym({("s", "a"): 1.0, ("s", "b"): 1.0, ("a", "b"): 1.0, ("p", "q"): 1.0, ("q", "r"): 1.0, ("p", "r"): 1.0})
     out = evaluate(["s"], rep, P)["present"]
     assert not ({"p", "q", "r"} & set(out))
+
+
+# ---- vertex-disjoint path rule -------------------------------------------------------------------
+from app.services.graph import disjoint_paths, _adjacency   # noqa: E402
+
+
+def _adj(pairs):
+    return _adjacency({tuple(sorted(k)): v for k, v in pairs.items()})
+
+
+def test_disjoint_paths_diamond_and_bottleneck():
+    diamond = _adj({("s", "a"): 1, ("s", "b"): 1, ("a", "t"): 1, ("b", "t"): 1})
+    assert disjoint_paths(["s"], diamond, "t", 3) == 2
+    bottleneck = _adj({("s", "a"): 1, ("s", "b"): 1, ("a", "m"): 1, ("b", "m"): 1, ("m", "t"): 1})
+    assert disjoint_paths(["s"], bottleneck, "t", 3) == 1          # everything funnels through m
+
+
+def test_cluster_behind_one_bridge_cannot_vouch_for_itself():
+    # a, b are real (2 seeds); x has two real witnesses (a, b) and is admitted by the k-witness rule;
+    # y and z only reach the room THROUGH x, but vouch for each other: 3 witnesses each, yet 1 disjoint path
+    pairs = {("s1", "a"): 1.0, ("s2", "b"): 1.0, ("s1", "b"): 1.5, ("s2", "a"): 1.5, ("a", "b"): 1.0,
+             ("a", "x"): 1.0, ("b", "x"): 1.0, ("x", "y"): 1.0, ("x", "z"): 1.0, ("y", "z"): 1.0}
+    rep = sym(pairs)
+    loose = evaluate(["s1", "s2"], rep, Params(**{**P.as_dict(), "independent": False}))["present"]
+    strict = evaluate(["s1", "s2"], rep, Params(**{**P.as_dict(), "independent": True}))["present"]
+    assert {"x", "y", "z"} <= set(loose)                           # cascade under plain k-witness
+    assert "x" in strict and "y" not in strict and "z" not in strict
