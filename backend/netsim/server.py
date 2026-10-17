@@ -12,7 +12,8 @@ from netsim.scenario import build_scene, platforms
 def trial(cfg: RoomConfig, p: Params, seed: int, calibrate: bool = True) -> dict:
     rng = random.Random(seed)
     nodes, seeds, wall = build_scene(cfg, rng)
-    reports = synth_reports(cfg, nodes, wall, rng, calibrate)
+    st: dict = {}
+    reports = synth_reports(cfg, nodes, wall, rng, calibrate, stats=st)
     present = evaluate(seeds, reports, p, platforms(cfg, nodes))["present"]
     ins = [k for k, v in nodes.items() if v["inside"] and k not in seeds]
     outs = [k for k, v in nodes.items() if not v["inside"]]
@@ -24,6 +25,7 @@ def trial(cfg: RoomConfig, p: Params, seed: int, calibrate: bool = True) -> dict
         "false_absent": sum(1 for k in ins if k not in present),
         "outside": len(outs),
         "false_present": sum(1 for k in outs if k in present),
+        **st,
     }
 
 

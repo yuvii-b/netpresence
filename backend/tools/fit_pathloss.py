@@ -1,6 +1,7 @@
 """Fit RSSI = A - 10 n log10(d) from the BLE lab-app CSV export (plan phase 0.3).
 
-CSV columns: model,distance_m,rssi            (one row per RSSI sample; optional: condition)
+CSV columns: model,distance_m,rssi            (one row per RSSI sample). The app's CSV v2 (t_ms,model,platform,peer_eph,
+distance_m,orientation,bodies,wall,rssi) also works: only clear line-of-sight rows (bodies 0, wall 0) are fitted.
 Usage: python -m tools.fit_pathloss samples.csv [--ref-model "Pixel 6"]
 
 Prints per-model A, n, shadowing sigma, a 3 m vs 6 m confusion estimate at the chosen threshold,
@@ -38,6 +39,8 @@ def main():
     by = defaultdict(list)
     with open(a.csv) as f:
         for r in csv.DictReader(f):
+            if int(r.get("bodies") or 0) or int(r.get("wall") or 0):
+                continue
             by[r["model"]].append((float(r["distance_m"]), float(r["rssi"])))
     fits = {m: fit(pts) for m, pts in by.items() if len({d for d, _ in pts}) >= 3}
     ref = a.ref_model or max(fits, key=lambda m: len(by[m]))

@@ -17,18 +17,18 @@ from netsim.phone import tap_times
 
 
 def synth_reports(cfg: RoomConfig, nodes: dict, wall: tuple, rng: random.Random, calibrate: bool = True,
-                  with_counts: bool = False):
+                  with_counts: bool = False, stats: dict | None = None):
     """Every phone's report: {reporter: {peer: median RSSI}} (and optionally the sample counts). Vectorised (numpy)."""
     # separate streams per noise source (common random numbers): changing the window only changes sample counts,
     # so comparisons between configurations are like-for-like
-    g_shadow, g_count, g_noise, g_det, g_tap = (np.random.default_rng(x) for x in np.random.SeedSequence(rng.getrandbits(63)).spawn(5))
+    g_shadow, g_count, g_noise, g_det, g_tap, g_orient = (np.random.default_rng(x) for x in np.random.SeedSequence(rng.getrandbits(63)).spawn(6))
     ids = list(nodes)
     N = len(ids)
     prof = [cfg.models[nodes[k]["model"]] for k in ids]
     rx = np.array([q["rx"] for q in prof]); tx = np.array([q["tx"] for q in prof])
     adv = np.array([q["adv_ms"] for q in prof]); eff = np.array([q["scan_eff"] for q in prof])
 
-    iu, ju, d, mean = pair_mean_rssi(cfg, nodes, wall, g_shadow)
+    iu, ju, d, mean = pair_mean_rssi(cfg, nodes, wall, g_shadow, g_orient, stats)
 
     tap = tap_times(cfg, g_tap, N)
     joined = tap <= cfg.window_s

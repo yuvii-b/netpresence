@@ -69,6 +69,14 @@ class RoomConfig:
     model_mix: tuple = (0.55, 0.30, 0.15)
     ios_share: float | None = None  # override: fraction of iPhones (Android models keep their relative mix)
     n_seeds: int = 4              # grid layout; the bench layout verifies the whole front bench
+    # --- channel realism (M2). Defaults reproduce the original independent-shadowing model exactly.
+    shadow_model: str = "iid"     # "iid": independent per pair (original) | "gudmundson": spatially correlated, reciprocal
+    d_corr: float = 1.0           # m, shadowing correlation distance (gudmundson)
+    orient_mix: tuple = (1.0, 0.0, 0.0, 0.0)   # share of phones held in hand / on desk / in pocket / in bag
+    orient_db: tuple = (0.0, 2.0, 6.0, 10.0)   # extra loss of each way of holding a phone, per end of the link
+    channel: str = "parametric"   # "parametric" | "trace" (empirical RSSI tables from the BLE lab, netsim/traces.py)
+    trace_file: str | None = None  # BLE-lab CSV v2 (file or directory of them) used when channel = "trace"
+    trace_orientation: str = "desk"  # which orientation's rows of the trace file to draw from
 
 
 TAGS: dict[str, str] = {
@@ -86,6 +94,8 @@ TAGS: dict[str, str] = {
     # humans and phones
     "tap_median_s": "assumed", "tap_sigma": "assumed", "startup_s": "assumed",
     "models": "assumed", "model_mix": "assumed", "ios_share": "assumed", "n_seeds": "spec",
+    "shadow_model": "assumed", "d_corr": "assumed", "orient_mix": "assumed", "orient_db": "assumed",
+    "channel": "spec", "trace_file": "spec", "trace_orientation": "spec",
 }
 
 
