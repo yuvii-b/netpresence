@@ -1,0 +1,17 @@
+:root { font-family: system-ui, sans-serif; color: #1a1a1a; }
+body { margin: 0; background: #fafafa; }
+.app { max-width: 780px; margin: 0 auto; padding: 16px; }
+.card { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 16px; margin-top: 12px; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 8px 0; }
+nav { display: flex; flex-wrap: wrap; gap: 6px; }
+button { padding: 8px 14px; border: 1px solid #bbb; border-radius: 6px; background: #f4f4f4; cursor: pointer; }
+button:disabled { opacity: .5; cursor: default; }
+button.primary { background: #1b6ef3; color: #fff; border-color: #1b6ef3; }
+button.danger { background: #c62828; color: #fff; border-color: #c62828; }
+button.tab.active { background: #1a1a1a; color: #fff; }
+input, select { padding: 7px; border: 1px solid #bbb; border-radius: 6px; }
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid #eee; }
+ul.plain { list-style: none; padding: 0; }
+.hint { color: #666; font-size: .85em; }
+.err { color: #b00020; }
