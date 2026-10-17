@@ -15,3 +15,5 @@ th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid #eee; }
 ul.plain { list-style: none; padding: 0; }
 .hint { color: #666; font-size: .85em; }
 .err { color: #b00020; }
+.warn { background: #fff4e0; border: 1px solid #f0c36d; border-radius: 6px; padding: 8px 10px; }
+tr.review { background: #fff4e0; }

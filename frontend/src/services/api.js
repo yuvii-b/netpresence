@@ -47,7 +47,7 @@ export const v2 = {
   start: (opts = {}) => call('POST', '/api/sessions/start', { body: opts, teacher: true }),
   students: () => call('GET', '/api/devices', { teacher: true }),
   verifySeeds: (id, studentIds) => call('POST', `/api/sessions/${id}/verify-seeds`, { body: { student_ids: studentIds }, teacher: true }),
-  close: (id) => call('POST', `/api/sessions/${id}/close`, { teacher: true }),
+  close: (id, headcount) => call('POST', `/api/sessions/${id}/close`, { body: headcount === '' || headcount == null ? {} : { headcount: Number(headcount) }, teacher: true }),
   result: (id) => call('GET', `/api/sessions/${id}/result`, { teacher: true }),
   adjudicate: (id, studentId, status) => call('POST', `/api/sessions/${id}/adjudicate`, { body: { student_id: studentId, status }, teacher: true }),
   list: () => call('GET', '/api/sessions', { teacher: true }),

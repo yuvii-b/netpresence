@@ -1,0 +1,35 @@
+{
+  "public_key_spki_b64": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE+PKK3N1UPEol+lcrTGWn/otoyEqp8w5JsmF0Gf20pGlDxmtQlXf+fFUFBzRwUy+XcMrMtypEVsISlOksuIsIWA==",
+  "neighbours": [
+    {
+      "peer_id": "ff00aa11",
+      "rssi_median": -71,
+      "sample_count": 9
+    },
+    {
+      "peer_id": "0a1b2c3d",
+      "rssi_median": -58,
+      "sample_count": 14
+    },
+    {
+      "peer_id": "0a1b2c3d",
+      "rssi_median": -60,
+      "sample_count": 3
+    },
+    {
+      "peer_id": "7c7c7c7c",
+      "rssi_median": -64,
+      "sample_count": 20
+    }
+  ],
+  "messages": {
+    "register": "register:21CT042:Redmi Note 9",
+    "checkin": "checkin:S-1a2b3c4d5e:9f8e7d6c5b4a39281706f5e4d3c2b1a0",
+    "report": "report:S-1a2b3c4d5e:21CT042:[[\"0a1b2c3d\",-60,3],[\"0a1b2c3d\",-58,14],[\"7c7c7c7c\",-64,20],[\"ff00aa11\",-71,9]]"
+  },
+  "signatures_by_python": {
+    "register": "MEQCIH3MWjwmMhI7ScXojyuRyFCysdIM8yvjmISchVE9uXA8AiAnrmVBXj5GeNQJA6ytvLv5zusQbNnVCxK3fum+3Z2UAQ==",
+    "checkin": "MEUCIB83J4cxbwsNH0OP0GHn+HnsN1MLDku35rliXI2acJ5AAiEA3f5BdZ8/Kv/3ltlGs6Boo+w5qgb+e+YvdKZStyDt+D0=",
+    "report": "MEYCIQCZuBL9O4vuOLjBZyhj8rHFm74EcWXaUTHBUhCMFzCk9QIhAIYjIWt2o9GtDBRGgi8eXu5jJJznBmskXcAOpyVlzdoE"
+  }
+}

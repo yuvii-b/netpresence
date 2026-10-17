@@ -27,7 +27,7 @@ from app.db.mongo import db_instance, ensure_indexes
 from app.main import app
 from app.services import crypto
 from sim.room import RoomConfig, build_scene, synth_reports
-from tests.conftest import Device
+from sim.phone import Device
 
 TEACHER = {"X-Teacher-Token": settings.TEACHER_TOKEN}
 for _n in ("httpx", "httpcore", "netpresence"):

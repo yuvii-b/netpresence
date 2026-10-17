@@ -185,3 +185,12 @@ async def test_headcount_flags_least_corroborated_present(client):
     await client.post(f"/api/sessions/{s['session_id']}/adjudicate", json={"student_id": "stu4", "status": "ABSENT"}, headers=TEACHER)
     res = (await client.get(f"/api/sessions/{s['session_id']}/result", headers=TEACHER)).json()
     assert res["review"] == 0 and res["gap"] == 1 and res["headcount"] == 4
+
+
+async def test_server_time_is_exposed_for_clock_skew_correction(client):
+    import time
+    s, devs = await make_room(client, 2)
+    o = (await client.get("/api/sessions/open")).json()
+    assert abs(o["server_time"] - time.time()) < 5 and o["window_ends_at"] > o["server_time"]
+    c = await checkin(client, s, devs[0])
+    assert abs(c["server_time"] - time.time()) < 5

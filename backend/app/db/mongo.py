@@ -1,4 +1,5 @@
 import logging
+import os
 
 from fastapi import HTTPException
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -31,10 +32,17 @@ async def ensure_indexes(db) -> None:
 
 
 async def connect_to_mongo():
-    db_instance.client = AsyncIOMotorClient(settings.MONGO_URL)
-    db_instance.db = db_instance.client[settings.DB_NAME]
+    if os.getenv("NP_INMEMORY_DB") == "1":
+        # Dev/test only (pip install -r requirements-dev.txt): no MongoDB needed, ALL STATE IS LOST ON RESTART.
+        from mongomock_motor import AsyncMongoMockClient
+        db_instance.client = None
+        db_instance.db = AsyncMongoMockClient()[settings.DB_NAME]
+        logger.warning("Using the IN-MEMORY database (NP_INMEMORY_DB=1): nothing is persisted.")
+    else:
+        db_instance.client = AsyncIOMotorClient(settings.MONGO_URL)
+        db_instance.db = db_instance.client[settings.DB_NAME]
+        logger.info("Connected to MongoDB.")
     await ensure_indexes(db_instance.db)
-    logger.info("Connected to MongoDB.")
 
 
 async def close_mongo_connection():

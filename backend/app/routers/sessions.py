@@ -88,7 +88,7 @@ async def open_session(db=Depends(get_db)):
     return {
         "status": "open", "session_id": s["session_id"], "nonce": s["nonce"],
         "window_ends_at": s["window_ends_at"], "report_deadline": s["report_deadline"],
-        "service_uuid": SERVICE_UUID,
+        "service_uuid": SERVICE_UUID, "server_time": time.time(),   # lets phones correct their clock skew
     }
 
 
@@ -128,6 +128,7 @@ async def checkin(session_id: str, payload: CheckIn, db=Depends(get_db)):
     return {
         "eph_id": eph, "advertise_name": f"NP-{eph}", "service_uuid": SERVICE_UUID,
         "window_ends_at": s["window_ends_at"], "report_deadline": s["report_deadline"],
+        "server_time": time.time(),
     }
 
 

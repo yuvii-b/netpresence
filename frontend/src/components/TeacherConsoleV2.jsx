@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { v2, getTeacherToken, setTeacherToken } from '../services/api';
 
 const STATUS_COLOR = { PRESENT: '#1b7f3b', FLAGGED: '#b26a00', ABSENT: '#a11' };
+// Rows that need a teacher decision first (review, then flagged), then the rest.
+const rank = (r) => (r.review ? 0 : r.status === 'FLAGGED' ? 1 : r.status === 'PRESENT' ? 2 : 3);
 
 export default function TeacherConsoleV2() {
   const [token, setToken] = useState(getTeacherToken());
@@ -13,6 +15,8 @@ export default function TeacherConsoleV2() {
   const [seeds, setSeeds] = useState([]);              // confirmed on server
   const [pick, setPick] = useState(new Set());         // pending selection
   const [result, setResult] = useState(null);
+  const [headcount, setHeadcount] = useState('');
+  const [q, setQ] = useState('');
   const [now, setNow] = useState(() => Date.now());
   const [msg, setMsg] = useState('');
   const wsRef = useRef(null);
@@ -30,7 +34,7 @@ export default function TeacherConsoleV2() {
     else if (e.type === 'SEEDS') setSeeds(e.student_ids);
     else if (e.type === 'RESULT') setResult(e);
     else if (e.type === 'ADJUDICATED') {
-      setResult((r) => r && { ...r, rows: r.rows.map((x) => (x.student_id === e.student_id ? { ...x, status: e.status, decided_by: 'teacher' } : x)) });
+      setResult((r) => r && { ...r, rows: r.rows.map((x) => (x.student_id === e.student_id ? { ...x, status: e.status, decided_by: 'teacher', review: false } : x)) });
     }
   }, []);
 
@@ -43,13 +47,13 @@ export default function TeacherConsoleV2() {
     setTeacherToken(token);
     const [s, studs] = await Promise.all([v2.start({ room }), v2.students()]);
     setRoster(Object.fromEntries(studs.map((x) => [x.student_id, x.name])));
-    setSession(s); setCheckedIn([]); setReports(0); setSeeds([]); setPick(new Set()); setResult(null);
+    setSession(s); setQ(''); setCheckedIn([]); setReports(0); setSeeds([]); setPick(new Set()); setResult(null); setHeadcount('');
     wsRef.current?.close();
     wsRef.current = v2.socket(s.session_id, onEvent);
   });
 
   const confirmSeeds = () => guard(async () => { await v2.verifySeeds(session.session_id, [...pick]); });
-  const closeAndCompute = () => guard(async () => { setResult(await v2.close(session.session_id)); });
+  const closeAndCompute = () => guard(async () => { setResult(await v2.close(session.session_id, headcount)); });
   const adjudicate = (id, status) => guard(async () => { await v2.adjudicate(session.session_id, id, status); });
 
   const secsLeft = session ? Math.max(0, Math.round((session.window_ends_at * 1000 - now) / 1000)) : 0;
@@ -74,9 +78,10 @@ export default function TeacherConsoleV2() {
             {' '}· reports received: {reports}</p>
 
           <h3>Checked in ({checkedIn.length})</h3>
-          <p className="hint">Tick the students sitting on the front bench whom you can see, then confirm. They anchor the flood.</p>
+          <p className="hint">Tick the students on the <b>front bench</b> (the middle column works best) whom you can see, then confirm. They anchor the flood.</p>
+          <input type="search" placeholder="Search name or roll no." value={q} onChange={(e) => setQ(e.target.value)} style={{ width: '100%', boxSizing: 'border-box' }} />
           <ul className="plain">
-            {checkedIn.map((id) => (
+            {checkedIn.filter((id) => pick.has(id) || seeds.includes(id) || `${id} ${roster[id] || ''}`.toLowerCase().includes(q.trim().toLowerCase())).map((id) => (
               <li key={id}>
                 <label>
                   <input type="checkbox" disabled={!!result} checked={pick.has(id) || seeds.includes(id)} onChange={() => togglePick(id)} />
@@ -87,6 +92,8 @@ export default function TeacherConsoleV2() {
           </ul>
           {!result && (
             <div className="row">
+              <label>Heads in the room (optional) <input type="number" min="0" max="500" style={{ width: 80 }} value={headcount}
+                onChange={(e) => setHeadcount(e.target.value)} /></label>
               <button onClick={confirmSeeds} disabled={pick.size === 0}>Confirm {pick.size} verified</button>
               <button className="primary" onClick={closeAndCompute} disabled={seeds.length === 0}>Close &amp; compute attendance</button>
             </div>
@@ -97,20 +104,27 @@ export default function TeacherConsoleV2() {
       {result && (
         <>
           <h3>Result</h3>
-          <p>
+          <p data-testid="counts">
             {Object.entries(result.counts).map(([k, v]) => <span key={k} style={{ color: STATUS_COLOR[k], marginRight: 12 }}><b>{v}</b> {k}</span>)}
             {result.edges != null && <span className="hint">· {result.edges} admitted links</span>}
+            {result.params && <span className="hint"> · link range {result.params.max_edge_m} m</span>}
           </p>
+          {result.review > 0 && (
+            <p className="warn">
+              You counted {result.headcount} but {result.counts.PRESENT} are marked present. The {result.review} least-corroborated
+              {' '}are highlighted below — look for anyone standing at the door or in the corridor.
+            </p>
+          )}
           <table>
             <thead><tr><th>Student</th><th>Status</th><th>Hops</th><th>Path m</th><th>By</th><th /></tr></thead>
             <tbody>
-              {result.rows.map((r) => (
-                <tr key={r.student_id}>
+              {[...result.rows].sort((a, b) => rank(a) - rank(b) || a.student_id.localeCompare(b.student_id, undefined, { numeric: true })).map((r) => (
+                <tr key={r.student_id} className={r.review ? 'review' : ''}>
                   <td>{r.name} <span className="hint">({r.student_id})</span></td>
-                  <td style={{ color: STATUS_COLOR[r.status], fontWeight: 600 }}>{r.status}</td>
+                  <td style={{ color: STATUS_COLOR[r.status], fontWeight: 600 }}>{r.status}{r.review ? ' · check' : ''}</td>
                   <td>{r.hops ?? '–'}</td><td>{r.path_m ?? '–'}</td><td>{r.decided_by}</td>
                   <td>
-                    {r.status === 'FLAGGED' && (
+                    {(r.status === 'FLAGGED' || r.review) && (
                       <>
                         <button onClick={() => adjudicate(r.student_id, 'PRESENT')}>Present</button>
                         <button onClick={() => adjudicate(r.student_id, 'ABSENT')}>Absent</button>
@@ -121,7 +135,8 @@ export default function TeacherConsoleV2() {
               ))}
             </tbody>
           </table>
-          <p className="hint">FLAGGED = checked in on the phone but not corroborated by enough nearby students; you decide.</p>
+          <p className="hint">FLAGGED = checked in on the phone but not corroborated by enough nearby students. "check" = marked present but
+            thinly corroborated while your headcount is lower. You decide both.</p>
         </>
       )}
     </div>
