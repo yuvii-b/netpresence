@@ -73,7 +73,9 @@ cd backend
 python -m tools.check          # tests, 93-student room study, Android+iOS fleet study, phone code vs live server (~2.5 min)
 python -m tools.check --full   # + the teacher console in headless Chromium
 ```
-GitHub runs the same command on every push (`.github/workflows/tests.yml`).
+Works the same on Windows (Command Prompt, inside the `venv`) and Linux; GitHub runs it on both on every push
+(`.github/workflows/tests.yml`). The simulator reads its protocol constants from the app's own code
+(`backend/sim/protocol.py`), so what you simulate is always what the repo implements.
 
 ## 8. Real deployment (later)
 Use MongoDB (Atlas free tier) instead of the in-memory database, set a long random `TEACHER_TOKEN`, put the API behind HTTPS

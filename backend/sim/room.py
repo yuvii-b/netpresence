@@ -20,6 +20,8 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
+from sim import protocol   # every protocol constant comes from the real code (see sim/protocol.py)
+
 from app.services.graph import Params, evaluate
 
 
@@ -57,21 +59,21 @@ class RoomConfig:
     wall_db: float = 12.0
     sensitivity: float = -95.0
     p_detect: float = 0.97        # extra chance a pair is heard at all (OS hiccups not modelled below)
-    window_s: float = 20.0        # check-in window (s): a student who taps later than this is absent (= server WINDOW_SECONDS)
-    tail_s: float = 5.0           # discovery continues this long after check-in closes (= server DISCOVERY_TAIL_SECONDS)
+    window_s: float = protocol.WINDOW_S          # check-in window: a student tapping later is absent
+    tail_s: float = protocol.TAIL_S              # phones keep discovering this long after check-in closes
     tap_median_s: float = 4.0     # students tap "Mark me present" after a lognormal delay (median, s); 0 = all at t=0
     tap_sigma: float = 0.6        #   log-sd of that delay (90th percentile ~ 2.2 x median)
     startup_s: float = 1.0        # tap -> radio on (check-in round trip, permissions already granted)
-    min_samples: int = 3          # the phone only reports a peer it heard at least this often
-    sample_cap: int = 200         # the phone keeps at most this many samples per peer
-    airtime_ms: float = 0.3       # one 21-byte advert (identity in the service UUID: no scan response needed)
+    min_samples: int = protocol.MIN_SAMPLES      # NeighbourCollector default (mobile/core/src/aggregate.ts)
+    sample_cap: int | None = protocol.PER_PEER_SAMPLE_CAP   # None: the phone keeps every sample per peer
+    airtime_ms: float = protocol.ADV_AIRTIME_MS  # one advert: AdvA + flags + 128-bit UUID (identity inside the UUID)
     n_outside: int = 8            # phones just past the wall (corridor / next class)
     # Phone models: platform, receiver gain rx, transmit power tx (dB, relative), advertising interval, scan efficiency.
     # Android: LOW_LATENCY advertising (100 ms) + LOW_LATENCY scanning. iOS: interval not settable (assumed 150 ms),
     # duplicate reports possibly coalesced (scan_eff 0.6), fixed TX power assumed +3 dB over Android HIGH.
     models: dict = field(default_factory=lambda: {
-        "ref":    {"platform": "android", "rx": 0.0, "tx": 0.0, "adv_ms": 100.0, "scan_eff": 0.95},
-        "lowend": {"platform": "android", "rx": -4.0, "tx": -2.0, "adv_ms": 100.0, "scan_eff": 0.75},
+        "ref":    {"platform": "android", "rx": 0.0, "tx": 0.0, "adv_ms": float(protocol.ANDROID_ADV_MS), "scan_eff": 0.95},
+        "lowend": {"platform": "android", "rx": -4.0, "tx": -2.0, "adv_ms": float(protocol.ANDROID_ADV_MS), "scan_eff": 0.75},
         "iphone": {"platform": "ios", "rx": -9.0, "tx": 3.0, "adv_ms": 150.0, "scan_eff": 0.6},
     })
     model_mix: tuple = (0.55, 0.30, 0.15)
@@ -218,7 +220,9 @@ def synth_reports(cfg: RoomConfig, nodes: dict, wall: tuple, rng: random.Random,
     counts = {k: {} for k in ids}
     for hear, src in ((iu, ju), (ju, iu)):            # both directions of every pair
         lam = overlap * 1000.0 / adv[src] * eff[hear] * p_ok
-        m = np.minimum(g_count.poisson(lam), cfg.sample_cap)
+        m = g_count.poisson(lam)
+        if cfg.sample_cap is not None:
+            m = np.minimum(m, cfg.sample_cap)
         sig = np.sqrt(cfg.dir_sigma ** 2 + (1.2533 * cfg.fast_sigma) ** 2 / np.maximum(m, 1))
         r = mean + rx[hear] + tx[src] + g_noise.normal(0, 1, d.shape) * sig
         ok = (m >= cfg.min_samples) & (r > cfg.sensitivity) & (g_det.random(d.shape) < cfg.p_detect)

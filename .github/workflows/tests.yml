@@ -11,7 +11,12 @@ permissions:
 
 jobs:
   check:
-    runs-on: ubuntu-latest
+    # Windows too: the simulator must run on the author's Windows laptop exactly as it runs here
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

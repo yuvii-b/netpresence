@@ -3,7 +3,7 @@
 Starts a REAL server process (in-memory DB) and the BUILT frontend, then drives the console in headless Chromium
 while 100+ virtual phones (from a sim.export_scene fixture, real P-256 signatures) enrol, check in and report over HTTP.
 
-    python -m tools.ui_e2e --fixture ../mobile/core/test/fixtures/scene93.json [--shots /tmp/shots]
+    python -m tools.ui_e2e --fixture ../mobile/core/test/fixtures/scene93.json [--shots DIR]
 
 Needs: pip install playwright (Chromium: the preinstalled /opt/pw-browsers/chromium is used if present), npm deps in ../frontend.
 """
@@ -11,6 +11,7 @@ import argparse
 import asyncio
 import json
 import os
+import tempfile
 import re
 import socket
 import statistics
@@ -48,7 +49,7 @@ def check(cond, msg):
 async def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--fixture", required=True)
-    ap.add_argument("--shots", default="/tmp/np-shots")
+    ap.add_argument("--shots", default=os.path.join(tempfile.gettempdir(), "np-shots"))
     ap.add_argument("--short-by", type=int, default=3, help="teacher 'counts' this many fewer heads than are marked present")
     a = ap.parse_args()
     os.makedirs(a.shots, exist_ok=True)
@@ -57,7 +58,7 @@ async def main():
     api_url, ui_url = f"http://127.0.0.1:{api_port}", f"http://127.0.0.1:{ui_port}"
 
     print("building frontend against", api_url)
-    dist = f"/tmp/np-ui-dist-{api_port}"
+    dist = os.path.join(tempfile.gettempdir(), f"np-ui-dist-{api_port}")
     subprocess.run(["npx", "vite", "build", "--outDir", dist, "--emptyOutDir", "--logLevel", "error"], cwd=FRONTEND, check=True,
                    env={**os.environ, "VITE_API_BASE_URL": api_url})
     procs = [

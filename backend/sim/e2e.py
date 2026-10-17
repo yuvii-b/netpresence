@@ -139,7 +139,7 @@ async def amain():
     print(f"bench-column room: {cfg.bench_cols} columns x {cfg.bench_rows} benches x {cfg.seats_per_bench} seats = "
           f"{cfg.bench_cols * cfg.bench_rows * cfg.seats_per_bench} seats, {cfg.students} students (capacity {cfg.capacity}), p_detect={a.p_detect}, {a.seeds} seeds each")
     print("teacher verifies the whole FRONT BENCH of the middle column\n")
-    print(f"{'scenario':<44}{'false-abs':>10}{'corr✓':>7}{'caught':>7}{'remote✓':>8}{'friend✓':>8}{'to-review':>10}")
+    print(f"{'scenario':<44}{'false-abs':>10}{'corr IN':>7}{'caught':>7}{'remote IN':>8}{'friend IN':>8}{'to-review':>10}")
     for name, c, kw, params, hc in scenarios:
         runs = [await run_scenario(c, 100 + s, params=params, headcount=hc, **kw) for s in range(a.seeds)]
         friend = sum(r["friend_present"] for r in runs) / len(runs)
@@ -150,7 +150,7 @@ async def amain():
               f"{sum(r['teacher_workload'] + r['review_total'] for r in runs) / len(runs):>10.1f}")
     r = runs[-1]
     print(f"\nlast run: {r['phones']} phones, {r['requests']} API requests, {r['seconds']} s in-process")
-    print("corr✓ / remote✓ / friend✓ = share wrongly marked PRESENT (lower is better). caught = share of those leaked corridor phones the headcount\n"
+    print("corr IN / remote IN / friend IN = share wrongly marked PRESENT (lower is better). caught = share of those leaked corridor phones the headcount\n"
           "check put on the teacher's review list. to-review = avg students the teacher must look at (FLAGGED + headcount review).")
 
 

@@ -71,7 +71,7 @@ def main():
         # A. head-count sweep x door: fixed 2.0 m vs the server's density-adaptive threshold --------------
         print("A) Head-count sweep (random seating): fixed 2.0 m edge vs the server's adaptive edge")
         print(f"{'students':>8} {'door':>6} | {'FIXED 2.0 m':^21} | {'ADAPTIVE':^32} | {'hops p95/max':>12} {'path m max':>10}")
-        print(f"{'':>8} {'':>6} | {'false-abs':>9} {'corr✓':>10} | {'edge':>5} {'false-abs':>9} {'corr✓':>8} {'leak cls':>7} |")
+        print(f"{'':>8} {'':>6} | {'false-abs':>9} {'corr IN':>10} | {'edge':>5} {'false-abs':>9} {'corr IN':>8} {'leak cls':>7} |")
         A, AF = {}, {}
         for n in (93, 80, 65, 50, 35, 20):
             for door in (False, True):
@@ -84,7 +84,7 @@ def main():
                       f"{ad['fp']:>8.1%} {ad['leak_classes']:>7.0%} | {ad['hops_p95']:>5}/{ad['hops_max']:<5} {ad['path_max']:>10.1f}")
         # B. which front bench does the teacher verify? -----------------------------------------
         print("\nB) Which column's front bench is verified (door open, adaptive edge)")
-        print(f"{'students':>8} {'seed column':>12} | {'false-abs':>9} {'corridor✓':>10}")
+        print(f"{'students':>8} {'seed column':>12} | {'false-abs':>9} {'corridor IN':>10}")
         B = {}
         for n in (93, 60):
             for col in (0, 1, 2):
@@ -106,7 +106,7 @@ def main():
             print(f"{ttl:>4} | " + " ".join(row))
         # D. students seated front-first, column by column ----------------------------------------
         print("\nD) Column-by-column seating, front first (door open, adaptive edge)")
-        print(f"{'students':>8} | {'false-abs':>9} {'corridor✓':>10}")
+        print(f"{'students':>8} | {'false-abs':>9} {'corridor IN':>10}")
         D = {}
         for n in (40, 60, 93):
             r = _agg(_run(pool, [("trial", replace(BASE, students=n, fill="column"), adaptive(n), 700 + s, 0) for s in range(N)]))
@@ -114,7 +114,7 @@ def main():
             print(f"{n:>8} | {r['fa']:>9.1%} {r['fp']:>10.1%}")
         # E. edge threshold in the densest room ---------------------------------------------------
         print("\nE) Edge-distance threshold (door open)")
-        print(f"{'students':>8} {'edge m':>7} | {'false-abs':>9} {'corridor✓':>10}")
+        print(f"{'students':>8} {'edge m':>7} | {'false-abs':>9} {'corridor IN':>10}")
         E = {}
         for n in (93, 60):
             for em in (1.5, 2.0, 2.5):
