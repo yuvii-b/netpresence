@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, SafeAreaView, StatusBar, StyleSheet, Text, TextInput, View } from 'react-native';
-import { NetPresenceApi, NoOpenSession, enroll, markPresent } from '../core/src';
+import { ApiError, NetPresenceApi, NoOpenSession, enroll, markPresent } from '../core/src';
 import Lab from './src/Lab';
 import { NativeRadio, deviceModel, nativeKeys } from './src/native';
 import { Profile, clearProfile, loadProfile, saveProfile } from './src/storage';
@@ -11,7 +11,7 @@ export default function App() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [lab, setLab] = useState(false);
-  const [form, setForm] = useState<Profile>({ baseUrl: 'https://', studentId: '', name: '' });
+  const [form, setForm] = useState<Profile>({ baseUrl: 'http://192.168.', studentId: '', name: '' });
   const [phase, setPhase] = useState<Phase>('idle');
   const [msg, setMsg] = useState('');
   const radio = useRef(new NativeRadio()).current;
@@ -19,14 +19,34 @@ export default function App() {
   useEffect(() => { loadProfile().then((p) => { setProfile(p); setLoaded(true); }); }, []);
   if (!loaded) return <ActivityIndicator style={{ flex: 1 }} />;
 
+  // Test-build convenience: add a missing scheme, and use plain http for private/LAN/Tailscale addresses
+  // (a leftover "https://" on a laptop IP is the most common reason the connection fails).
+  const normalizeUrl = (raw: string) => {
+    let u = raw.trim().replace(/\/+$/, '');
+    if (!/^https?:\/\//i.test(u)) u = 'http://' + u;
+    if (/^https:\/\/(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|100\.)/.test(u)) u = u.replace(/^https:/, 'http:');
+    return u;
+  };
+
   const doEnroll = async () => {
-    setPhase('working'); setMsg('Registering this phone…');
+    setPhase('working'); setMsg('Checking the server…');
+    const base = normalizeUrl(form.baseUrl);
+    const api = new NetPresenceApi(base);
     try {
-      const base = form.baseUrl.trim().replace(/\/+$/, '');
-      await enroll(new NetPresenceApi(base), nativeKeys, { studentId: form.studentId.trim(), name: form.name.trim(), model: await deviceModel() });
+      await api.openSession(); // public endpoint: proves the phone can reach the server before we try to register
+    } catch (e: any) {
+      setPhase('error');
+      setMsg(e instanceof ApiError && e.status === 0
+        ? `Can't reach ${base}\n\nOpen that address + /docs in this phone's browser. If it doesn't load there either, it's the network or the laptop firewall, not the app. Same Wi-Fi? Server started with --host 0.0.0.0?`
+        : `Server at ${base} answered with an error: ${e?.message ?? e}`);
+      return;
+    }
+    setMsg('Registering this phone…');
+    try {
+      await enroll(api, nativeKeys, { studentId: form.studentId.trim(), name: form.name.trim(), model: await deviceModel() });
       const p = { ...form, baseUrl: base, studentId: form.studentId.trim(), name: form.name.trim() };
       await saveProfile(p); setProfile(p); setPhase('idle'); setMsg('');
-    } catch (e: any) { setPhase('error'); setMsg(e?.message ?? String(e)); }
+    } catch (e: any) { setPhase('error'); setMsg(`Registration failed: ${e?.message ?? String(e)}`); }
   };
 
   const mark = async () => {
