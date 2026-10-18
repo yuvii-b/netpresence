@@ -20,6 +20,7 @@ class20 lab6 exam`, or a TOML file in `netsim/presets/` or passed with `--toml`.
 | M6 baselines | done: `netsim/baselines.py` B0 manual, B1 beacon, B2 acoustic, B3/B4 ablations, B5 QR, same rooms and seeds |
 | M7 paper pipeline | done: `backend/paper/make.py` runs E01-E14 (`netsim/experiments/`), bootstrap CIs over classrooms, cached by config+code hash, tables (md/tex) and figures (pdf/png) |
 | M8 Windows CI hash parity | done in the workflow, NOT yet seen green: `tests.yml` jobs `paper` (ubuntu + windows, `paper.make --quick`) and `paper-parity` (`python -m paper.compare_hashes`); first CI run decides |
+| M10 OMNeT++ model | done: `omnet/` (Phone, BleMedium, Server modules; animated in OMNeT++ Qtenv) + `netsim.omnet_export/omnet_eval/omnet_run`; the real engine decides the verdict; see `omnet/README.md` |
 | M9 loadtest | done: `python -m netsim.loadtest` (virtual phones with real keys against a real server over the real network), `paper/real/README.md` defines the measurement formats |
 
 ## Paper pipeline (M7)
@@ -64,6 +65,13 @@ request timeout; the script prints delivery, latency percentiles, status codes, 
 the engine's on the same reports. The radio is SIMULATED, so this measures the server, database and network only - never copy its
 numbers into `paper/real/sessions.csv`. Enrolments stay in the database (ids `lt<run>-<n>`). `--calibrated` gives the phones
 ideal per-model offsets; the default is raw readings, like a fresh server.
+
+## OMNeT++ model (M10)
+`python -m netsim.omnet_run --preset class93 --gui` runs the roll call as a discrete-event simulation in OMNeT++ 6.1 and shows it in
+its own Qtenv viewer (see `omnet/README.md`). Cross-check on identical classrooms (10 each, assumed values, 30% iOS): false-absent
+Python vs OMNeT++ = class35 0.61% / 0.30%, class60 0.52% / 0.52%, class93 0.34% / 0.45%; corridor admission agrees (class60, class93: 0 / 0).
+The two link layers were written independently, so this is a real agreement check, not a copy. Relay: both radios flagged
+"same radio". Needs OMNeT++ installed; tests skip without it.
 
 ## Provenance of every default
 `netsim/config.py` tags each field `measured`, `spec` or `assumed` (`config.TAGS`; a test fails if one is missing). Protocol

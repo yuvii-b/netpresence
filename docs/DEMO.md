@@ -28,6 +28,11 @@ Results land in `backend\paper\out\`: open `summary.md` (all tables), `figures\*
 Show the professor: `figures\e09_baselines.png` (NetPresence vs manual / beacon / acoustic / QR), `e03_attacks.png` (relay attack and defence),
 `e01_accuracy.png`, `e10_backbench.png` (nobody at the back is missed).
 
+**Animated simulator (OMNeT++, the standard network simulator):** install OMNeT++ 6.1 and build the model once (`omnet/README.md`), then
+`python -m netsim.omnet_run --preset class93 --seed 1 --gui` and press Run in Qtenv: phones tap, advertise and scan, adverts fly
+between phones, reports go up, then the real engine colours each phone present / absent / flagged and draws the proximity graph.
+`--relays 2` shows the relay attack being flagged. `--compare` checks it against the Python simulator on the same rooms.
+
 **Be honest in the viva:** every radio number is *simulated with assumed values* (each parameter is tagged spec / assumed / measured in
 `netsim/config.py`). The simulator reads the protocol constants from the real app code, and the engine it runs IS the server's engine.
 Real numbers come only after the BLE-lab measurements (below) go in `backend\paper\real\`. `--quick` numbers have wide error bars.

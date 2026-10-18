@@ -1,0 +1,9 @@
+out/
+generated/
+results/
+*.o
+netpresence
+netpresence.exe
+Makefile
+src/*_m.cc
+src/*_m.h
