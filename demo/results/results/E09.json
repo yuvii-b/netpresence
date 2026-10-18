@@ -1,0 +1,537 @@
+{
+ "check": {
+  "False/B0 manual roll call": [
+   0,
+   0,
+   157
+  ],
+  "False/B1 teacher beacon": [
+   1605,
+   33,
+   90
+  ],
+  "False/B2 acoustic (v1)": [
+   1754,
+   0,
+   90
+  ],
+  "False/B3 no disjoint paths": [
+   22,
+   0,
+   5
+  ],
+  "False/B4 no self-calibration": [
+   40,
+   0,
+   5
+  ],
+  "False/B5 rotating QR": [
+   178,
+   0,
+   91
+  ],
+  "False/NetPresence": [
+   22,
+   0,
+   5
+  ],
+  "False/NetPresence, no co-location": [
+   22,
+   0,
+   300
+  ],
+  "True/B0 manual roll call": [
+   0,
+   0,
+   157
+  ],
+  "True/B1 teacher beacon": [
+   1605,
+   33,
+   90
+  ],
+  "True/B2 acoustic (v1)": [
+   1754,
+   0,
+   90
+  ],
+  "True/B3 no disjoint paths": [
+   22,
+   27,
+   5
+  ],
+  "True/B4 no self-calibration": [
+   40,
+   0,
+   5
+  ],
+  "True/B5 rotating QR": [
+   178,
+   0,
+   91
+  ],
+  "True/NetPresence": [
+   22,
+   0,
+   5
+  ],
+  "True/NetPresence, no co-location": [
+   22,
+   0,
+   300
+  ]
+ },
+ "rows": [
+  {
+   "door": "closed",
+   "far": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 60
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 60
+   },
+   "method": "B0 manual roll call",
+   "proxy": {
+    "est": 0.523333,
+    "hi": 0.576667,
+    "lo": 0.47,
+    "n": 60
+   },
+   "time_s": {
+    "est": 263.833557,
+    "hi": 266.30523,
+    "lo": 261.299223,
+    "n": 60
+   }
+  },
+  {
+   "door": "closed",
+   "far": {
+    "est": 0.300449,
+    "hi": 0.313612,
+    "lo": 0.28729,
+    "n": 60
+   },
+   "fpr": {
+    "est": 0.06875,
+    "hi": 0.093802,
+    "lo": 0.045833,
+    "n": 60
+   },
+   "method": "B1 teacher beacon",
+   "proxy": {
+    "est": 0.3,
+    "hi": 0.35,
+    "lo": 0.253333,
+    "n": 60
+   },
+   "time_s": {
+    "est": 20.0,
+    "hi": 20.0,
+    "lo": 20.0,
+    "n": 60
+   }
+  },
+  {
+   "door": "closed",
+   "far": {
+    "est": 0.328341,
+    "hi": 0.342693,
+    "lo": 0.315116,
+    "n": 60
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 60
+   },
+   "method": "B2 acoustic (v1)",
+   "proxy": {
+    "est": 0.3,
+    "hi": 0.35,
+    "lo": 0.253333,
+    "n": 60
+   },
+   "time_s": {
+    "est": 20.0,
+    "hi": 20.0,
+    "lo": 20.0,
+    "n": 60
+   }
+  },
+  {
+   "door": "closed",
+   "far": {
+    "est": 0.004118,
+    "hi": 0.006179,
+    "lo": 0.002246,
+    "n": 60
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 60
+   },
+   "method": "B3 no disjoint paths",
+   "proxy": {
+    "est": 0.016667,
+    "hi": 0.036667,
+    "lo": 0.003333,
+    "n": 60
+   },
+   "time_s": {
+    "est": 26.0,
+    "hi": 26.0,
+    "lo": 26.0,
+    "n": 60
+   }
+  },
+  {
+   "door": "closed",
+   "far": {
+    "est": 0.007488,
+    "hi": 0.010292,
+    "lo": 0.004869,
+    "n": 60
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 60
+   },
+   "method": "B4 no self-calibration",
+   "proxy": {
+    "est": 0.016667,
+    "hi": 0.036667,
+    "lo": 0.003333,
+    "n": 60
+   },
+   "time_s": {
+    "est": 26.0,
+    "hi": 26.0,
+    "lo": 26.0,
+    "n": 60
+   }
+  },
+  {
+   "door": "closed",
+   "far": {
+    "est": 0.033321,
+    "hi": 0.038555,
+    "lo": 0.028641,
+    "n": 60
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 60
+   },
+   "method": "B5 rotating QR",
+   "proxy": {
+    "est": 0.303333,
+    "hi": 0.353333,
+    "lo": 0.253333,
+    "n": 60
+   },
+   "time_s": {
+    "est": 20.0,
+    "hi": 20.0,
+    "lo": 20.0,
+    "n": 60
+   }
+  },
+  {
+   "door": "closed",
+   "far": {
+    "est": 0.004118,
+    "hi": 0.006179,
+    "lo": 0.002246,
+    "n": 60
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 60
+   },
+   "method": "NetPresence",
+   "proxy": {
+    "est": 0.016667,
+    "hi": 0.036667,
+    "lo": 0.003333,
+    "n": 60
+   },
+   "time_s": {
+    "est": 26.0,
+    "hi": 26.0,
+    "lo": 26.0,
+    "n": 60
+   }
+  },
+  {
+   "door": "closed",
+   "far": {
+    "est": 0.004118,
+    "hi": 0.006179,
+    "lo": 0.002246,
+    "n": 60
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 60
+   },
+   "method": "NetPresence, no co-location",
+   "proxy": {
+    "est": 1.0,
+    "hi": 1.0,
+    "lo": 1.0,
+    "n": 60
+   },
+   "time_s": {
+    "est": 26.0,
+    "hi": 26.0,
+    "lo": 26.0,
+    "n": 60
+   }
+  },
+  {
+   "door": "open",
+   "far": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 60
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 60
+   },
+   "method": "B0 manual roll call",
+   "proxy": {
+    "est": 0.523333,
+    "hi": 0.576667,
+    "lo": 0.47,
+    "n": 60
+   },
+   "time_s": {
+    "est": 263.833557,
+    "hi": 266.30523,
+    "lo": 261.299223,
+    "n": 60
+   }
+  },
+  {
+   "door": "open",
+   "far": {
+    "est": 0.300449,
+    "hi": 0.313612,
+    "lo": 0.28729,
+    "n": 60
+   },
+   "fpr": {
+    "est": 0.06875,
+    "hi": 0.093802,
+    "lo": 0.045833,
+    "n": 60
+   },
+   "method": "B1 teacher beacon",
+   "proxy": {
+    "est": 0.3,
+    "hi": 0.35,
+    "lo": 0.253333,
+    "n": 60
+   },
+   "time_s": {
+    "est": 20.0,
+    "hi": 20.0,
+    "lo": 20.0,
+    "n": 60
+   }
+  },
+  {
+   "door": "open",
+   "far": {
+    "est": 0.328341,
+    "hi": 0.342693,
+    "lo": 0.315116,
+    "n": 60
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 60
+   },
+   "method": "B2 acoustic (v1)",
+   "proxy": {
+    "est": 0.3,
+    "hi": 0.35,
+    "lo": 0.253333,
+    "n": 60
+   },
+   "time_s": {
+    "est": 20.0,
+    "hi": 20.0,
+    "lo": 20.0,
+    "n": 60
+   }
+  },
+  {
+   "door": "open",
+   "far": {
+    "est": 0.004118,
+    "hi": 0.006179,
+    "lo": 0.002246,
+    "n": 60
+   },
+   "fpr": {
+    "est": 0.05625,
+    "hi": 0.104167,
+    "lo": 0.01875,
+    "n": 60
+   },
+   "method": "B3 no disjoint paths",
+   "proxy": {
+    "est": 0.016667,
+    "hi": 0.036667,
+    "lo": 0.003333,
+    "n": 60
+   },
+   "time_s": {
+    "est": 26.0,
+    "hi": 26.0,
+    "lo": 26.0,
+    "n": 60
+   }
+  },
+  {
+   "door": "open",
+   "far": {
+    "est": 0.007488,
+    "hi": 0.010292,
+    "lo": 0.004869,
+    "n": 60
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 60
+   },
+   "method": "B4 no self-calibration",
+   "proxy": {
+    "est": 0.016667,
+    "hi": 0.036667,
+    "lo": 0.003333,
+    "n": 60
+   },
+   "time_s": {
+    "est": 26.0,
+    "hi": 26.0,
+    "lo": 26.0,
+    "n": 60
+   }
+  },
+  {
+   "door": "open",
+   "far": {
+    "est": 0.033321,
+    "hi": 0.038555,
+    "lo": 0.028641,
+    "n": 60
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 60
+   },
+   "method": "B5 rotating QR",
+   "proxy": {
+    "est": 0.303333,
+    "hi": 0.353333,
+    "lo": 0.253333,
+    "n": 60
+   },
+   "time_s": {
+    "est": 20.0,
+    "hi": 20.0,
+    "lo": 20.0,
+    "n": 60
+   }
+  },
+  {
+   "door": "open",
+   "far": {
+    "est": 0.004118,
+    "hi": 0.006179,
+    "lo": 0.002246,
+    "n": 60
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 60
+   },
+   "method": "NetPresence",
+   "proxy": {
+    "est": 0.016667,
+    "hi": 0.036667,
+    "lo": 0.003333,
+    "n": 60
+   },
+   "time_s": {
+    "est": 26.0,
+    "hi": 26.0,
+    "lo": 26.0,
+    "n": 60
+   }
+  },
+  {
+   "door": "open",
+   "far": {
+    "est": 0.004118,
+    "hi": 0.006179,
+    "lo": 0.002246,
+    "n": 60
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 60
+   },
+   "method": "NetPresence, no co-location",
+   "proxy": {
+    "est": 1.0,
+    "hi": 1.0,
+    "lo": 1.0,
+    "n": 60
+   },
+   "time_s": {
+    "est": 26.0,
+    "hi": 26.0,
+    "lo": 26.0,
+    "n": 60
+   }
+  }
+ ],
+ "timing": {
+  "seconds": 71.74
+ }
+}

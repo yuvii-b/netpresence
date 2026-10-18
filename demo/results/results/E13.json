@@ -1,0 +1,202 @@
+{
+ "check": {
+  "35/False/parametric": {
+   "false_absent": 11,
+   "false_present": 11,
+   "inside": 1311,
+   "outside": 320
+  },
+  "35/False/trace": {
+   "false_absent": 9,
+   "false_present": 0,
+   "inside": 1311,
+   "outside": 320
+  },
+  "35/True/parametric": {
+   "false_absent": 13,
+   "false_present": 30,
+   "inside": 1311,
+   "outside": 320
+  },
+  "35/True/trace": {
+   "false_absent": 9,
+   "false_present": 12,
+   "inside": 1311,
+   "outside": 320
+  },
+  "93/False/parametric": {
+   "false_absent": 13,
+   "false_present": 0,
+   "inside": 3562,
+   "outside": 320
+  },
+  "93/False/trace": {
+   "false_absent": 20,
+   "false_present": 0,
+   "inside": 3562,
+   "outside": 320
+  },
+  "93/True/parametric": {
+   "false_absent": 13,
+   "false_present": 0,
+   "inside": 3562,
+   "outside": 320
+  },
+  "93/True/trace": {
+   "false_absent": 20,
+   "false_present": 0,
+   "inside": 3562,
+   "outside": 320
+  }
+ },
+ "rows": [
+  {
+   "channel": "parametric",
+   "classrooms": 40,
+   "door": "closed",
+   "far": {
+    "est": 0.008391,
+    "hi": 0.014449,
+    "lo": 0.003072,
+    "n": 40
+   },
+   "fpr": {
+    "est": 0.034375,
+    "hi": 0.096875,
+    "lo": 0.0,
+    "n": 40
+   },
+   "students": 35
+  },
+  {
+   "channel": "trace",
+   "classrooms": 40,
+   "door": "closed",
+   "far": {
+    "est": 0.006865,
+    "hi": 0.012898,
+    "lo": 0.002278,
+    "n": 40
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "students": 35
+  },
+  {
+   "channel": "parametric",
+   "classrooms": 40,
+   "door": "open",
+   "far": {
+    "est": 0.009916,
+    "hi": 0.016215,
+    "lo": 0.004545,
+    "n": 40
+   },
+   "fpr": {
+    "est": 0.09375,
+    "hi": 0.187578,
+    "lo": 0.025,
+    "n": 40
+   },
+   "students": 35
+  },
+  {
+   "channel": "trace",
+   "classrooms": 40,
+   "door": "open",
+   "far": {
+    "est": 0.006865,
+    "hi": 0.012898,
+    "lo": 0.002278,
+    "n": 40
+   },
+   "fpr": {
+    "est": 0.0375,
+    "hi": 0.09375,
+    "lo": 0.003125,
+    "n": 40
+   },
+   "students": 35
+  },
+  {
+   "channel": "parametric",
+   "classrooms": 40,
+   "door": "closed",
+   "far": {
+    "est": 0.00365,
+    "hi": 0.005897,
+    "lo": 0.001684,
+    "n": 40
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "students": 93
+  },
+  {
+   "channel": "trace",
+   "classrooms": 40,
+   "door": "closed",
+   "far": {
+    "est": 0.005615,
+    "hi": 0.008696,
+    "lo": 0.002809,
+    "n": 40
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "students": 93
+  },
+  {
+   "channel": "parametric",
+   "classrooms": 40,
+   "door": "open",
+   "far": {
+    "est": 0.00365,
+    "hi": 0.005897,
+    "lo": 0.001684,
+    "n": 40
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "students": 93
+  },
+  {
+   "channel": "trace",
+   "classrooms": 40,
+   "door": "open",
+   "far": {
+    "est": 0.005615,
+    "hi": 0.008696,
+    "lo": 0.002809,
+    "n": 40
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "students": 93
+  }
+ ],
+ "timing": {
+  "seconds": 8.7
+ },
+ "trace": "SYNTHETIC (drawn from the parametric model; not measured)"
+}

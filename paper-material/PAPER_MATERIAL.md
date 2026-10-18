@@ -48,10 +48,10 @@ verified front-bench students; a student is present only with k = 2 vertex-disjo
 ## 5. Threat model table (for the security section)
 | Attack | Attacker | Result in simulation | Residual |
 |---|---|---|---|
-| Corridor / next-room phone | honest but outside | not admitted (E01) | door open: bounded by TTL/edge |
+| Corridor / next-room phone | honest but outside | 1.75% admitted with the door open at 93 students (CI 0-4.5), 0% closed (E01) | door open: bounded by TTL/edge |
 | Remote forger | uploads fabricated links | one-sided edges rejected | - |
 | Collusion | c in-room accomplices vouch | works iff c >= k (E03) | raise k, headcount, teacher review |
-| Relay / wormhole | accomplice radio also carries friend's id | admitted ~100% without defence, flagged with co-location (E03) | < 10 common observers abstains; per-observer power-varying hardware not modelled |
+| Relay / wormhole | accomplice radio also carries friend's id | admitted 100% without defence; with co-location 2.2% admitted, 97.8% flagged, 0% honest flagged (E03, full run) | < 10 common observers abstains; per-observer power-varying hardware not modelled |
 | RSSI inflation | phone adds +X dB | pooled per platform; lopsided links rejected (E03) | - |
 | Replay | resubmit old report | refused: signature binds session | - |
 | Id spoof of a present classmate | second radio sends a classmate's id | NOT modelled | future work |

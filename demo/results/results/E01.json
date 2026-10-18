@@ -1,0 +1,285 @@
+{
+ "check": {
+  "20/False": {
+   "false_absent": 88,
+   "false_present": 0,
+   "inside": 1781,
+   "outside": 800
+  },
+  "20/True": {
+   "false_absent": 90,
+   "false_present": 44,
+   "inside": 1781,
+   "outside": 800
+  },
+  "35/False": {
+   "false_absent": 36,
+   "false_present": 11,
+   "inside": 3285,
+   "outside": 800
+  },
+  "35/True": {
+   "false_absent": 38,
+   "false_present": 66,
+   "inside": 3285,
+   "outside": 800
+  },
+  "50/False": {
+   "false_absent": 96,
+   "false_present": 0,
+   "inside": 4765,
+   "outside": 800
+  },
+  "50/True": {
+   "false_absent": 96,
+   "false_present": 24,
+   "inside": 4765,
+   "outside": 800
+  },
+  "60/False": {
+   "false_absent": 34,
+   "false_present": 0,
+   "inside": 5740,
+   "outside": 800
+  },
+  "60/True": {
+   "false_absent": 34,
+   "false_present": 27,
+   "inside": 5740,
+   "outside": 800
+  },
+  "75/False": {
+   "false_absent": 36,
+   "false_present": 0,
+   "inside": 7186,
+   "outside": 800
+  },
+  "75/True": {
+   "false_absent": 36,
+   "false_present": 4,
+   "inside": 7186,
+   "outside": 800
+  },
+  "93/False": {
+   "false_absent": 33,
+   "false_present": 0,
+   "inside": 8906,
+   "outside": 800
+  },
+  "93/True": {
+   "false_absent": 33,
+   "false_present": 14,
+   "inside": 8906,
+   "outside": 800
+  }
+ },
+ "rows": [
+  {
+   "classrooms": 100,
+   "door": "open",
+   "far": {
+    "est": 0.050533,
+    "hi": 0.075473,
+    "lo": 0.032313,
+    "n": 100
+   },
+   "fpr": {
+    "est": 0.055,
+    "hi": 0.09625,
+    "lo": 0.02125,
+    "n": 100
+   },
+   "students": 20
+  },
+  {
+   "classrooms": 100,
+   "door": "closed",
+   "far": {
+    "est": 0.04941,
+    "hi": 0.074143,
+    "lo": 0.031656,
+    "n": 100
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 100
+   },
+   "students": 20
+  },
+  {
+   "classrooms": 100,
+   "door": "open",
+   "far": {
+    "est": 0.011568,
+    "hi": 0.015599,
+    "lo": 0.007915,
+    "n": 100
+   },
+   "fpr": {
+    "est": 0.0825,
+    "hi": 0.13125,
+    "lo": 0.04,
+    "n": 100
+   },
+   "students": 35
+  },
+  {
+   "classrooms": 100,
+   "door": "closed",
+   "far": {
+    "est": 0.010959,
+    "hi": 0.014962,
+    "lo": 0.007328,
+    "n": 100
+   },
+   "fpr": {
+    "est": 0.01375,
+    "hi": 0.0375,
+    "lo": 0.0,
+    "n": 100
+   },
+   "students": 35
+  },
+  {
+   "classrooms": 100,
+   "door": "open",
+   "far": {
+    "est": 0.020147,
+    "hi": 0.042128,
+    "lo": 0.007368,
+    "n": 100
+   },
+   "fpr": {
+    "est": 0.03,
+    "hi": 0.0575,
+    "lo": 0.0075,
+    "n": 100
+   },
+   "students": 50
+  },
+  {
+   "classrooms": 100,
+   "door": "closed",
+   "far": {
+    "est": 0.020147,
+    "hi": 0.042128,
+    "lo": 0.007368,
+    "n": 100
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 100
+   },
+   "students": 50
+  },
+  {
+   "classrooms": 100,
+   "door": "open",
+   "far": {
+    "est": 0.005923,
+    "hi": 0.008175,
+    "lo": 0.003986,
+    "n": 100
+   },
+   "fpr": {
+    "est": 0.03375,
+    "hi": 0.06375,
+    "lo": 0.0125,
+    "n": 100
+   },
+   "students": 60
+  },
+  {
+   "classrooms": 100,
+   "door": "closed",
+   "far": {
+    "est": 0.005923,
+    "hi": 0.008175,
+    "lo": 0.003986,
+    "n": 100
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 100
+   },
+   "students": 60
+  },
+  {
+   "classrooms": 100,
+   "door": "open",
+   "far": {
+    "est": 0.00501,
+    "hi": 0.006666,
+    "lo": 0.003344,
+    "n": 100
+   },
+   "fpr": {
+    "est": 0.005,
+    "hi": 0.01125,
+    "lo": 0.0,
+    "n": 100
+   },
+   "students": 75
+  },
+  {
+   "classrooms": 100,
+   "door": "closed",
+   "far": {
+    "est": 0.00501,
+    "hi": 0.006666,
+    "lo": 0.003344,
+    "n": 100
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 100
+   },
+   "students": 75
+  },
+  {
+   "classrooms": 100,
+   "door": "open",
+   "far": {
+    "est": 0.003705,
+    "hi": 0.005163,
+    "lo": 0.002359,
+    "n": 100
+   },
+   "fpr": {
+    "est": 0.0175,
+    "hi": 0.045,
+    "lo": 0.0,
+    "n": 100
+   },
+   "students": 93
+  },
+  {
+   "classrooms": 100,
+   "door": "closed",
+   "far": {
+    "est": 0.003705,
+    "hi": 0.005163,
+    "lo": 0.002359,
+    "n": 100
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 100
+   },
+   "students": 93
+  }
+ ],
+ "timing": {
+  "seconds": 25.93
+ }
+}

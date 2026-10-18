@@ -1,0 +1,296 @@
+{
+ "check": {
+  "B1 teacher beacon": 1605,
+  "B2 acoustic (v1)": 1754,
+  "NetPresence": 22
+ },
+ "cols": 3,
+ "methods": {
+  "B1 teacher beacon": {
+   "0,0": {
+    "absent": 5,
+    "total": 235
+   },
+   "0,1": {
+    "absent": 13,
+    "total": 236
+   },
+   "0,2": {
+    "absent": 34,
+    "total": 233
+   },
+   "0,3": {
+    "absent": 95,
+    "total": 231
+   },
+   "0,4": {
+    "absent": 119,
+    "total": 231
+   },
+   "0,5": {
+    "absent": 136,
+    "total": 231
+   },
+   "0,6": {
+    "absent": 75,
+    "total": 233
+   },
+   "0,7": {
+    "absent": 70,
+    "total": 226
+   },
+   "1,1": {
+    "absent": 0,
+    "total": 234
+   },
+   "1,2": {
+    "absent": 24,
+    "total": 235
+   },
+   "1,3": {
+    "absent": 61,
+    "total": 229
+   },
+   "1,4": {
+    "absent": 95,
+    "total": 234
+   },
+   "1,5": {
+    "absent": 127,
+    "total": 236
+   },
+   "1,6": {
+    "absent": 160,
+    "total": 229
+   },
+   "1,7": {
+    "absent": 60,
+    "total": 232
+   },
+   "2,0": {
+    "absent": 7,
+    "total": 236
+   },
+   "2,1": {
+    "absent": 11,
+    "total": 230
+   },
+   "2,2": {
+    "absent": 34,
+    "total": 230
+   },
+   "2,3": {
+    "absent": 83,
+    "total": 231
+   },
+   "2,4": {
+    "absent": 111,
+    "total": 233
+   },
+   "2,5": {
+    "absent": 137,
+    "total": 232
+   },
+   "2,6": {
+    "absent": 72,
+    "total": 233
+   },
+   "2,7": {
+    "absent": 76,
+    "total": 232
+   }
+  },
+  "B2 acoustic (v1)": {
+   "0,0": {
+    "absent": 37,
+    "total": 235
+   },
+   "0,1": {
+    "absent": 46,
+    "total": 236
+   },
+   "0,2": {
+    "absent": 70,
+    "total": 233
+   },
+   "0,3": {
+    "absent": 87,
+    "total": 231
+   },
+   "0,4": {
+    "absent": 92,
+    "total": 231
+   },
+   "0,5": {
+    "absent": 98,
+    "total": 231
+   },
+   "0,6": {
+    "absent": 94,
+    "total": 233
+   },
+   "0,7": {
+    "absent": 92,
+    "total": 226
+   },
+   "1,1": {
+    "absent": 17,
+    "total": 234
+   },
+   "1,2": {
+    "absent": 51,
+    "total": 235
+   },
+   "1,3": {
+    "absent": 61,
+    "total": 229
+   },
+   "1,4": {
+    "absent": 95,
+    "total": 234
+   },
+   "1,5": {
+    "absent": 89,
+    "total": 236
+   },
+   "1,6": {
+    "absent": 123,
+    "total": 229
+   },
+   "1,7": {
+    "absent": 103,
+    "total": 232
+   },
+   "2,0": {
+    "absent": 34,
+    "total": 236
+   },
+   "2,1": {
+    "absent": 46,
+    "total": 230
+   },
+   "2,2": {
+    "absent": 55,
+    "total": 230
+   },
+   "2,3": {
+    "absent": 73,
+    "total": 231
+   },
+   "2,4": {
+    "absent": 99,
+    "total": 233
+   },
+   "2,5": {
+    "absent": 100,
+    "total": 232
+   },
+   "2,6": {
+    "absent": 93,
+    "total": 233
+   },
+   "2,7": {
+    "absent": 99,
+    "total": 232
+   }
+  },
+  "NetPresence": {
+   "0,0": {
+    "absent": 0,
+    "total": 235
+   },
+   "0,1": {
+    "absent": 1,
+    "total": 236
+   },
+   "0,2": {
+    "absent": 2,
+    "total": 233
+   },
+   "0,3": {
+    "absent": 0,
+    "total": 231
+   },
+   "0,4": {
+    "absent": 2,
+    "total": 231
+   },
+   "0,5": {
+    "absent": 1,
+    "total": 231
+   },
+   "0,6": {
+    "absent": 3,
+    "total": 233
+   },
+   "0,7": {
+    "absent": 0,
+    "total": 226
+   },
+   "1,1": {
+    "absent": 2,
+    "total": 234
+   },
+   "1,2": {
+    "absent": 1,
+    "total": 235
+   },
+   "1,3": {
+    "absent": 0,
+    "total": 229
+   },
+   "1,4": {
+    "absent": 3,
+    "total": 234
+   },
+   "1,5": {
+    "absent": 0,
+    "total": 236
+   },
+   "1,6": {
+    "absent": 0,
+    "total": 229
+   },
+   "1,7": {
+    "absent": 1,
+    "total": 232
+   },
+   "2,0": {
+    "absent": 1,
+    "total": 236
+   },
+   "2,1": {
+    "absent": 1,
+    "total": 230
+   },
+   "2,2": {
+    "absent": 0,
+    "total": 230
+   },
+   "2,3": {
+    "absent": 1,
+    "total": 231
+   },
+   "2,4": {
+    "absent": 1,
+    "total": 233
+   },
+   "2,5": {
+    "absent": 0,
+    "total": 232
+   },
+   "2,6": {
+    "absent": 1,
+    "total": 233
+   },
+   "2,7": {
+    "absent": 1,
+    "total": 232
+   }
+  }
+ },
+ "rows": 8,
+ "timing": {
+  "seconds": 19.36
+ }
+}

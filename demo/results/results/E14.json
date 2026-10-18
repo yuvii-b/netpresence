@@ -1,0 +1,51 @@
+{
+ "assumed_ma": {
+  "ble_advertise_low_latency": 2.5,
+  "ble_scan_low_latency": 12.0,
+  "mic_on": 25.0,
+  "radio_upload": 200.0,
+  "screen_on": 120.0,
+  "speaker_tone": 90.0
+ },
+ "battery_mah": 4000.0,
+ "check": [
+  {
+   "mAh": 1.0451,
+   "method": "NetPresence",
+   "pct_day": 0.157
+  },
+  {
+   "mAh": 0.9167,
+   "method": "acoustic v1 (student phone)",
+   "pct_day": 0.138
+  },
+  {
+   "mAh": 0.4444,
+   "method": "rotating QR (student phone)",
+   "pct_day": 0.067
+  }
+ ],
+ "lectures_per_day": 6,
+ "radio_on_s": 25.0,
+ "rows": [
+  {
+   "mAh": 1.0451,
+   "method": "NetPresence",
+   "pct_day": 0.157
+  },
+  {
+   "mAh": 0.9167,
+   "method": "acoustic v1 (student phone)",
+   "pct_day": 0.138
+  },
+  {
+   "mAh": 0.4444,
+   "method": "rotating QR (student phone)",
+   "pct_day": 0.067
+  }
+ ],
+ "timing": {
+  "seconds": 0.0
+ },
+ "window_s": 20.0
+}

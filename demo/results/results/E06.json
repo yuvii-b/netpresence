@@ -1,0 +1,1029 @@
+{
+ "check": {
+  "cell_4g/0.0/35": 9,
+  "cell_4g/0.0/93": 13,
+  "cell_4g/2.0/35": 9,
+  "cell_4g/2.0/93": 13,
+  "cell_4g/5.0/35": 11,
+  "cell_4g/5.0/93": 16,
+  "ideal/0.0/35": 9,
+  "ideal/0.0/93": 13,
+  "ideal/2.0/35": 9,
+  "ideal/2.0/93": 13,
+  "ideal/5.0/35": 9,
+  "ideal/5.0/93": 13,
+  "wifi_congested/0.0/35": 9,
+  "wifi_congested/0.0/93": 13,
+  "wifi_congested/2.0/35": 9,
+  "wifi_congested/2.0/93": 16,
+  "wifi_congested/5.0/35": 14,
+  "wifi_congested/5.0/93": 53,
+  "wifi_congested:0.7,cell_4g:0.3/0.0/35": 9,
+  "wifi_congested:0.7,cell_4g:0.3/0.0/93": 13,
+  "wifi_congested:0.7,cell_4g:0.3/2.0/35": 9,
+  "wifi_congested:0.7,cell_4g:0.3/2.0/93": 15,
+  "wifi_congested:0.7,cell_4g:0.3/5.0/35": 10,
+  "wifi_congested:0.7,cell_4g:0.3/5.0/93": 52,
+  "wifi_good/0.0/35": 9,
+  "wifi_good/0.0/93": 13,
+  "wifi_good/2.0/35": 9,
+  "wifi_good/2.0/93": 13,
+  "wifi_good/5.0/35": 9,
+  "wifi_good/5.0/93": 15
+ },
+ "rows": [
+  {
+   "attempts": null,
+   "classrooms": 30,
+   "delivered": null,
+   "far": {
+    "est": 0.009137,
+    "hi": 0.015275,
+    "lo": 0.003061,
+    "n": 30
+   },
+   "fpr": {
+    "est": 0.033333,
+    "hi": 0.1,
+    "lo": 0.0,
+    "n": 30
+   },
+   "jitter_s": 0.0,
+   "profile": "ideal",
+   "students": 35,
+   "t_all_in": null
+  },
+  {
+   "attempts": null,
+   "classrooms": 30,
+   "delivered": null,
+   "far": {
+    "est": 0.004867,
+    "hi": 0.007865,
+    "lo": 0.002247,
+    "n": 30
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 30
+   },
+   "jitter_s": 0.0,
+   "profile": "ideal",
+   "students": 93,
+   "t_all_in": null
+  },
+  {
+   "attempts": null,
+   "classrooms": 30,
+   "delivered": null,
+   "far": {
+    "est": 0.009137,
+    "hi": 0.015275,
+    "lo": 0.003061,
+    "n": 30
+   },
+   "fpr": {
+    "est": 0.033333,
+    "hi": 0.1,
+    "lo": 0.0,
+    "n": 30
+   },
+   "jitter_s": 2.0,
+   "profile": "ideal",
+   "students": 35,
+   "t_all_in": null
+  },
+  {
+   "attempts": null,
+   "classrooms": 30,
+   "delivered": null,
+   "far": {
+    "est": 0.004867,
+    "hi": 0.007865,
+    "lo": 0.002247,
+    "n": 30
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 30
+   },
+   "jitter_s": 2.0,
+   "profile": "ideal",
+   "students": 93,
+   "t_all_in": null
+  },
+  {
+   "attempts": null,
+   "classrooms": 30,
+   "delivered": null,
+   "far": {
+    "est": 0.009137,
+    "hi": 0.015275,
+    "lo": 0.003061,
+    "n": 30
+   },
+   "fpr": {
+    "est": 0.033333,
+    "hi": 0.1,
+    "lo": 0.0,
+    "n": 30
+   },
+   "jitter_s": 5.0,
+   "profile": "ideal",
+   "students": 35,
+   "t_all_in": null
+  },
+  {
+   "attempts": null,
+   "classrooms": 30,
+   "delivered": null,
+   "far": {
+    "est": 0.004867,
+    "hi": 0.007865,
+    "lo": 0.002247,
+    "n": 30
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 30
+   },
+   "jitter_s": 5.0,
+   "profile": "ideal",
+   "students": 93,
+   "t_all_in": null
+  },
+  {
+   "attempts": {
+    "est": 1.003101,
+    "hi": 1.006202,
+    "lo": 1.000775,
+    "n": 30
+   },
+   "classrooms": 30,
+   "delivered": {
+    "est": 100.0,
+    "hi": 100.0,
+    "lo": 100.0,
+    "n": 30
+   },
+   "far": {
+    "est": 0.009137,
+    "hi": 0.015275,
+    "lo": 0.003061,
+    "n": 30
+   },
+   "fpr": {
+    "est": 0.033333,
+    "hi": 0.1,
+    "lo": 0.0,
+    "n": 30
+   },
+   "jitter_s": 0.0,
+   "profile": "wifi_good",
+   "students": 35,
+   "t_all_in": {
+    "est": 1.037747,
+    "hi": 1.755646,
+    "lo": 0.49648,
+    "n": 30
+   }
+  },
+  {
+   "attempts": {
+    "est": 1.005287,
+    "hi": 1.008588,
+    "lo": 1.002324,
+    "n": 30
+   },
+   "classrooms": 30,
+   "delivered": {
+    "est": 100.0,
+    "hi": 100.0,
+    "lo": 100.0,
+    "n": 30
+   },
+   "far": {
+    "est": 0.004867,
+    "hi": 0.007865,
+    "lo": 0.002247,
+    "n": 30
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 30
+   },
+   "jitter_s": 0.0,
+   "profile": "wifi_good",
+   "students": 93,
+   "t_all_in": {
+    "est": 1.253184,
+    "hi": 1.971598,
+    "lo": 0.54704,
+    "n": 30
+   }
+  },
+  {
+   "attempts": {
+    "est": 1.005426,
+    "hi": 1.009302,
+    "lo": 1.002326,
+    "n": 30
+   },
+   "classrooms": 30,
+   "delivered": {
+    "est": 100.0,
+    "hi": 100.0,
+    "lo": 100.0,
+    "n": 30
+   },
+   "far": {
+    "est": 0.009137,
+    "hi": 0.015275,
+    "lo": 0.003061,
+    "n": 30
+   },
+   "fpr": {
+    "est": 0.033333,
+    "hi": 0.1,
+    "lo": 0.0,
+    "n": 30
+   },
+   "jitter_s": 2.0,
+   "profile": "wifi_good",
+   "students": 35,
+   "t_all_in": {
+    "est": 2.732197,
+    "hi": 3.285621,
+    "lo": 2.285963,
+    "n": 30
+   }
+  },
+  {
+   "attempts": {
+    "est": 1.00629,
+    "hi": 1.009908,
+    "lo": 1.003314,
+    "n": 30
+   },
+   "classrooms": 30,
+   "delivered": {
+    "est": 100.0,
+    "hi": 100.0,
+    "lo": 100.0,
+    "n": 30
+   },
+   "far": {
+    "est": 0.004867,
+    "hi": 0.007865,
+    "lo": 0.002247,
+    "n": 30
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 30
+   },
+   "jitter_s": 2.0,
+   "profile": "wifi_good",
+   "students": 93,
+   "t_all_in": {
+    "est": 3.302558,
+    "hi": 4.022463,
+    "lo": 2.658747,
+    "n": 30
+   }
+  },
+  {
+   "attempts": {
+    "est": 1.004651,
+    "hi": 1.008527,
+    "lo": 1.00155,
+    "n": 30
+   },
+   "classrooms": 30,
+   "delivered": {
+    "est": 100.0,
+    "hi": 100.0,
+    "lo": 100.0,
+    "n": 30
+   },
+   "far": {
+    "est": 0.009137,
+    "hi": 0.015275,
+    "lo": 0.003061,
+    "n": 30
+   },
+   "fpr": {
+    "est": 0.033333,
+    "hi": 0.1,
+    "lo": 0.0,
+    "n": 30
+   },
+   "jitter_s": 5.0,
+   "profile": "wifi_good",
+   "students": 35,
+   "t_all_in": {
+    "est": 5.397286,
+    "hi": 5.782654,
+    "lo": 5.106564,
+    "n": 30
+   }
+  },
+  {
+   "attempts": {
+    "est": 1.004967,
+    "hi": 1.008591,
+    "lo": 1.002306,
+    "n": 30
+   },
+   "classrooms": 30,
+   "delivered": {
+    "est": 99.933663,
+    "hi": 100.0,
+    "lo": 99.833993,
+    "n": 30
+   },
+   "far": {
+    "est": 0.005616,
+    "hi": 0.008982,
+    "lo": 0.002622,
+    "n": 30
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 30
+   },
+   "jitter_s": 5.0,
+   "profile": "wifi_good",
+   "students": 93,
+   "t_all_in": {
+    "est": 5.629162,
+    "hi": 6.108171,
+    "lo": 5.247947,
+    "n": 30
+   }
+  },
+  {
+   "attempts": {
+    "est": 1.035714,
+    "hi": 1.045792,
+    "lo": 1.025728,
+    "n": 30
+   },
+   "classrooms": 30,
+   "delivered": {
+    "est": 100.0,
+    "hi": 100.0,
+    "lo": 100.0,
+    "n": 30
+   },
+   "far": {
+    "est": 0.009137,
+    "hi": 0.015275,
+    "lo": 0.003061,
+    "n": 30
+   },
+   "fpr": {
+    "est": 0.033333,
+    "hi": 0.1,
+    "lo": 0.0,
+    "n": 30
+   },
+   "jitter_s": 0.0,
+   "profile": "wifi_congested",
+   "students": 35,
+   "t_all_in": {
+    "est": 4.541335,
+    "hi": 5.312452,
+    "lo": 3.79362,
+    "n": 30
+   }
+  },
+  {
+   "attempts": {
+    "est": 1.026829,
+    "hi": 1.033472,
+    "lo": 1.020868,
+    "n": 30
+   },
+   "classrooms": 30,
+   "delivered": {
+    "est": 100.0,
+    "hi": 100.0,
+    "lo": 100.0,
+    "n": 30
+   },
+   "far": {
+    "est": 0.004867,
+    "hi": 0.007865,
+    "lo": 0.002247,
+    "n": 30
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 30
+   },
+   "jitter_s": 0.0,
+   "profile": "wifi_congested",
+   "students": 93,
+   "t_all_in": {
+    "est": 4.979942,
+    "hi": 5.565296,
+    "lo": 4.428342,
+    "n": 30
+   }
+  },
+  {
+   "attempts": {
+    "est": 1.048117,
+    "hi": 1.075969,
+    "lo": 1.027944,
+    "n": 30
+   },
+   "classrooms": 30,
+   "delivered": {
+    "est": 100.0,
+    "hi": 100.0,
+    "lo": 100.0,
+    "n": 30
+   },
+   "far": {
+    "est": 0.009137,
+    "hi": 0.015275,
+    "lo": 0.003061,
+    "n": 30
+   },
+   "fpr": {
+    "est": 0.033333,
+    "hi": 0.1,
+    "lo": 0.0,
+    "n": 30
+   },
+   "jitter_s": 2.0,
+   "profile": "wifi_congested",
+   "students": 35,
+   "t_all_in": {
+    "est": 5.038479,
+    "hi": 5.728629,
+    "lo": 4.377479,
+    "n": 30
+   }
+  },
+  {
+   "attempts": {
+    "est": 1.071073,
+    "hi": 1.133455,
+    "lo": 1.032443,
+    "n": 30
+   },
+   "classrooms": 30,
+   "delivered": {
+    "est": 99.90066,
+    "hi": 100.0,
+    "lo": 99.768647,
+    "n": 30
+   },
+   "far": {
+    "est": 0.00599,
+    "hi": 0.008998,
+    "lo": 0.002996,
+    "n": 30
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 30
+   },
+   "jitter_s": 2.0,
+   "profile": "wifi_congested",
+   "students": 93,
+   "t_all_in": {
+    "est": 6.776525,
+    "hi": 7.307119,
+    "lo": 6.193495,
+    "n": 30
+   }
+  },
+  {
+   "attempts": {
+    "est": 1.03959,
+    "hi": 1.057401,
+    "lo": 1.024843,
+    "n": 30
+   },
+   "classrooms": 30,
+   "delivered": {
+    "est": 99.610557,
+    "hi": 100.0,
+    "lo": 99.069767,
+    "n": 30
+   },
+   "far": {
+    "est": 0.014213,
+    "hi": 0.022403,
+    "lo": 0.006116,
+    "n": 30
+   },
+   "fpr": {
+    "est": 0.033333,
+    "hi": 0.1,
+    "lo": 0.0,
+    "n": 30
+   },
+   "jitter_s": 5.0,
+   "profile": "wifi_congested",
+   "students": 35,
+   "t_all_in": {
+    "est": 6.492726,
+    "hi": 6.945511,
+    "lo": 6.072832,
+    "n": 30
+   }
+  },
+  {
+   "attempts": {
+    "est": 1.049278,
+    "hi": 1.09315,
+    "lo": 1.024525,
+    "n": 30
+   },
+   "classrooms": 30,
+   "delivered": {
+    "est": 98.612541,
+    "hi": 99.700998,
+    "lo": 96.731345,
+    "n": 30
+   },
+   "far": {
+    "est": 0.019843,
+    "hi": 0.040809,
+    "lo": 0.007859,
+    "n": 30
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 30
+   },
+   "jitter_s": 5.0,
+   "profile": "wifi_congested",
+   "students": 93,
+   "t_all_in": {
+    "est": 7.591002,
+    "hi": 8.050745,
+    "lo": 7.09918,
+    "n": 30
+   }
+  },
+  {
+   "attempts": {
+    "est": 1.010871,
+    "hi": 1.017829,
+    "lo": 1.005426,
+    "n": 30
+   },
+   "classrooms": 30,
+   "delivered": {
+    "est": 100.0,
+    "hi": 100.0,
+    "lo": 100.0,
+    "n": 30
+   },
+   "far": {
+    "est": 0.009137,
+    "hi": 0.015275,
+    "lo": 0.003061,
+    "n": 30
+   },
+   "fpr": {
+    "est": 0.033333,
+    "hi": 0.1,
+    "lo": 0.0,
+    "n": 30
+   },
+   "jitter_s": 0.0,
+   "profile": "cell_4g",
+   "students": 35,
+   "t_all_in": {
+    "est": 2.557001,
+    "hi": 3.409923,
+    "lo": 1.743182,
+    "n": 30
+   }
+  },
+  {
+   "attempts": {
+    "est": 1.008951,
+    "hi": 1.013225,
+    "lo": 1.005297,
+    "n": 30
+   },
+   "classrooms": 30,
+   "delivered": {
+    "est": 100.0,
+    "hi": 100.0,
+    "lo": 100.0,
+    "n": 30
+   },
+   "far": {
+    "est": 0.004867,
+    "hi": 0.007865,
+    "lo": 0.002247,
+    "n": 30
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 30
+   },
+   "jitter_s": 0.0,
+   "profile": "cell_4g",
+   "students": 93,
+   "t_all_in": {
+    "est": 3.349502,
+    "hi": 4.019721,
+    "lo": 2.681464,
+    "n": 30
+   }
+  },
+  {
+   "attempts": {
+    "est": 1.012422,
+    "hi": 1.019398,
+    "lo": 1.00622,
+    "n": 30
+   },
+   "classrooms": 30,
+   "delivered": {
+    "est": 100.0,
+    "hi": 100.0,
+    "lo": 100.0,
+    "n": 30
+   },
+   "far": {
+    "est": 0.009137,
+    "hi": 0.015275,
+    "lo": 0.003061,
+    "n": 30
+   },
+   "fpr": {
+    "est": 0.033333,
+    "hi": 0.1,
+    "lo": 0.0,
+    "n": 30
+   },
+   "jitter_s": 2.0,
+   "profile": "cell_4g",
+   "students": 35,
+   "t_all_in": {
+    "est": 4.065497,
+    "hi": 4.782951,
+    "lo": 3.40907,
+    "n": 30
+   }
+  },
+  {
+   "attempts": {
+    "est": 1.009948,
+    "hi": 1.013888,
+    "lo": 1.006614,
+    "n": 30
+   },
+   "classrooms": 30,
+   "delivered": {
+    "est": 100.0,
+    "hi": 100.0,
+    "lo": 100.0,
+    "n": 30
+   },
+   "far": {
+    "est": 0.004867,
+    "hi": 0.007865,
+    "lo": 0.002247,
+    "n": 30
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 30
+   },
+   "jitter_s": 2.0,
+   "profile": "cell_4g",
+   "students": 93,
+   "t_all_in": {
+    "est": 4.719711,
+    "hi": 5.418004,
+    "lo": 4.037456,
+    "n": 30
+   }
+  },
+  {
+   "attempts": {
+    "est": 1.012422,
+    "hi": 1.019398,
+    "lo": 1.00622,
+    "n": 30
+   },
+   "classrooms": 30,
+   "delivered": {
+    "est": 99.844961,
+    "hi": 100.0,
+    "lo": 99.612403,
+    "n": 30
+   },
+   "far": {
+    "est": 0.011168,
+    "hi": 0.017312,
+    "lo": 0.005086,
+    "n": 30
+   },
+   "fpr": {
+    "est": 0.033333,
+    "hi": 0.1,
+    "lo": 0.0,
+    "n": 30
+   },
+   "jitter_s": 5.0,
+   "profile": "cell_4g",
+   "students": 35,
+   "t_all_in": {
+    "est": 6.059728,
+    "hi": 6.540263,
+    "lo": 5.648427,
+    "n": 30
+   }
+  },
+  {
+   "attempts": {
+    "est": 1.008624,
+    "hi": 1.012282,
+    "lo": 1.005317,
+    "n": 30
+   },
+   "classrooms": 30,
+   "delivered": {
+    "est": 99.90066,
+    "hi": 100.0,
+    "lo": 99.768647,
+    "n": 30
+   },
+   "far": {
+    "est": 0.00599,
+    "hi": 0.009353,
+    "lo": 0.002996,
+    "n": 30
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 30
+   },
+   "jitter_s": 5.0,
+   "profile": "cell_4g",
+   "students": 93,
+   "t_all_in": {
+    "est": 6.574384,
+    "hi": 7.11898,
+    "lo": 6.079183,
+    "n": 30
+   }
+  },
+  {
+   "attempts": {
+    "est": 1.030288,
+    "hi": 1.039572,
+    "lo": 1.021706,
+    "n": 30
+   },
+   "classrooms": 30,
+   "delivered": {
+    "est": 100.0,
+    "hi": 100.0,
+    "lo": 100.0,
+    "n": 30
+   },
+   "far": {
+    "est": 0.009137,
+    "hi": 0.015275,
+    "lo": 0.003061,
+    "n": 30
+   },
+   "fpr": {
+    "est": 0.033333,
+    "hi": 0.1,
+    "lo": 0.0,
+    "n": 30
+   },
+   "jitter_s": 0.0,
+   "profile": "wifi_congested:0.7,cell_4g:0.3",
+   "students": 35,
+   "t_all_in": {
+    "est": 4.301727,
+    "hi": 5.068709,
+    "lo": 3.538155,
+    "n": 30
+   }
+  },
+  {
+   "attempts": {
+    "est": 1.021535,
+    "hi": 1.027607,
+    "lo": 1.015894,
+    "n": 30
+   },
+   "classrooms": 30,
+   "delivered": {
+    "est": 100.0,
+    "hi": 100.0,
+    "lo": 100.0,
+    "n": 30
+   },
+   "far": {
+    "est": 0.004867,
+    "hi": 0.007865,
+    "lo": 0.002247,
+    "n": 30
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 30
+   },
+   "jitter_s": 0.0,
+   "profile": "wifi_congested:0.7,cell_4g:0.3",
+   "students": 93,
+   "t_all_in": {
+    "est": 4.775337,
+    "hi": 5.399206,
+    "lo": 4.163439,
+    "n": 30
+   }
+  },
+  {
+   "attempts": {
+    "est": 1.037246,
+    "hi": 1.063603,
+    "lo": 1.01938,
+    "n": 30
+   },
+   "classrooms": 30,
+   "delivered": {
+    "est": 100.0,
+    "hi": 100.0,
+    "lo": 100.0,
+    "n": 30
+   },
+   "far": {
+    "est": 0.009137,
+    "hi": 0.015275,
+    "lo": 0.003061,
+    "n": 30
+   },
+   "fpr": {
+    "est": 0.033333,
+    "hi": 0.1,
+    "lo": 0.0,
+    "n": 30
+   },
+   "jitter_s": 2.0,
+   "profile": "wifi_congested:0.7,cell_4g:0.3",
+   "students": 35,
+   "t_all_in": {
+    "est": 4.853997,
+    "hi": 5.576831,
+    "lo": 4.199522,
+    "n": 30
+   }
+  },
+  {
+   "attempts": {
+    "est": 1.062782,
+    "hi": 1.127773,
+    "lo": 1.023874,
+    "n": 30
+   },
+   "classrooms": 30,
+   "delivered": {
+    "est": 99.933993,
+    "hi": 100.0,
+    "lo": 99.834983,
+    "n": 30
+   },
+   "far": {
+    "est": 0.005616,
+    "hi": 0.008611,
+    "lo": 0.002995,
+    "n": 30
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 30
+   },
+   "jitter_s": 2.0,
+   "profile": "wifi_congested:0.7,cell_4g:0.3",
+   "students": 93,
+   "t_all_in": {
+    "est": 6.396952,
+    "hi": 7.003367,
+    "lo": 5.744902,
+    "n": 30
+   }
+  },
+  {
+   "attempts": {
+    "est": 1.032595,
+    "hi": 1.048911,
+    "lo": 1.018642,
+    "n": 30
+   },
+   "classrooms": 30,
+   "delivered": {
+    "est": 99.920635,
+    "hi": 100.0,
+    "lo": 99.761905,
+    "n": 30
+   },
+   "far": {
+    "est": 0.010152,
+    "hi": 0.017241,
+    "lo": 0.004044,
+    "n": 30
+   },
+   "fpr": {
+    "est": 0.033333,
+    "hi": 0.1,
+    "lo": 0.0,
+    "n": 30
+   },
+   "jitter_s": 5.0,
+   "profile": "wifi_congested:0.7,cell_4g:0.3",
+   "students": 35,
+   "t_all_in": {
+    "est": 6.316007,
+    "hi": 6.754082,
+    "lo": 5.907172,
+    "n": 30
+   }
+  },
+  {
+   "attempts": {
+    "est": 1.022529,
+    "hi": 1.028163,
+    "lo": 1.017274,
+    "n": 30
+   },
+   "classrooms": 30,
+   "delivered": {
+    "est": 98.612871,
+    "hi": 99.668977,
+    "lo": 96.764018,
+    "n": 30
+   },
+   "far": {
+    "est": 0.019468,
+    "hi": 0.040069,
+    "lo": 0.007488,
+    "n": 30
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 30
+   },
+   "jitter_s": 5.0,
+   "profile": "wifi_congested:0.7,cell_4g:0.3",
+   "students": 93,
+   "t_all_in": {
+    "est": 7.29728,
+    "hi": 7.829674,
+    "lo": 6.747155,
+    "n": 30
+   }
+  }
+ ],
+ "timing": {
+  "seconds": 28.84
+ }
+}

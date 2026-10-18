@@ -125,16 +125,15 @@ without the co-location check: 100% of relay proxies succeed.
   fixed edge threshold: at 60 students false-absent is 0.5% (hand), 12% (desk), 41% (mixed with pockets/bags), 98% (all in
   pockets). Simulated with assumed losses; E08 sweeps it, and a session-level offset estimate is the candidate fix.
 
-* **Large halls hit the default TTL, not the radio** (E11, quick run): at 200 students (17 bench rows) false-absent is ~9-15% with
-  the default 8 hops / 15 m and ~0.3-0.5% with `ttl=12, max_path_m=25` (teacher-settable per session). Defaults are unchanged;
-  the app should suggest a larger TTL above ~150 students. Needs the full run for tight CIs.
+* **Large halls hit the default TTL, not the radio** (E11, full run): at 200 students (17 bench rows) false-absent is 12.2% (CI 8.7-15.2)
+  with the default 8 hops / 15 m and 0.3% (CI 0.1-0.5) with `ttl=12, max_path_m=25` (teacher-settable per session). Defaults are
+  unchanged; the app should suggest a larger TTL above ~150 students.
 * **Very small rooms are the weak end** (E07/E01, 10 phones): too few neighbours for k=2 disjoint paths; stated limitation, unchanged.
 
-* **A fresh server has no per-model offset table, and small classes feel it** (E04, quick run, 30% iPhones): false-absent with the
-  table is ~0-1% at 20-93 students; without it ~0.8-1.5% at 35-93 and ~34% [8, 80] at 20 students (3 classrooms, very wide).
-  The simulator's default `calibrate=True` assumes the table exists; E04 and `loadtest` (default) show the raw case. Candidate fix:
-  fit the offsets per model from the first sessions, or make the engine's self-calibration per model, not per platform. Needs the
-  full run before anyone acts on the 20-student number.
+* **A fresh server has no per-model offset table, and small classes feel it** (E04, full run, 30% iPhones): at 20 students false-absent is
+  6.2% (CI 2.4-11.9) with the table and 42.1% (CI 30.7-52.6) without; at 35-93 students the gap is small. The simulator's default
+  `calibrate=True` assumes the table exists; E04 and `loadtest` (default) show the raw case. Candidate fix: fit offsets per model from
+  the first sessions, or make the engine's self-calibration per model, not per platform. Not built.
 
 ## Not modelled yet
 Server overload errors (429/5xx), relay/wormhole attacks,
