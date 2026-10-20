@@ -102,6 +102,29 @@ describe('StudentRunner diagnostics', () => {
   });
 });
 
+describe('StudentRunner login errors', () => {
+  it('a phone the server does not know shows "not registered" and retries slowly instead of hammering the login', async () => {
+    let logins = 0;
+    const { api } = studentApi({ studentLogin: async () => { logins++; throw new ApiError(404, 'This phone is not registered yet.'); } });
+    const r = new StudentRunner({ api, keys, radio: new FakeRadio(), studentId: 'stu' });
+    const run = r.run();
+    await until(() => r.state.phase === 'not_registered');
+    await wait(500);
+    r.stop(); await run;
+    expect(r.state.message).toMatch(/Register it again/);
+    expect(logins).toBe(1);                                // one try, then it waits 3 s
+  });
+
+  it('a roll number bound to another phone says so', async () => {
+    const { api } = studentApi({ studentLogin: async () => { throw new ApiError(401, 'This is not the phone registered for this student.'); } });
+    const r = new StudentRunner({ api, keys, radio: new FakeRadio(), studentId: 'stu' });
+    const run = r.run();
+    await until(() => r.state.phase === 'not_registered');
+    r.stop(); await run;
+    expect(r.state.message).toMatch(/different phone/);
+  });
+});
+
 describe('StudentRunner', () => {
   it('auto check-in, radio on, reports, Present, closed - without any tap', async () => {
     const { api, calls } = studentApi();

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Platform, Pressable, SafeAreaView, ScrollView, Share, StatusBar, StyleSheet, Text, Vibration, View, useColorScheme } from 'react-native';
+import { ActivityIndicator, Alert, Platform, Pressable, SafeAreaView, ScrollView, Share, StatusBar, StyleSheet, Text, Vibration, View, useColorScheme } from 'react-native';
 import { ApiError, DiagBoard, LIVE_BEST_AFTER_S, NetPresenceApi, StudentRunner, TeacherRoll, attendanceCsv, enroll, sheetCsv } from '../core/src';
 import type { AttendanceSheet, LiveDiag, StudentState, SubjectInfo, TeacherLive } from '../core/src';
 import LivePanel from './src/LivePanel';
@@ -183,12 +183,18 @@ function SheetScreen({ r, go }: { r: Extract<Route, { name: 'teacher-sheet' }>; 
   const cell = (txt: string, w: number, color?: string, bold = false, align: 'left' | 'center' = 'center') =>
     <Text numberOfLines={1} style={{ width: w, color: color ?? t.text, fontSize: 13, fontWeight: bold ? '700' : '400', textAlign: align, paddingVertical: 8 }}>{txt}</Text>;
   const held = sheet?.sessions.length ?? 0;
+  const resetPhone = (id: string, name: string) => Alert.alert(`Reset ${name}'s phone?`,
+    `${id} will be able to register a new phone (lost phone, reinstalled app). Their old registration is removed.`, [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Reset', style: 'destructive', onPress: () => new NetPresenceApi(r.from.base).resetStudentPhone(r.from.token, id)
+        .then(() => Alert.alert('Done', `${id} can register again.`)).catch((e) => Alert.alert('Could not reset', explain(e, r.from.base))) },
+    ]);
   return (
     <View style={{ flex: 1 }}>
       <View style={{ padding: 20, paddingBottom: 8, gap: 4 }}>
         <Text style={[s.hello, { color: t.sub }]}>{r.subject.code} · register</Text>
         <Text style={[s.name, { color: t.text }]} numberOfLines={1}>{r.subject.name}</Text>
-        {sheet && <Text style={{ color: t.sub, fontSize: 13 }}>{held} class{held === 1 ? '' : 'es'} held · {sheet.students.length} students</Text>}
+        {sheet && <Text style={{ color: t.sub, fontSize: 13 }}>{held} class{held === 1 ? '' : 'es'} held · {sheet.students.length} students · long-press a student to reset their phone</Text>}
       </View>
       {err ? <View style={{ paddingHorizontal: 20 }}><Banner kind="err" text={err} /></View> : null}
       {!sheet && !err && <ActivityIndicator style={{ marginTop: 40 }} color={t.primary} />}
@@ -211,11 +217,12 @@ function SheetScreen({ r, go }: { r: Extract<Route, { name: 'teacher-sheet' }>; 
                 {cell('', W.pct)}
               </View>
               {sheet.students.map((st) => (
-                <View key={st.student_id} style={{ flexDirection: 'row', borderTopWidth: StyleSheet.hairlineWidth, borderColor: t.border }}>
+                <Pressable key={st.student_id} onLongPress={() => resetPhone(st.student_id, st.name)} delayLongPress={500}
+                  style={{ flexDirection: 'row', borderTopWidth: StyleSheet.hairlineWidth, borderColor: t.border }}>
                   {cell(st.student_id, W.roll, t.text, false, 'left')}{cell(st.name, W.name, t.text, false, 'left')}
                   {st.marks.map((m, i) => <View key={i}>{cell(m, W.mark, t[MARK[m as keyof typeof MARK] ?? 'sub'], m !== '-')}</View>)}
                   {cell(st.pct == null ? '-' : `${st.pct}`, W.pct, st.pct != null && st.pct < 75 ? t.err : t.text, true)}
-                </View>
+                </Pressable>
               ))}
             </View>
           </ScrollView>
@@ -429,6 +436,7 @@ function StudentHome({ profile, fresh, go }: { profile: Profile; fresh: boolean;
         {st.subject && st.phase !== 'idle' && <Chip text={`${st.subject.code} · ${st.subject.name}`} />}
       </View>
       {view.banner ? <Banner kind={view.banner.kind} text={view.banner.text} /> : null}
+      {st.phase === 'not_registered' && <Button title="Register this phone again" onPress={async () => { await clearProfile(); go({ name: 'student-setup' }); }} />}
       <LivePanel d={diag} />
     </ScrollView>
   );
@@ -445,6 +453,7 @@ function describe(st: StudentState, t: Theme, radioErr: string | null) {
       if (st.status === 'FLAGGED') return { ...base, bg: t.warnBg, fg: t.warn, icon: '!', title: 'Your teacher will confirm', sub: 'Stay where you are.' };
       return { ...base, spin: true, title: 'Reaching nearby phones…', sub: 'Keep the app open.', banner: radioErr ? { kind: 'err' as const, text: radioErr === 'NP-ERR-BT-OFF' ? 'Bluetooth is off. Turn it on.' : `Bluetooth problem (${radioErr}).` } : undefined };
     case 'closed': return { ...base, bg: st.result === 'PRESENT' ? t.okBg : t.surface, fg: st.result === 'PRESENT' ? t.ok : t.sub, icon: st.result === 'PRESENT' ? '✓' : '·', title: st.result === 'PRESENT' ? 'You were marked present' : 'Roll call finished', sub: st.result === 'PRESENT' ? '' : 'See your teacher if this looks wrong.' };
+    case 'not_registered': return { ...base, bg: t.warnBg, fg: t.warn, icon: '?', title: 'Phone not recognised', sub: st.message ?? 'Register this phone again.' };
     case 'not_in_class': return { ...base, bg: t.errBg, fg: t.err, icon: '✕', title: 'Not in this class', sub: st.message ?? 'You are not on the list for this subject.' };
     case 'offline': return { ...base, bg: t.warnBg, fg: t.warn, icon: '⚠', title: 'No connection', sub: st.message ?? 'Trying again.' };
     default: return { ...base, bg: t.errBg, fg: t.err, icon: '!', title: 'Something went wrong', sub: st.message ?? 'Trying again.' };

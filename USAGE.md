@@ -93,6 +93,7 @@ Full guide and troubleshooting: `docs/INSTALL.md`.
   Watch the Present count climb; the Finish button says when the result is most accurate (15 s). FLAGGED students can be set Present/Absent in place. Share list = CSV.
 * Every screen has a **What's happening** panel: Bluetooth on/off, the name this phone broadcasts as, the phones it hears (with signal), reports sent/failed and a time-stamped log. Send me a screenshot of it when something looks wrong.
 * **Register** button on each subject card: a sheet of every roster student against every finished class (P present, A absent, F flagged), with each student's percentage and a CSV share. Under 75 % shows red.
+* Same phone, same roll number registering again (cleared data, Remove registration) just works. A **reinstalled app** makes a new key, so the server asks for a reset: teacher opens **Register** for the subject, long-presses the student, **Reset**. If the laptop server was restarted (in-memory DB) the phone shows **Phone not recognised** with a *Register this phone again* button.
 * The teacher stays signed in for about 11 hours (Log out on the subjects screen clears it). A student keeps the registered phone until you choose Remove this phone's registration.
 * Student phone (first time): I'm a student -> roll number, name, class code -> **Verify with fingerprint** -> "Phone verified". After that the app needs no taps:
   when the teacher starts the subject the phone joins by itself, starts transmitting and shows **Present**. A student who is not on that subject's roster is refused

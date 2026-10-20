@@ -32,6 +32,13 @@ async def register_device(payload: DeviceRegister, db=Depends(get_db)):
         doc["install_id"] = payload.install_id
     if payload.platform:
         doc["platform"] = payload.platform
+    mine = await db.students.find_one({"student_id": payload.student_id}, {"_id": 0, "device_id": 1})
+    if mine:
+        if mine["device_id"] == device_id:      # the same student on the same phone key registering again (cleared data, "remove registration"): fine
+            await db.students.update_one({"student_id": payload.student_id}, {"$set": {k: v for k, v in doc.items() if k != "student_id"}})
+            return {"status": "enrolled", "student_id": payload.student_id}
+        raise HTTPException(status_code=409, detail="This roll number is registered to a different phone (or the app was reinstalled, which makes a new key). "
+                                                    "Ask your teacher to reset it from the Register screen.")
     try:
         await db.students.insert_one(doc)
     except DuplicateKeyError:

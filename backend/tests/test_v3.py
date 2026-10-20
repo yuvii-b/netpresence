@@ -380,3 +380,26 @@ async def test_teacher_decision_beats_the_latch(client):
     await asyncio.sleep(0.6)
     rows = {x["student_id"]: x["status"] for x in (await client.get(f"/api/teacher/sessions/{sid}/live?since=-1", headers=th)).json()["rows"]}
     assert rows[devs[0].student_id] == "ABSENT" and rows[devs[1].student_id] == "PRESENT"
+
+
+async def test_registering_again_from_the_same_phone_works_but_a_new_key_needs_a_teacher_reset(client):
+    roster, devs, sub = await seed(client, 2)
+    d = devs[0]
+    again = await client.post("/api/devices/register", json={
+        "student_id": d.student_id, "name": "Renamed", "model": d.model, "public_key": d.pub,
+        "signature": d.sign(crypto.register_message(d.student_id, d.model)), "install_id": "install-2"})
+    assert again.status_code in (200, 201), again.text                     # same key: idempotent, no "ask your teacher"
+    ts = int(time.time())
+    ok = await client.post("/api/auth/student", json={"student_id": d.student_id, "ts": ts, "signature": d.sign(crypto.login_message(d.student_id, ts))})
+    assert ok.status_code == 200 and ok.json()["name"] == "Renamed"
+    fresh = Device(d.student_id)                                           # reinstall: a brand-new hardware key
+    clash = await client.post("/api/devices/register", json={
+        "student_id": d.student_id, "name": "x", "model": fresh.model, "public_key": fresh.pub,
+        "signature": fresh.sign(crypto.register_message(fresh.student_id, fresh.model))})
+    assert clash.status_code == 409 and "teacher" in clash.json()["detail"]
+    th, _ = await login(client)
+    assert (await client.post(f"/api/teacher/students/{d.student_id}/reset-device", headers=th)).status_code == 200
+    again2 = await client.post("/api/devices/register", json={
+        "student_id": d.student_id, "name": "x", "model": fresh.model, "public_key": fresh.pub,
+        "signature": fresh.sign(crypto.register_message(fresh.student_id, fresh.model))})
+    assert again2.status_code in (200, 201)

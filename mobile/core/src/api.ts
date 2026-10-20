@@ -93,6 +93,9 @@ export class NetPresenceApi {
   teacherSubjects(token: string) {
     return this.call<SubjectInfo[]>('GET', '/api/teacher/subjects', undefined, { bearer: token });
   }
+  resetStudentPhone(token: string, studentId: string) {
+    return this.call<{ status: string }>('POST', `/api/teacher/students/${encodeURIComponent(studentId)}/reset-device`, undefined, { bearer: token });
+  }
   teacherSheet(token: string, subjectId: string) {
     return this.call<AttendanceSheet>('GET', `/api/teacher/subjects/${subjectId}/sheet`, undefined, { bearer: token });
   }

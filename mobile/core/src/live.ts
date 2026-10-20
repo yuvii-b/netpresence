@@ -139,7 +139,7 @@ async function reportLoop(o: { api: Api; keys: KeyStore; clock: Clock; sessionId
 }
 
 // ======================================================================= student =======================================================================
-export type StudentPhase = 'signing_in' | 'idle' | 'joining' | 'live' | 'closed' | 'not_in_class' | 'offline' | 'error';
+export type StudentPhase = 'signing_in' | 'idle' | 'joining' | 'live' | 'closed' | 'not_in_class' | 'not_registered' | 'offline' | 'error';
 export interface StudentState {
   phase: StudentPhase;
   subject?: { code: string; name: string };
@@ -187,7 +187,19 @@ export class StudentRunner {
         if (!this.token) {
           this.emit({ phase: 'signing_in', message: undefined });
           this.d.diag?.log('signing in with this phone\'s key');
-          this.token = await this.login();
+          try {
+            this.token = await this.login();
+          } catch (e) {
+            if (e instanceof ApiError && (e.status === 404 || e.status === 401)) {   // the server does not know this phone / it is another phone's roll number
+              this.d.diag?.log(`not recognised: ${e.message}`);
+              this.emit({ phase: 'not_registered', message: e.status === 404
+                ? 'The server does not have this phone registered (it may have been reset). Register it again.'
+                : 'This roll number is registered to a different phone. Ask your teacher to reset it, then register again.' });
+              await this.clock.sleep(3000);
+              continue;
+            }
+            throw e;
+          }
           this.d.diag?.log('signed in - waiting for the teacher to start a class');
         }
         const polled = this.clock.now();
