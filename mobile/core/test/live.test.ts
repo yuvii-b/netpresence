@@ -8,8 +8,9 @@ import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { NetPresenceApi } from '../src/api';
 import { discover, enroll, joinSession, submitReport } from '../src/session';
+import { StudentRunner, TeacherRoll, type StudentState } from '../src/live';
 import { NodeKeyStore, ReplayRadio } from '../src/node';
-import type { Clock, Joined } from '../src/types';
+import type { Clock, Joined, Radio, RadioSample } from '../src/types';
 
 const PY = process.env.NP_PYTHON;
 const PORT = 18000 + Math.floor(Math.random() * 1000);
@@ -76,4 +77,78 @@ describe.skipIf(!PY)('mobile core <-> live server', () => {
       expect(away.filter((a) => present.includes(a))).toEqual([]); // remote cheaters never admitted
     }, 180_000);
   }
+
+  it('live flow (protocol v3): 93 students + a teacher phone seed, auto check-in, Present pushed within seconds', async () => {
+    const fx = JSON.parse(readFileSync(path.resolve(__dirname, 'fixtures/scene93.json'), 'utf8'));
+    const api = new NetPresenceApi(BASE);
+    const P = 'live93.';
+    const sid = (id: string) => P + id;
+    const ids: string[] = Object.keys(fx.people).map(sid);
+    const person = (id: string) => fx.people[id.slice(P.length)];
+    const keys = new Map(ids.map((id) => [id, new NodeKeyStore()]));
+    await api.teacher.addTeacher(TOKEN, 'Dr Live', 'LIVE-CODE');
+    await api.teacher.addSubject(TOKEN, 'LIVE-CODE', 'LV93', 'Live 93', ids);
+    await chunks(ids, 20, (id) => enroll(api, keys.get(id)!, { studentId: id, name: id, model: person(id).model }));
+    for (const [model, off] of Object.entries<number>(fx.calibration_offsets)) await api.teacher.setCalibration(TOKEN, model, off);
+    const login = await api.teacherLogin('LIVE-CODE');
+    expect(login.subjects.map((s) => s.code)).toEqual(['LV93']);
+
+    // Fake radio: every 100 ms (the Android advert interval) a phone "hears" each peer it heard in the scene (replaying the
+    // scene's RSSI series). A phone's own ephemeral id is learned from the advertise name the app hands to radio.start().
+    const ephOf = new Map<string, string>();
+    class SceneRadio implements Radio {
+      private timer?: ReturnType<typeof setInterval>;
+      private k = 0;
+      constructor(private readonly self: string, private readonly heard: Record<string, number[]>) {}
+      async start(name: string, _u: string, cb: (s: RadioSample) => void) {
+        ephOf.set(this.self, name.slice(3));
+        this.timer = setInterval(() => {
+          this.k++;
+          for (const [peer, rs] of Object.entries(this.heard)) {
+            const eph = ephOf.get(peer);
+            if (eph) cb({ name: `NP-${eph}`, rssi: rs[this.k % rs.length]! });
+          }
+        }, 100);
+      }
+      async stop() { clearInterval(this.timer); }
+    }
+    const teacherKey = 'TEACHER';
+    const jitter = [-63, -64, -65, -64, -63];   // the teacher's phone sits ~1.5 m in front of the seeds, both ways
+    const seeds: string[] = fx.seeds.map(sid);
+    const heardBy = (id: string) => {
+      const h: Record<string, number[]> = {};
+      for (const [peer, rs] of Object.entries<number[]>(person(id).samples)) h[sid(peer)] = rs;
+      if (seeds.includes(id)) h[teacherKey] = jitter;
+      return h;
+    };
+    const tPresent = new Map<string, number>();
+    let tStart = 0;
+    const runners = ids.map((id) => {
+      const r = new StudentRunner({ api, keys: keys.get(id)!, radio: new SceneRadio(id, heardBy(id)), studentId: id,
+        onState: (s: StudentState) => { if (s.status === 'PRESENT' && !tPresent.has(id)) tPresent.set(id, performance.now() - tStart); } });
+      return { r, run: r.run() };
+    });
+    await new Promise((r) => setTimeout(r, 2000));      // everybody has the app open and is long-polling
+
+    const teacher = new TeacherRoll({ api, keys: new NodeKeyStore(), model: 'ref', token: login.token,
+      radio: new SceneRadio(teacherKey, Object.fromEntries(seeds.map((s) => [s, jitter]))) });
+    tStart = performance.now();
+    const st = await teacher.begin(login.subjects[0]!.subject_id);
+    expect(st.tag).toMatch(/^[0-9a-f]{4}$/);
+    const expected = new Set<string>(fx.expected_present.map(sid));
+    const deadline = Date.now() + 40_000;
+    while (Date.now() < deadline && [...expected].some((i) => !tPresent.has(i))) await new Promise((r) => setTimeout(r, 50));
+
+    const lat = [...expected].map((i) => tPresent.get(i) ?? Infinity).sort((a, b) => a - b);
+    const q = (p: number) => lat[Math.min(lat.length - 1, Math.ceil(p * lat.length) - 1)]!;
+    console.log(`live93 time-to-present from teacher Start (fake radio, real server, one machine): p50=${q(0.5).toFixed(0)} ms p95=${q(0.95).toFixed(0)} ms max=${lat[lat.length - 1]!.toFixed(0)} ms`);
+    const out = await teacher.finish();
+    runners.forEach(({ r }) => r.stop());
+    await Promise.all(runners.map(({ run }) => run));
+    const present = out.rows.filter((r) => r.status === 'PRESENT').map((r) => r.student_id).sort();
+    expect(present).toEqual([...expected].sort());                                  // same verdict as the engine on this scene
+    expect(ids.filter((i) => person(i).remote && present.includes(i))).toEqual([]); // remote cheaters never admitted
+    expect(lat[lat.length - 1]).toBeLessThan(Infinity);                             // every in-room phone saw PRESENT before the finish
+    expect(q(0.95)).toBeLessThanOrEqual(5000);                                      // pre-declared: p95 <= 5 s
+  }, 120_000);
 });

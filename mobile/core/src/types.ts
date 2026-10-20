@@ -18,6 +18,8 @@ export interface RadioSample {
  * every NetPresence advertisement heard as { name: "NP-<eph>", rssi }.
  */
 export interface Radio {
+  /** Optional: create the BLE managers and ask for permissions while idle, so start() is instant. */
+  prepare?(): Promise<void>;
   start(advertiseName: string, advertiseUuid: string, onSample: (s: RadioSample) => void): Promise<void>;
   stop(): Promise<void>;
 }
@@ -62,3 +64,25 @@ export interface Joined {
   discoveryEndsAtMs: number;
   reportDeadlineMs: number;
 }
+
+// ---------------- protocol v3 ----------------
+export interface SubjectInfo { subject_id: string; code: string; name: string; roster_size: number; last_pct: number | null }
+
+export interface TeacherStart {
+  session_id: string; nonce: string; tag: string; teacher_student_id: string; teacher_eph: string;
+  advertise_name: string; advertise_uuid: string; server_time: number; live_ends_at: number;
+  subject: { subject_id: string; code: string; name: string; roster_size: number };
+}
+
+export type LiveStatus = 'PRESENT' | 'PENDING' | 'FLAGGED' | 'NOT_JOINED' | 'ABSENT';
+export interface LiveRow { student_id: string; name: string; status: LiveStatus; reason?: string; partner_name?: string; decided_by?: string }
+export interface TeacherLive {
+  rev: number; status: 'open' | 'closed'; counts: Record<string, number>; rows: LiveRow[];
+  stable_for_s: number; elapsed_s: number; roster_size: number; ends_in_s?: number;
+}
+
+export interface MySession {
+  status: 'open' | 'none'; session_id?: string; nonce?: string; tag?: string; server_time?: number; live_ends_at?: number;
+  subject?: { subject_id: string; code: string; name: string };
+}
+export interface MyStatus { rev: number; status: 'NONE' | 'PENDING' | 'PRESENT' | 'FLAGGED' | 'ABSENT' | 'CLOSED'; at: number | null; result?: string | null }

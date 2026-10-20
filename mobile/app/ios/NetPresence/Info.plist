@@ -22,6 +22,8 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>NetPresence confirms it is you with Face ID when you bind this phone to your attendance.</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>NetPresence uses Bluetooth to detect nearby classmates and mark you present. No location is used.</string>
 	<key>NSBluetoothPeripheralUsageDescription</key>

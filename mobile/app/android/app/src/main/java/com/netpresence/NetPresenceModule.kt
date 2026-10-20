@@ -11,15 +11,21 @@ import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanFilter
 import android.bluetooth.le.ScanResult
 import android.bluetooth.le.ScanSettings
+import android.app.KeyguardManager
 import android.content.Context
 import android.location.LocationManager
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.ParcelUuid
+import android.provider.Settings
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.Base64
+import androidx.biometric.BiometricManager
+import androidx.biometric.BiometricPrompt
+import androidx.core.content.ContextCompat
+import androidx.fragment.app.FragmentActivity
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
@@ -83,6 +89,62 @@ class NetPresenceModule(private val ctx: ReactApplicationContext) : ReactContext
   @ReactMethod
   fun deviceModel(promise: Promise) = promise.resolve("${Build.MANUFACTURER} ${Build.MODEL}")
 
+  /** Stable per-install id (ANDROID_ID): with the key's hash it binds one phone to one student on the server. */
+  @SuppressLint("HardwareIds")
+  @ReactMethod
+  fun installId(promise: Promise) {
+    promise.resolve(Settings.Secure.getString(ctx.contentResolver, Settings.Secure.ANDROID_ID) ?: "")
+  }
+
+  /**
+   * The OS confirms the owner (fingerprint / face / PIN) before this phone is bound to a student. Apps never see biometric data.
+   * Resolves "ok", "cancel" (user backed out) or "none" (the phone has no biometric and no screen lock at all).
+   */
+  @ReactMethod
+  fun confirmBiometric(reason: String, promise: Promise) {
+    val a = ctx.currentActivity as? FragmentActivity
+    if (a == null) { promise.reject("E_NO_ACTIVITY", "Open the app and try again."); return }
+    a.runOnUiThread {
+      try {
+        val bm = BiometricManager.from(a)
+        var auth = BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.DEVICE_CREDENTIAL
+        var legacyCredential = false
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+          // Android 10 and older cannot combine biometric + screen lock in one prompt: prefer the biometric, else the screen lock.
+          if (bm.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_WEAK) == BiometricManager.BIOMETRIC_SUCCESS) {
+            auth = BiometricManager.Authenticators.BIOMETRIC_WEAK
+          } else if ((a.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager).isDeviceSecure) {
+            legacyCredential = true
+          } else { promise.resolve("none"); return@runOnUiThread }
+        } else if (bm.canAuthenticate(auth) != BiometricManager.BIOMETRIC_SUCCESS) { promise.resolve("none"); return@runOnUiThread }
+        val info = BiometricPrompt.PromptInfo.Builder().setTitle("Bind this phone").setSubtitle(reason)
+        @Suppress("DEPRECATION")
+        if (legacyCredential) info.setDeviceCredentialAllowed(true)
+        else {
+          info.setAllowedAuthenticators(auth)
+          if (auth and BiometricManager.Authenticators.DEVICE_CREDENTIAL == 0) info.setNegativeButtonText("Cancel")
+        }
+        var settled = false
+        val prompt = BiometricPrompt(a, ContextCompat.getMainExecutor(a), object : BiometricPrompt.AuthenticationCallback() {
+          override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) { if (!settled) { settled = true; promise.resolve("ok") } }
+          override fun onAuthenticationError(errorCode: Int, errString: CharSequence) { if (!settled) { settled = true; promise.resolve("cancel") } }
+        })
+        prompt.authenticate(info.build())
+      } catch (e: Exception) { promise.reject("E_BIOMETRIC", e) }
+    }
+  }
+
+  /** Warm the Bluetooth objects while the app is idle so startRadio() is instant when a roll call opens. */
+  @SuppressLint("MissingPermission")
+  @ReactMethod
+  fun prepareRadio(promise: Promise) {
+    try {
+      val adapter = (ctx.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager)?.adapter
+      if (adapter != null && adapter.isEnabled) { adapter.bluetoothLeAdvertiser; adapter.bluetoothLeScanner }
+      promise.resolve(null)
+    } catch (e: Exception) { promise.resolve(null) }   // permissions may not be granted yet: start() reports that properly
+  }
+
   @ReactMethod
   fun setKeepAwake(on: Boolean) {
     val a = ctx.currentActivity ?: return
@@ -106,8 +168,8 @@ class NetPresenceModule(private val ctx: ReactApplicationContext) : ReactContext
   private var advCb: AdvertiseCallback? = null
 
   // Samples are batched and sent to JS every FLUSH_MS: ~90 peers x ~10 adverts/s would otherwise be ~900 bridge
-  // events per second, enough to stall the UI thread on a mid-range phone.
-  private val FLUSH_MS = 200L
+  // events per second, enough to stall the UI thread on a mid-range phone. 100 ms keeps the live roll call responsive.
+  private val FLUSH_MS = 100L
   private val main = Handler(Looper.getMainLooper())
   private val buffer = ArrayList<Pair<String, Int>>()
   private val flusher = object : Runnable {

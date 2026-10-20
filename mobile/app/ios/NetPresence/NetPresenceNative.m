@@ -1,5 +1,6 @@
 #import "NetPresenceNative.h"
 #import <CoreBluetooth/CoreBluetooth.h>
+#import <LocalAuthentication/LocalAuthentication.h>   // auto-linked (CLANG_ENABLE_MODULES)
 #import <Security/Security.h>
 #import <UIKit/UIKit.h>
 #include <sys/utsname.h>
@@ -15,7 +16,7 @@ static NSString *const kPrefix = @"6E657470-7265-7365-6E63-6500";   // CBUUID.UU
 @property (nonatomic, strong) CBUUID *advUUID;
 @property (nonatomic, assign) BOOL running;
 @property (nonatomic, assign) BOOL hasListeners;
-@property (nonatomic, strong) NSMutableArray<NSDictionary *> *buffer;   // batched to JS every 200 ms
+@property (nonatomic, strong) NSMutableArray<NSDictionary *> *buffer;   // batched to JS every 100 ms
 @property (nonatomic, strong) NSTimer *flushTimer;
 @end
 
@@ -93,11 +94,34 @@ RCT_EXPORT_METHOD(deviceModel : (RCTPromiseResolveBlock)resolve rejecter : (RCTP
   resolve([NSString stringWithFormat:@"Apple %s", u.machine]); // e.g. "Apple iPhone14,5" - used as the calibration key
 }
 
+RCT_EXPORT_METHOD(installId : (RCTPromiseResolveBlock)resolve rejecter : (RCTPromiseRejectBlock)reject) {
+  resolve([[UIDevice currentDevice].identifierForVendor UUIDString] ?: @"");   // stable per app vendor; changes on full reinstall
+}
+
+// The OS confirms the owner (Face ID / Touch ID / passcode) before this phone is bound to a student. Apps never see biometric data.
+// Resolves "ok", "cancel" (user backed out) or "none" (no passcode set on this phone).
+RCT_EXPORT_METHOD(confirmBiometric : (NSString *)reason resolver : (RCTPromiseResolveBlock)resolve rejecter : (RCTPromiseRejectBlock)reject) {
+  LAContext *ctx = [[LAContext alloc] init];
+  NSError *err = nil;
+  if (![ctx canEvaluatePolicy:LAPolicyDeviceOwnerAuthentication error:&err]) { resolve(@"none"); return; }
+  [ctx evaluatePolicy:LAPolicyDeviceOwnerAuthentication localizedReason:reason reply:^(BOOL ok, NSError *e) { resolve(ok ? @"ok" : @"cancel"); }];
+}
+
+// Create the CoreBluetooth managers while the app is idle so startRadio is instant when a roll call opens.
+RCT_EXPORT_METHOD(prepareRadio : (RCTPromiseResolveBlock)resolve rejecter : (RCTPromiseRejectBlock)reject) {
+  dispatch_async(dispatch_get_main_queue(), ^{ [self ensureManagers]; resolve(nil); });
+}
+
 RCT_EXPORT_METHOD(setKeepAwake : (BOOL)on) {
   dispatch_async(dispatch_get_main_queue(), ^{ [UIApplication sharedApplication].idleTimerDisabled = on; });
 }
 
 #pragma mark - radio
+
+- (void)ensureManagers {   // main queue only; delegates fire on the main queue; foreground-only by design (no background modes)
+  if (!self.central) self.central = [[CBCentralManager alloc] initWithDelegate:self queue:dispatch_get_main_queue()];
+  if (!self.peripheral) self.peripheral = [[CBPeripheralManager alloc] initWithDelegate:self queue:dispatch_get_main_queue()];
+}
 
 RCT_EXPORT_METHOD(startRadio : (NSString *)name serviceUuid : (NSString *)uuid resolver : (RCTPromiseResolveBlock)resolve rejecter : (RCTPromiseRejectBlock)reject) {
   NSUUID *parsed = [[NSUUID alloc] initWithUUIDString:uuid];
@@ -107,10 +131,11 @@ RCT_EXPORT_METHOD(startRadio : (NSString *)name serviceUuid : (NSString *)uuid r
     self.advUUID = [CBUUID UUIDWithNSUUID:parsed];
     self.buffer = [NSMutableArray array];
     self.running = YES;
-    // Delegates fire on the main queue; foreground-only by design (no state restoration, no background modes).
-    self.central = [[CBCentralManager alloc] initWithDelegate:self queue:dispatch_get_main_queue()];
-    self.peripheral = [[CBPeripheralManager alloc] initWithDelegate:self queue:dispatch_get_main_queue()];
-    self.flushTimer = [NSTimer scheduledTimerWithTimeInterval:0.2 target:self selector:@selector(flush) userInfo:nil repeats:YES];
+    [self ensureManagers];
+    self.flushTimer = [NSTimer scheduledTimerWithTimeInterval:0.1 target:self selector:@selector(flush) userInfo:nil repeats:YES];
+    // managers prepared earlier are already powered on: act on their current state now (a fresh manager calls back by itself)
+    [self centralManagerDidUpdateState:self.central];
+    [self peripheralManagerDidUpdateState:self.peripheral];
     resolve(nil);
   });
 }
@@ -122,18 +147,20 @@ RCT_EXPORT_METHOD(stopRadio : (RCTPromiseResolveBlock)resolve rejecter : (RCTPro
   });
 }
 
-- (void)stopInternal {   // main queue only
+- (void)stopInternal {   // main queue only; the managers stay alive (prepared) - only scanning/advertising stop
   self.running = NO;
   [self.flushTimer invalidate]; self.flushTimer = nil;
   [self.central stopScan]; [self.peripheral stopAdvertising];
-  self.central.delegate = nil; self.peripheral.delegate = nil;
-  self.central = nil; self.peripheral = nil;
   [self flush];
 }
 
 - (void)invalidate {   // bridge teardown / reload: never leave the radio on
   [super invalidate];  // RCTEventEmitter requires it (NS_REQUIRES_SUPER)
-  dispatch_async(dispatch_get_main_queue(), ^{ [self stopInternal]; });
+  dispatch_async(dispatch_get_main_queue(), ^{
+    [self stopInternal];
+    self.central.delegate = nil; self.peripheral.delegate = nil;
+    self.central = nil; self.peripheral = nil;
+  });
 }
 
 - (void)push:(NSString *)n rssi:(NSNumber *)r {
@@ -152,6 +179,8 @@ RCT_EXPORT_METHOD(stopRadio : (RCTPromiseResolveBlock)resolve rejecter : (RCTPro
     // nil services: CoreBluetooth cannot filter on a UUID prefix, so match it below. Foreground scanning with nil
     // services is allowed. AllowDuplicates is mandatory: without it iOS reports each peer once (no RSSI series).
     [c scanForPeripheralsWithServices:nil options:@{CBCentralManagerScanOptionAllowDuplicatesKey : @YES}];
+  } else if (!self.running) {
+    return;
   } else if (c.state == CBManagerStateUnauthorized) {
     [self push:@"NP-ERR-BT-UNAUTHORIZED" rssi:@(-1)];
   } else if (c.state == CBManagerStatePoweredOff) {

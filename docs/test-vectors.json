@@ -25,12 +25,14 @@
   "messages": {
     "register": "register:21CT042:Redmi Note 9",
     "checkin": "checkin:S-1a2b3c4d5e:9f8e7d6c5b4a39281706f5e4d3c2b1a0",
+    "login": "login:21CT042:1760000000",
     "report": "report:S-1a2b3c4d5e:21CT042:[[\"0a1b2c3d\",-60,3],[\"0a1b2c3d\",-58,14],[\"7c7c7c7c\",-64,20],[\"ff00aa11\",-71,9]]"
   },
   "signatures_by_python": {
-    "register": "MEYCIQDIr3NOQgc7L7ZLDrOrp6n8xgOpt4Wo2VR2MYdCJusbewIhAPGeyacJ9KQRnivIi2GNa0x+f3KtyUa0oM+j2pl9s6Bg",
-    "checkin": "MEYCIQCMoOcKiDBXpzZmZaqNC/cltg0BT4DU2q9CAQvNKMx4wwIhAMmGzJLXZf5wJmp20zXLfqcVZ1PjralrKtd58AeRZO0A",
-    "report": "MEQCID1KR/e3riPDpa/CBQzKZJ81JJW46wAdIaUOYCz8Tnx6AiAvrUj4ys2JwEo7jXKfABejFenxwL8wwApCyHSpurprQA=="
+    "register": "MEQCIGUlc6otSh3noiLtyo8renBejt0LkczQjKPsYvMMLNlIAiBQi8FdJGm4/xemm+y1R+urxoaCTSIMlKUlU5ovFZTgBw==",
+    "checkin": "MEUCIHEatyv/GwZS/4j4f1+Q/Vx9DRGX1Cvo5CUD5FXwSi4bAiEAgtjD+JVMtbHEX7HBnKY7G5Zpb4wmm4eBMrVFZUQHHfE=",
+    "login": "MEUCIGdPUPnFiNpICYqIya3wZ0Gm/2Wa7odTZTQ1aYg+9R2TAiEAyleH4cwSey4xweCX2C/LyLPwLKZWyfAjO4CHsf3aDGw=",
+    "report": "MEUCIQDHgZDc9pMROOhtropHrgTBp2Moi/9mB6Rqkalox8hw6wIgFHXkgGbNp1VnhSH44g0nMS/SQG0bWcHx/R0RVjOpvLE="
   },
   "advertise_uuid": [
     {

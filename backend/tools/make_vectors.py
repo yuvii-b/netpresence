@@ -27,6 +27,7 @@ def main(out="../../docs/test-vectors.json"):
     msgs = {
         "register": crypto.register_message("21CT042", "Redmi Note 9"),
         "checkin": crypto.checkin_message("S-1a2b3c4d5e", "9f8e7d6c5b4a39281706f5e4d3c2b1a0"),
+        "login": crypto.login_message("21CT042", 1760000000),
         "report": crypto.report_message("S-1a2b3c4d5e", "21CT042", neighbours),
     }
     sig = {k: base64.b64encode(key.sign(v.encode(), ec.ECDSA(hashes.SHA256()))).decode() for k, v in msgs.items()}
