@@ -1,0 +1,70 @@
+name: Tests
+# Everything that does not need a real phone: server, engine, both simulation studies, phone protocol code against a
+# live server. Fails the push if any pre-declared acceptance criterion fails.
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    # Windows too: the simulator must run on the author's Windows laptop exactly as it runs here
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: pip install -r requirements.txt -r requirements-dev.txt
+        working-directory: backend
+      - run: npm ci || npm install
+        working-directory: mobile/core
+      - run: python -m tools.check
+        working-directory: backend
+
+  # The paper pipeline: every experiment (few classrooms) on both OSes; the per-experiment hashes of the integer counts must be
+  # identical on Linux and Windows (numpy/random streams, float formatting, multiprocessing 'spawn').
+  paper:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: pip install -r requirements.txt -r requirements-dev.txt -r requirements-paper.txt
+        working-directory: backend
+      - run: python -m paper.make --quick --workers 2 --no-cache
+        working-directory: backend
+      - uses: actions/upload-artifact@v4
+        with:
+          name: paper-quick-${{ matrix.os }}
+          path: |
+            backend/paper/out/results/hashes.json
+            backend/paper/out/summary.md
+            backend/paper/out/tables
+            backend/paper/out/figures
+
+  paper-parity:
+    needs: paper
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - uses: actions/download-artifact@v4
+        with: { name: paper-quick-ubuntu-latest, path: parity/linux }
+      - uses: actions/download-artifact@v4
+        with: { name: paper-quick-windows-latest, path: parity/windows }
+      - run: python -m paper.compare_hashes ../parity/linux/results/hashes.json ../parity/windows/results/hashes.json
+        working-directory: backend

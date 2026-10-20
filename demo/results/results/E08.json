@@ -1,0 +1,468 @@
+{
+ "base": {
+  "classrooms": 40,
+  "far": {
+   "est": 0.00365,
+   "hi": 0.005897,
+   "lo": 0.001684,
+   "n": 40
+  },
+  "fpr": {
+   "est": 0.0,
+   "hi": 0.0,
+   "lo": 0.0,
+   "n": 40
+  }
+ },
+ "check": {
+  "A/high": [
+   13,
+   128
+  ],
+  "A/low": [
+   164,
+   0
+  ],
+  "base": [
+   13,
+   0
+  ],
+  "body_db/high": [
+   13,
+   0
+  ],
+  "body_db/low": [
+   13,
+   5
+  ],
+  "dir_sigma/high": [
+   18,
+   0
+  ],
+  "dir_sigma/low": [
+   13,
+   1
+  ],
+  "fast_sigma/high": [
+   13,
+   0
+  ],
+  "fast_sigma/low": [
+   13,
+   0
+  ],
+  "n/high": [
+   13,
+   0
+  ],
+  "n/low": [
+   13,
+   35
+  ],
+  "p_detect/high": [
+   13,
+   0
+  ],
+  "p_detect/low": [
+   18,
+   0
+  ],
+  "seat_pitch/high": [
+   14,
+   0
+  ],
+  "seat_pitch/low": [
+   13,
+   2
+  ],
+  "shadow_sigma/high": [
+   13,
+   60
+  ],
+  "shadow_sigma/low": [
+   15,
+   0
+  ],
+  "tap_median_s/high": [
+   218,
+   0
+  ],
+  "tap_median_s/low": [
+   0,
+   0
+  ],
+  "wall_db/high": [
+   13,
+   0
+  ],
+  "wall_db/low": [
+   13,
+   24
+  ]
+ },
+ "rows": [
+  {
+   "classrooms": 40,
+   "far": {
+    "est": 0.00365,
+    "hi": 0.005897,
+    "lo": 0.001684,
+    "n": 40
+   },
+   "field": "n",
+   "fpr": {
+    "est": 0.109375,
+    "hi": 0.19375,
+    "lo": 0.034375,
+    "n": 40
+   },
+   "side": "low",
+   "value": 2.4
+  },
+  {
+   "classrooms": 40,
+   "far": {
+    "est": 0.00365,
+    "hi": 0.005897,
+    "lo": 0.001684,
+    "n": 40
+   },
+   "field": "n",
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "side": "high",
+   "value": 3.6
+  },
+  {
+   "classrooms": 40,
+   "far": {
+    "est": 0.004211,
+    "hi": 0.006738,
+    "lo": 0.001965,
+    "n": 40
+   },
+   "field": "shadow_sigma",
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "side": "low",
+   "value": 3.0
+  },
+  {
+   "classrooms": 40,
+   "far": {
+    "est": 0.00365,
+    "hi": 0.005897,
+    "lo": 0.001684,
+    "n": 40
+   },
+   "field": "shadow_sigma",
+   "fpr": {
+    "est": 0.1875,
+    "hi": 0.290625,
+    "lo": 0.096797,
+    "n": 40
+   },
+   "side": "high",
+   "value": 8.0
+  },
+  {
+   "classrooms": 40,
+   "far": {
+    "est": 0.00365,
+    "hi": 0.005897,
+    "lo": 0.001684,
+    "n": 40
+   },
+   "field": "fast_sigma",
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "side": "low",
+   "value": 2.0
+  },
+  {
+   "classrooms": 40,
+   "far": {
+    "est": 0.00365,
+    "hi": 0.005897,
+    "lo": 0.001684,
+    "n": 40
+   },
+   "field": "fast_sigma",
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "side": "high",
+   "value": 6.0
+  },
+  {
+   "classrooms": 40,
+   "far": {
+    "est": 0.00365,
+    "hi": 0.005897,
+    "lo": 0.001684,
+    "n": 40
+   },
+   "field": "dir_sigma",
+   "fpr": {
+    "est": 0.003125,
+    "hi": 0.009375,
+    "lo": 0.0,
+    "n": 40
+   },
+   "side": "low",
+   "value": 0.0
+  },
+  {
+   "classrooms": 40,
+   "far": {
+    "est": 0.005053,
+    "hi": 0.007861,
+    "lo": 0.002527,
+    "n": 40
+   },
+   "field": "dir_sigma",
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "side": "high",
+   "value": 3.0
+  },
+  {
+   "classrooms": 40,
+   "far": {
+    "est": 0.00365,
+    "hi": 0.005897,
+    "lo": 0.001684,
+    "n": 40
+   },
+   "field": "body_db",
+   "fpr": {
+    "est": 0.015625,
+    "hi": 0.040625,
+    "lo": 0.0,
+    "n": 40
+   },
+   "side": "low",
+   "value": 1.0
+  },
+  {
+   "classrooms": 40,
+   "far": {
+    "est": 0.00365,
+    "hi": 0.005897,
+    "lo": 0.001684,
+    "n": 40
+   },
+   "field": "body_db",
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "side": "high",
+   "value": 5.0
+  },
+  {
+   "classrooms": 40,
+   "far": {
+    "est": 0.00365,
+    "hi": 0.005897,
+    "lo": 0.001684,
+    "n": 40
+   },
+   "field": "wall_db",
+   "fpr": {
+    "est": 0.075,
+    "hi": 0.14375,
+    "lo": 0.021875,
+    "n": 40
+   },
+   "side": "low",
+   "value": 6.0
+  },
+  {
+   "classrooms": 40,
+   "far": {
+    "est": 0.00365,
+    "hi": 0.005897,
+    "lo": 0.001684,
+    "n": 40
+   },
+   "field": "wall_db",
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "side": "high",
+   "value": 18.0
+  },
+  {
+   "classrooms": 40,
+   "far": {
+    "est": 0.005053,
+    "hi": 0.008139,
+    "lo": 0.002526,
+    "n": 40
+   },
+   "field": "p_detect",
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "side": "low",
+   "value": 0.9
+  },
+  {
+   "classrooms": 40,
+   "far": {
+    "est": 0.00365,
+    "hi": 0.005897,
+    "lo": 0.001684,
+    "n": 40
+   },
+   "field": "p_detect",
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "side": "high",
+   "value": 1.0
+  },
+  {
+   "classrooms": 40,
+   "far": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "field": "tap_median_s",
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "side": "low",
+   "value": 2.0
+  },
+  {
+   "classrooms": 40,
+   "far": {
+    "est": 0.061202,
+    "hi": 0.070486,
+    "lo": 0.052794,
+    "n": 40
+   },
+   "field": "tap_median_s",
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "side": "high",
+   "value": 8.0
+  },
+  {
+   "classrooms": 40,
+   "far": {
+    "est": 0.00365,
+    "hi": 0.005897,
+    "lo": 0.001684,
+    "n": 40
+   },
+   "field": "seat_pitch",
+   "fpr": {
+    "est": 0.00625,
+    "hi": 0.01875,
+    "lo": 0.0,
+    "n": 40
+   },
+   "side": "low",
+   "value": 0.4
+  },
+  {
+   "classrooms": 40,
+   "far": {
+    "est": 0.00393,
+    "hi": 0.006738,
+    "lo": 0.001684,
+    "n": 40
+   },
+   "field": "seat_pitch",
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "side": "high",
+   "value": 0.7
+  },
+  {
+   "classrooms": 40,
+   "far": {
+    "est": 0.046042,
+    "hi": 0.05922,
+    "lo": 0.033954,
+    "n": 40
+   },
+   "field": "A",
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "side": "low",
+   "value": -65.0
+  },
+  {
+   "classrooms": 40,
+   "far": {
+    "est": 0.00365,
+    "hi": 0.005897,
+    "lo": 0.001684,
+    "n": 40
+   },
+   "field": "A",
+   "fpr": {
+    "est": 0.4,
+    "hi": 0.543828,
+    "lo": 0.26875,
+    "n": 40
+   },
+   "side": "high",
+   "value": -53.0
+  }
+ ],
+ "timing": {
+  "seconds": 43.66
+ }
+}

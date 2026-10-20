@@ -1,0 +1,2 @@
+package netpresence;
+@license(LGPL);

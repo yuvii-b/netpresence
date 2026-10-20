@@ -1,0 +1,30 @@
+name: Release
+# Publish downloadable builds: push a version tag and the apps appear on the repo's Releases page.
+#   git tag v0.1.0 && git push origin v0.1.0
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    uses: ./.github/workflows/mobile.yml
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+      - name: Create the release with the Android APK and the iOS IPA attached
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp dist/netpresence-android-apk/app-release.apk NetPresence-android.apk
+          cp dist/netpresence-ios-unsigned-ipa/NetPresence-unsigned.ipa NetPresence-ios-unsigned.ipa
+          gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" \
+            --title "NetPresence $GITHUB_REF_NAME" --generate-notes \
+            NetPresence-android.apk NetPresence-ios-unsigned.ipa

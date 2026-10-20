@@ -1,0 +1,33 @@
+{
+ "check": {
+  "lab6": [
+   1,
+   0
+  ]
+ },
+ "rows": [
+  {
+   "preset": "lab6",
+   "sessions_real": 0,
+   "sim": {
+    "classrooms": 100,
+    "far": {
+     "est": 0.0033,
+     "hi": 0.010274,
+     "lo": 0.0,
+     "n": 100
+    },
+    "fpr": {
+     "est": 0.0,
+     "hi": 0.0,
+     "lo": 0.0,
+     "n": 100
+    }
+   }
+  }
+ ],
+ "status": "NO REAL DATA: simulator prediction only",
+ "timing": {
+  "seconds": 0.07
+ }
+}

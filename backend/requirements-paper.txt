@@ -1,0 +1,1 @@
+matplotlib>=3.8   # optional: only for paper figures (python -m paper.make); everything else runs without it

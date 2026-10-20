@@ -1,0 +1,885 @@
+{
+ "check": {
+  "10/100.0/des/False": 96,
+  "10/100.0/des/True": 96,
+  "10/100.0/fast/False": 92,
+  "10/200.0/des/False": 98,
+  "10/200.0/des/True": 98,
+  "10/200.0/fast/False": 90,
+  "10/300.0/des/False": 90,
+  "10/300.0/des/True": 88,
+  "10/300.0/fast/False": 90,
+  "30/100.0/des/False": 24,
+  "30/100.0/des/True": 21,
+  "30/100.0/fast/False": 12,
+  "30/200.0/des/False": 28,
+  "30/200.0/des/True": 24,
+  "30/200.0/fast/False": 12,
+  "30/300.0/des/False": 27,
+  "30/300.0/des/True": 27,
+  "30/300.0/fast/False": 12,
+  "60/100.0/des/False": 9,
+  "60/100.0/des/True": 9,
+  "60/100.0/fast/False": 9,
+  "60/200.0/des/False": 9,
+  "60/200.0/des/True": 9,
+  "60/200.0/fast/False": 9,
+  "60/300.0/des/False": 8,
+  "60/300.0/des/True": 8,
+  "60/300.0/fast/False": 8,
+  "93/100.0/des/False": 5,
+  "93/100.0/des/True": 5,
+  "93/100.0/fast/False": 5,
+  "93/200.0/des/False": 5,
+  "93/200.0/des/True": 5,
+  "93/200.0/fast/False": 5,
+  "93/300.0/des/False": 5,
+  "93/300.0/des/True": 5,
+  "93/300.0/fast/False": 5
+ },
+ "rows": [
+  {
+   "adv_ms": 100.0,
+   "capture": false,
+   "classrooms": 20,
+   "collision_pct": null,
+   "far": {
+    "est": 0.605263,
+    "hi": 0.777088,
+    "lo": 0.408759,
+    "n": 20
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 20
+   },
+   "mode": "fast",
+   "students": 10
+  },
+  {
+   "adv_ms": 100.0,
+   "capture": false,
+   "classrooms": 20,
+   "collision_pct": {
+    "est": 1.321724,
+    "hi": 1.399896,
+    "lo": 1.247209,
+    "n": 20
+   },
+   "far": {
+    "est": 0.631579,
+    "hi": 0.802661,
+    "lo": 0.440217,
+    "n": 20
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 20
+   },
+   "mode": "des",
+   "students": 10
+  },
+  {
+   "adv_ms": 100.0,
+   "capture": true,
+   "classrooms": 20,
+   "collision_pct": {
+    "est": 1.401194,
+    "hi": 1.47151,
+    "lo": 1.329053,
+    "n": 20
+   },
+   "far": {
+    "est": 0.631579,
+    "hi": 0.802661,
+    "lo": 0.440217,
+    "n": 20
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 20
+   },
+   "mode": "des",
+   "students": 10
+  },
+  {
+   "adv_ms": 200.0,
+   "capture": false,
+   "classrooms": 20,
+   "collision_pct": null,
+   "far": {
+    "est": 0.592105,
+    "hi": 0.770199,
+    "lo": 0.397436,
+    "n": 20
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 20
+   },
+   "mode": "fast",
+   "students": 10
+  },
+  {
+   "adv_ms": 200.0,
+   "capture": false,
+   "classrooms": 20,
+   "collision_pct": {
+    "est": 0.806434,
+    "hi": 0.86238,
+    "lo": 0.751474,
+    "n": 20
+   },
+   "far": {
+    "est": 0.644737,
+    "hi": 0.816471,
+    "lo": 0.453333,
+    "n": 20
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 20
+   },
+   "mode": "des",
+   "students": 10
+  },
+  {
+   "adv_ms": 200.0,
+   "capture": true,
+   "classrooms": 20,
+   "collision_pct": {
+    "est": 0.858964,
+    "hi": 0.926565,
+    "lo": 0.793384,
+    "n": 20
+   },
+   "far": {
+    "est": 0.644737,
+    "hi": 0.816471,
+    "lo": 0.453333,
+    "n": 20
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 20
+   },
+   "mode": "des",
+   "students": 10
+  },
+  {
+   "adv_ms": 300.0,
+   "capture": false,
+   "classrooms": 20,
+   "collision_pct": null,
+   "far": {
+    "est": 0.592105,
+    "hi": 0.770199,
+    "lo": 0.397436,
+    "n": 20
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 20
+   },
+   "mode": "fast",
+   "students": 10
+  },
+  {
+   "adv_ms": 300.0,
+   "capture": false,
+   "classrooms": 20,
+   "collision_pct": {
+    "est": 0.484094,
+    "hi": 0.547958,
+    "lo": 0.417061,
+    "n": 20
+   },
+   "far": {
+    "est": 0.592105,
+    "hi": 0.763645,
+    "lo": 0.40787,
+    "n": 20
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 20
+   },
+   "mode": "des",
+   "students": 10
+  },
+  {
+   "adv_ms": 300.0,
+   "capture": true,
+   "classrooms": 20,
+   "collision_pct": {
+    "est": 0.511834,
+    "hi": 0.569822,
+    "lo": 0.446412,
+    "n": 20
+   },
+   "far": {
+    "est": 0.578947,
+    "hi": 0.748429,
+    "lo": 0.391244,
+    "n": 20
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 20
+   },
+   "mode": "des",
+   "students": 10
+  },
+  {
+   "adv_ms": 100.0,
+   "capture": false,
+   "classrooms": 20,
+   "collision_pct": null,
+   "far": {
+    "est": 0.021622,
+    "hi": 0.033995,
+    "lo": 0.010733,
+    "n": 20
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 20
+   },
+   "mode": "fast",
+   "students": 30
+  },
+  {
+   "adv_ms": 100.0,
+   "capture": false,
+   "classrooms": 20,
+   "collision_pct": {
+    "est": 3.497827,
+    "hi": 3.596646,
+    "lo": 3.388862,
+    "n": 20
+   },
+   "far": {
+    "est": 0.043243,
+    "hi": 0.06295,
+    "lo": 0.025134,
+    "n": 20
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 20
+   },
+   "mode": "des",
+   "students": 30
+  },
+  {
+   "adv_ms": 100.0,
+   "capture": true,
+   "classrooms": 20,
+   "collision_pct": {
+    "est": 3.44918,
+    "hi": 3.541036,
+    "lo": 3.351418,
+    "n": 20
+   },
+   "far": {
+    "est": 0.037838,
+    "hi": 0.057762,
+    "lo": 0.01982,
+    "n": 20
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 20
+   },
+   "mode": "des",
+   "students": 30
+  },
+  {
+   "adv_ms": 200.0,
+   "capture": false,
+   "classrooms": 20,
+   "collision_pct": null,
+   "far": {
+    "est": 0.021622,
+    "hi": 0.033995,
+    "lo": 0.010733,
+    "n": 20
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 20
+   },
+   "mode": "fast",
+   "students": 30
+  },
+  {
+   "adv_ms": 200.0,
+   "capture": false,
+   "classrooms": 20,
+   "collision_pct": {
+    "est": 1.925715,
+    "hi": 2.01426,
+    "lo": 1.841807,
+    "n": 20
+   },
+   "far": {
+    "est": 0.05045,
+    "hi": 0.070909,
+    "lo": 0.030853,
+    "n": 20
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 20
+   },
+   "mode": "des",
+   "students": 30
+  },
+  {
+   "adv_ms": 200.0,
+   "capture": true,
+   "classrooms": 20,
+   "collision_pct": {
+    "est": 1.882977,
+    "hi": 1.955216,
+    "lo": 1.809536,
+    "n": 20
+   },
+   "far": {
+    "est": 0.043243,
+    "hi": 0.061931,
+    "lo": 0.025315,
+    "n": 20
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 20
+   },
+   "mode": "des",
+   "students": 30
+  },
+  {
+   "adv_ms": 300.0,
+   "capture": false,
+   "classrooms": 20,
+   "collision_pct": null,
+   "far": {
+    "est": 0.021622,
+    "hi": 0.033995,
+    "lo": 0.010733,
+    "n": 20
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 20
+   },
+   "mode": "fast",
+   "students": 30
+  },
+  {
+   "adv_ms": 300.0,
+   "capture": false,
+   "classrooms": 20,
+   "collision_pct": {
+    "est": 1.397553,
+    "hi": 1.501671,
+    "lo": 1.305644,
+    "n": 20
+   },
+   "far": {
+    "est": 0.048649,
+    "hi": 0.070652,
+    "lo": 0.028725,
+    "n": 20
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 20
+   },
+   "mode": "des",
+   "students": 30
+  },
+  {
+   "adv_ms": 300.0,
+   "capture": true,
+   "classrooms": 20,
+   "collision_pct": {
+    "est": 1.379286,
+    "hi": 1.47625,
+    "lo": 1.292353,
+    "n": 20
+   },
+   "far": {
+    "est": 0.048649,
+    "hi": 0.071946,
+    "lo": 0.028673,
+    "n": 20
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 20
+   },
+   "mode": "des",
+   "students": 30
+  },
+  {
+   "adv_ms": 100.0,
+   "capture": false,
+   "classrooms": 20,
+   "collision_pct": null,
+   "far": {
+    "est": 0.007895,
+    "hi": 0.011474,
+    "lo": 0.004371,
+    "n": 20
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 20
+   },
+   "mode": "fast",
+   "students": 60
+  },
+  {
+   "adv_ms": 100.0,
+   "capture": false,
+   "classrooms": 20,
+   "collision_pct": {
+    "est": 6.276236,
+    "hi": 6.36082,
+    "lo": 6.184832,
+    "n": 20
+   },
+   "far": {
+    "est": 0.007895,
+    "hi": 0.012324,
+    "lo": 0.003506,
+    "n": 20
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 20
+   },
+   "mode": "des",
+   "students": 60
+  },
+  {
+   "adv_ms": 100.0,
+   "capture": true,
+   "classrooms": 20,
+   "collision_pct": {
+    "est": 6.071741,
+    "hi": 6.156917,
+    "lo": 5.985527,
+    "n": 20
+   },
+   "far": {
+    "est": 0.007895,
+    "hi": 0.012324,
+    "lo": 0.003506,
+    "n": 20
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 20
+   },
+   "mode": "des",
+   "students": 60
+  },
+  {
+   "adv_ms": 200.0,
+   "capture": false,
+   "classrooms": 20,
+   "collision_pct": null,
+   "far": {
+    "est": 0.007895,
+    "hi": 0.011474,
+    "lo": 0.004371,
+    "n": 20
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 20
+   },
+   "mode": "fast",
+   "students": 60
+  },
+  {
+   "adv_ms": 200.0,
+   "capture": false,
+   "classrooms": 20,
+   "collision_pct": {
+    "est": 3.605308,
+    "hi": 3.702131,
+    "lo": 3.498382,
+    "n": 20
+   },
+   "far": {
+    "est": 0.007895,
+    "hi": 0.012324,
+    "lo": 0.003506,
+    "n": 20
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 20
+   },
+   "mode": "des",
+   "students": 60
+  },
+  {
+   "adv_ms": 200.0,
+   "capture": true,
+   "classrooms": 20,
+   "collision_pct": {
+    "est": 3.48317,
+    "hi": 3.570971,
+    "lo": 3.388586,
+    "n": 20
+   },
+   "far": {
+    "est": 0.007895,
+    "hi": 0.012324,
+    "lo": 0.003506,
+    "n": 20
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 20
+   },
+   "mode": "des",
+   "students": 60
+  },
+  {
+   "adv_ms": 300.0,
+   "capture": false,
+   "classrooms": 20,
+   "collision_pct": null,
+   "far": {
+    "est": 0.007018,
+    "hi": 0.010573,
+    "lo": 0.003503,
+    "n": 20
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 20
+   },
+   "mode": "fast",
+   "students": 60
+  },
+  {
+   "adv_ms": 300.0,
+   "capture": false,
+   "classrooms": 20,
+   "collision_pct": {
+    "est": 2.518119,
+    "hi": 2.631353,
+    "lo": 2.421528,
+    "n": 20
+   },
+   "far": {
+    "est": 0.007018,
+    "hi": 0.011454,
+    "lo": 0.002636,
+    "n": 20
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 20
+   },
+   "mode": "des",
+   "students": 60
+  },
+  {
+   "adv_ms": 300.0,
+   "capture": true,
+   "classrooms": 20,
+   "collision_pct": {
+    "est": 2.423069,
+    "hi": 2.520592,
+    "lo": 2.335422,
+    "n": 20
+   },
+   "far": {
+    "est": 0.007018,
+    "hi": 0.011454,
+    "lo": 0.002636,
+    "n": 20
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 20
+   },
+   "mode": "des",
+   "students": 60
+  },
+  {
+   "adv_ms": 100.0,
+   "capture": false,
+   "classrooms": 20,
+   "collision_pct": null,
+   "far": {
+    "est": 0.002807,
+    "hi": 0.005053,
+    "lo": 0.001108,
+    "n": 20
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 20
+   },
+   "mode": "fast",
+   "students": 93
+  },
+  {
+   "adv_ms": 100.0,
+   "capture": false,
+   "classrooms": 20,
+   "collision_pct": {
+    "est": 8.978606,
+    "hi": 9.169461,
+    "lo": 8.79247,
+    "n": 20
+   },
+   "far": {
+    "est": 0.002807,
+    "hi": 0.005053,
+    "lo": 0.001108,
+    "n": 20
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 20
+   },
+   "mode": "des",
+   "students": 93
+  },
+  {
+   "adv_ms": 100.0,
+   "capture": true,
+   "classrooms": 20,
+   "collision_pct": {
+    "est": 8.746484,
+    "hi": 8.878099,
+    "lo": 8.617699,
+    "n": 20
+   },
+   "far": {
+    "est": 0.002807,
+    "hi": 0.005053,
+    "lo": 0.001108,
+    "n": 20
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 20
+   },
+   "mode": "des",
+   "students": 93
+  },
+  {
+   "adv_ms": 200.0,
+   "capture": false,
+   "classrooms": 20,
+   "collision_pct": null,
+   "far": {
+    "est": 0.002807,
+    "hi": 0.005053,
+    "lo": 0.001108,
+    "n": 20
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 20
+   },
+   "mode": "fast",
+   "students": 93
+  },
+  {
+   "adv_ms": 200.0,
+   "capture": false,
+   "classrooms": 20,
+   "collision_pct": {
+    "est": 5.333144,
+    "hi": 5.405591,
+    "lo": 5.255346,
+    "n": 20
+   },
+   "far": {
+    "est": 0.002807,
+    "hi": 0.005053,
+    "lo": 0.001108,
+    "n": 20
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 20
+   },
+   "mode": "des",
+   "students": 93
+  },
+  {
+   "adv_ms": 200.0,
+   "capture": true,
+   "classrooms": 20,
+   "collision_pct": {
+    "est": 5.176884,
+    "hi": 5.228719,
+    "lo": 5.123521,
+    "n": 20
+   },
+   "far": {
+    "est": 0.002807,
+    "hi": 0.005053,
+    "lo": 0.001108,
+    "n": 20
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 20
+   },
+   "mode": "des",
+   "students": 93
+  },
+  {
+   "adv_ms": 300.0,
+   "capture": false,
+   "classrooms": 20,
+   "collision_pct": null,
+   "far": {
+    "est": 0.002807,
+    "hi": 0.005053,
+    "lo": 0.001108,
+    "n": 20
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 20
+   },
+   "mode": "fast",
+   "students": 93
+  },
+  {
+   "adv_ms": 300.0,
+   "capture": false,
+   "classrooms": 20,
+   "collision_pct": {
+    "est": 3.728812,
+    "hi": 3.857255,
+    "lo": 3.605336,
+    "n": 20
+   },
+   "far": {
+    "est": 0.002807,
+    "hi": 0.005053,
+    "lo": 0.001108,
+    "n": 20
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 20
+   },
+   "mode": "des",
+   "students": 93
+  },
+  {
+   "adv_ms": 300.0,
+   "capture": true,
+   "classrooms": 20,
+   "collision_pct": {
+    "est": 3.610589,
+    "hi": 3.714451,
+    "lo": 3.514208,
+    "n": 20
+   },
+   "far": {
+    "est": 0.002807,
+    "hi": 0.005053,
+    "lo": 0.001108,
+    "n": 20
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 20
+   },
+   "mode": "des",
+   "students": 93
+  }
+ ],
+ "timing": {
+  "seconds": 65.74
+ }
+}

@@ -1,0 +1,735 @@
+{
+ "check": {
+  "35/full system": [
+   18,
+   33,
+   6
+  ],
+  "35/k = 1": [
+   8,
+   206,
+   6
+  ],
+  "35/k = 3": [
+   90,
+   1,
+   6
+  ],
+  "35/no adaptive edge": [
+   565,
+   0,
+   3
+  ],
+  "35/no co-location check": [
+   16,
+   33,
+   178
+  ],
+  "35/no discovery tail": [
+   58,
+   31,
+   9
+  ],
+  "35/no disjoint paths": [
+   17,
+   189,
+   6
+  ],
+  "35/no self-calibration": [
+   1214,
+   0,
+   3
+  ],
+  "93/full system": [
+   21,
+   2,
+   4
+  ],
+  "93/k = 1": [
+   21,
+   45,
+   4
+  ],
+  "93/k = 3": [
+   28,
+   0,
+   4
+  ],
+  "93/no adaptive edge": [
+   21,
+   2,
+   4
+  ],
+  "93/no co-location check": [
+   21,
+   2,
+   180
+  ],
+  "93/no discovery tail": [
+   30,
+   2,
+   6
+  ],
+  "93/no disjoint paths": [
+   21,
+   25,
+   4
+  ],
+  "93/no self-calibration": [
+   1663,
+   0,
+   4
+  ]
+ },
+ "rows": [
+  {
+   "far": {
+    "est": 0.003931,
+    "hi": 0.005988,
+    "lo": 0.002245,
+    "n": 60
+   },
+   "fpr": {
+    "est": 0.004167,
+    "hi": 0.0125,
+    "lo": 0.0,
+    "n": 60
+   },
+   "relay": {
+    "est": 0.022222,
+    "hi": 0.044444,
+    "lo": 0.005556,
+    "n": 60
+   },
+   "students": 93,
+   "variant": "full system"
+  },
+  {
+   "d_far": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 60,
+    "significant": false
+   },
+   "d_fpr": {
+    "est": 0.047917,
+    "hi": 0.089583,
+    "lo": 0.010417,
+    "n": 60,
+    "significant": true
+   },
+   "d_relay": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 60,
+    "significant": false
+   },
+   "far": {
+    "est": 0.003931,
+    "hi": 0.005988,
+    "lo": 0.002245,
+    "n": 60
+   },
+   "fpr": {
+    "est": 0.052083,
+    "hi": 0.097917,
+    "lo": 0.016667,
+    "n": 60
+   },
+   "relay": {
+    "est": 0.022222,
+    "hi": 0.044444,
+    "lo": 0.005556,
+    "n": 60
+   },
+   "students": 93,
+   "variant": "no disjoint paths"
+  },
+  {
+   "d_far": {
+    "est": 0.307376,
+    "hi": 0.363778,
+    "lo": 0.257158,
+    "n": 60,
+    "significant": true
+   },
+   "d_fpr": {
+    "est": -0.004167,
+    "hi": 0.0,
+    "lo": -0.0125,
+    "n": 60,
+    "significant": false
+   },
+   "d_relay": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 60,
+    "significant": false
+   },
+   "far": {
+    "est": 0.311307,
+    "hi": 0.363484,
+    "lo": 0.260572,
+    "n": 60
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 60
+   },
+   "relay": {
+    "est": 0.022222,
+    "hi": 0.044444,
+    "lo": 0.005556,
+    "n": 60
+   },
+   "students": 93,
+   "variant": "no self-calibration"
+  },
+  {
+   "d_far": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 60,
+    "significant": false
+   },
+   "d_fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 60,
+    "significant": false
+   },
+   "d_relay": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 60,
+    "significant": false
+   },
+   "far": {
+    "est": 0.003931,
+    "hi": 0.005988,
+    "lo": 0.002245,
+    "n": 60
+   },
+   "fpr": {
+    "est": 0.004167,
+    "hi": 0.0125,
+    "lo": 0.0,
+    "n": 60
+   },
+   "relay": {
+    "est": 0.022222,
+    "hi": 0.044444,
+    "lo": 0.005556,
+    "n": 60
+   },
+   "students": 93,
+   "variant": "no adaptive edge"
+  },
+  {
+   "d_far": {
+    "est": 0.001685,
+    "hi": 0.002807,
+    "lo": 0.000749,
+    "n": 60,
+    "significant": true
+   },
+   "d_fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 60,
+    "significant": false
+   },
+   "d_relay": {
+    "est": 0.011111,
+    "hi": 0.027778,
+    "lo": 0.0,
+    "n": 60,
+    "significant": false
+   },
+   "far": {
+    "est": 0.005616,
+    "hi": 0.007862,
+    "lo": 0.003558,
+    "n": 60
+   },
+   "fpr": {
+    "est": 0.004167,
+    "hi": 0.0125,
+    "lo": 0.0,
+    "n": 60
+   },
+   "relay": {
+    "est": 0.033333,
+    "hi": 0.061111,
+    "lo": 0.011111,
+    "n": 60
+   },
+   "students": 93,
+   "variant": "no discovery tail"
+  },
+  {
+   "d_far": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 60,
+    "significant": false
+   },
+   "d_fpr": {
+    "est": 0.089583,
+    "hi": 0.147917,
+    "lo": 0.0375,
+    "n": 60,
+    "significant": true
+   },
+   "d_relay": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 60,
+    "significant": false
+   },
+   "far": {
+    "est": 0.003931,
+    "hi": 0.005988,
+    "lo": 0.002245,
+    "n": 60
+   },
+   "fpr": {
+    "est": 0.09375,
+    "hi": 0.15625,
+    "lo": 0.041667,
+    "n": 60
+   },
+   "relay": {
+    "est": 0.022222,
+    "hi": 0.044444,
+    "lo": 0.005556,
+    "n": 60
+   },
+   "students": 93,
+   "variant": "k = 1"
+  },
+  {
+   "d_far": {
+    "est": 0.00131,
+    "hi": 0.002433,
+    "lo": 0.000374,
+    "n": 60,
+    "significant": true
+   },
+   "d_fpr": {
+    "est": -0.004167,
+    "hi": 0.0,
+    "lo": -0.0125,
+    "n": 60,
+    "significant": false
+   },
+   "d_relay": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 60,
+    "significant": false
+   },
+   "far": {
+    "est": 0.005241,
+    "hi": 0.007675,
+    "lo": 0.003182,
+    "n": 60
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 60
+   },
+   "relay": {
+    "est": 0.022222,
+    "hi": 0.044444,
+    "lo": 0.005556,
+    "n": 60
+   },
+   "students": 93,
+   "variant": "k = 3"
+  },
+  {
+   "d_far": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 60,
+    "significant": false
+   },
+   "d_fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 60,
+    "significant": false
+   },
+   "d_relay": {
+    "est": 0.977778,
+    "hi": 0.994444,
+    "lo": 0.955556,
+    "n": 60,
+    "significant": true
+   },
+   "far": {
+    "est": 0.003931,
+    "hi": 0.005988,
+    "lo": 0.002245,
+    "n": 60
+   },
+   "fpr": {
+    "est": 0.004167,
+    "hi": 0.0125,
+    "lo": 0.0,
+    "n": 60
+   },
+   "relay": {
+    "est": 1.0,
+    "hi": 1.0,
+    "lo": 1.0,
+    "n": 60
+   },
+   "students": 93,
+   "variant": "no co-location check"
+  },
+  {
+   "far": {
+    "est": 0.009119,
+    "hi": 0.01365,
+    "lo": 0.004566,
+    "n": 60
+   },
+   "fpr": {
+    "est": 0.06875,
+    "hi": 0.129219,
+    "lo": 0.01875,
+    "n": 60
+   },
+   "relay": {
+    "est": 0.033333,
+    "hi": 0.061111,
+    "lo": 0.011111,
+    "n": 60
+   },
+   "students": 35,
+   "variant": "full system"
+  },
+  {
+   "d_far": {
+    "est": -0.000507,
+    "hi": 0.0,
+    "lo": -0.00153,
+    "n": 60,
+    "significant": false
+   },
+   "d_fpr": {
+    "est": 0.325,
+    "hi": 0.429167,
+    "lo": 0.220833,
+    "n": 60,
+    "significant": true
+   },
+   "d_relay": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 60,
+    "significant": false
+   },
+   "far": {
+    "est": 0.008612,
+    "hi": 0.013151,
+    "lo": 0.004061,
+    "n": 60
+   },
+   "fpr": {
+    "est": 0.39375,
+    "hi": 0.5125,
+    "lo": 0.279167,
+    "n": 60
+   },
+   "relay": {
+    "est": 0.033333,
+    "hi": 0.061111,
+    "lo": 0.011111,
+    "n": 60
+   },
+   "students": 35,
+   "variant": "no disjoint paths"
+  },
+  {
+   "d_far": {
+    "est": 0.605876,
+    "hi": 0.675649,
+    "lo": 0.539551,
+    "n": 60,
+    "significant": true
+   },
+   "d_fpr": {
+    "est": -0.06875,
+    "hi": -0.020833,
+    "lo": -0.133333,
+    "n": 60,
+    "significant": true
+   },
+   "d_relay": {
+    "est": -0.016667,
+    "hi": 0.005556,
+    "lo": -0.038889,
+    "n": 60,
+    "significant": false
+   },
+   "far": {
+    "est": 0.614995,
+    "hi": 0.680948,
+    "lo": 0.54466,
+    "n": 60
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 60
+   },
+   "relay": {
+    "est": 0.016667,
+    "hi": 0.033333,
+    "lo": 0.0,
+    "n": 60
+   },
+   "students": 35,
+   "variant": "no self-calibration"
+  },
+  {
+   "d_far": {
+    "est": 0.277102,
+    "hi": 0.368077,
+    "lo": 0.198777,
+    "n": 60,
+    "significant": true
+   },
+   "d_fpr": {
+    "est": -0.06875,
+    "hi": -0.020833,
+    "lo": -0.133333,
+    "n": 60,
+    "significant": true
+   },
+   "d_relay": {
+    "est": -0.016667,
+    "hi": 0.0,
+    "lo": -0.038889,
+    "n": 60,
+    "significant": false
+   },
+   "far": {
+    "est": 0.286221,
+    "hi": 0.375578,
+    "lo": 0.204582,
+    "n": 60
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 60
+   },
+   "relay": {
+    "est": 0.016667,
+    "hi": 0.038889,
+    "lo": 0.0,
+    "n": 60
+   },
+   "students": 35,
+   "variant": "no adaptive edge"
+  },
+  {
+   "d_far": {
+    "est": 0.020263,
+    "hi": 0.055668,
+    "lo": 0.001513,
+    "n": 60,
+    "significant": true
+   },
+   "d_fpr": {
+    "est": -0.004167,
+    "hi": 0.0,
+    "lo": -0.0125,
+    "n": 60,
+    "significant": false
+   },
+   "d_relay": {
+    "est": 0.016667,
+    "hi": 0.038889,
+    "lo": 0.0,
+    "n": 60,
+    "significant": false
+   },
+   "far": {
+    "est": 0.029382,
+    "hi": 0.066001,
+    "lo": 0.008612,
+    "n": 60
+   },
+   "fpr": {
+    "est": 0.064583,
+    "hi": 0.125,
+    "lo": 0.016667,
+    "n": 60
+   },
+   "relay": {
+    "est": 0.05,
+    "hi": 0.088889,
+    "lo": 0.022222,
+    "n": 60
+   },
+   "students": 35,
+   "variant": "no discovery tail"
+  },
+  {
+   "d_far": {
+    "est": -0.005066,
+    "hi": -0.002023,
+    "lo": -0.008674,
+    "n": 60,
+    "significant": true
+   },
+   "d_fpr": {
+    "est": 0.360417,
+    "hi": 0.470885,
+    "lo": 0.252083,
+    "n": 60,
+    "significant": true
+   },
+   "d_relay": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 60,
+    "significant": false
+   },
+   "far": {
+    "est": 0.004053,
+    "hi": 0.007092,
+    "lo": 0.001511,
+    "n": 60
+   },
+   "fpr": {
+    "est": 0.429167,
+    "hi": 0.55625,
+    "lo": 0.310365,
+    "n": 60
+   },
+   "relay": {
+    "est": 0.033333,
+    "hi": 0.061111,
+    "lo": 0.011111,
+    "n": 60
+   },
+   "students": 35,
+   "variant": "k = 1"
+  },
+  {
+   "d_far": {
+    "est": 0.036474,
+    "hi": 0.072259,
+    "lo": 0.01519,
+    "n": 60,
+    "significant": true
+   },
+   "d_fpr": {
+    "est": -0.066667,
+    "hi": -0.020833,
+    "lo": -0.129167,
+    "n": 60,
+    "significant": true
+   },
+   "d_relay": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 60,
+    "significant": false
+   },
+   "far": {
+    "est": 0.045593,
+    "hi": 0.084374,
+    "lo": 0.023362,
+    "n": 60
+   },
+   "fpr": {
+    "est": 0.002083,
+    "hi": 0.00625,
+    "lo": 0.0,
+    "n": 60
+   },
+   "relay": {
+    "est": 0.033333,
+    "hi": 0.061111,
+    "lo": 0.011111,
+    "n": 60
+   },
+   "students": 35,
+   "variant": "k = 3"
+  },
+  {
+   "d_far": {
+    "est": -0.001013,
+    "hi": 0.0,
+    "lo": -0.003063,
+    "n": 60,
+    "significant": false
+   },
+   "d_fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 60,
+    "significant": false
+   },
+   "d_relay": {
+    "est": 0.955556,
+    "hi": 0.983333,
+    "lo": 0.927778,
+    "n": 60,
+    "significant": true
+   },
+   "far": {
+    "est": 0.008105,
+    "hi": 0.012214,
+    "lo": 0.004059,
+    "n": 60
+   },
+   "fpr": {
+    "est": 0.06875,
+    "hi": 0.129219,
+    "lo": 0.01875,
+    "n": 60
+   },
+   "relay": {
+    "est": 0.988889,
+    "hi": 1.0,
+    "lo": 0.972222,
+    "n": 60
+   },
+   "students": 35,
+   "variant": "no co-location check"
+  }
+ ],
+ "timing": {
+  "seconds": 51.74
+ }
+}

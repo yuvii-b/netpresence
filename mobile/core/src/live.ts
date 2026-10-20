@@ -1,0 +1,413 @@
+/** Protocol v3: the live roll call (student and teacher phone). Platform independent; the app supplies Radio + KeyStore. */
+import { ApiError, LONGPOLL_WAIT_S, type NetPresenceApi } from './api';
+import { advertiseUuid } from './ble';
+import { checkinMessage, loginMessage, reportMessage } from './canonical';
+import type { AttendanceSheet, Clock, KeyStore, LiveRow, MyStatus, Neighbour, Radio, RadioSample, TeacherLive, TeacherStart } from './types';
+import { systemClock } from './types';
+
+export const LIVE_REPORT_INTERVAL_MS = 1000;   // = backend LIVE_REPORT_INTERVAL_MS (tests/test_parity.py pins it)
+export const LIVE_TICK_MS = 100;               // how often the reporter looks at the collector
+export const LIVE_WINDOW = 100;                // rolling samples kept per peer (20 made the relay check miss 20 % in sim.live run 1)
+export const LIVE_BEST_AFTER_S = 15;           // the teacher is told accuracy (relay check) is best after this many seconds
+export const LIVE_MIN_SAMPLES = 3;
+export const LIVE_FIRST_NEIGHBOURS = 3;        // send the first report as soon as this many neighbours have LIVE_MIN_SAMPLES
+
+const NAME = /^NP-([0-9a-f]{8})$/i;
+const median = (xs: number[]) => {
+  const s = [...xs].sort((a, b) => a - b);
+  const m = s.length >> 1;
+  return s.length % 2 ? s[m]! : Math.round((s[m - 1]! + s[m]!) / 2);
+};
+
+/** Rolling per-peer RSSI. Drops every advert whose 16-bit session tag is not ours (another class in the next room). */
+export class LiveCollector {
+  private readonly samples = new Map<string, number[]>();
+  private lastKey = '';
+  private lastEmit: number | null = null;
+  private firstSampleAt: number | null = null;
+  /** adverts ignored because they belong to another session */
+  foreign = 0;
+  /** adverts of OUR session heard in total (any peer) */
+  heard = 0;
+  constructor(private readonly selfEph: string, private readonly tag: string, private readonly opts: { minSamples?: number; window?: number } = {}) {}
+
+  add(s: RadioSample, nowMs = Date.now()): void {
+    const m = NAME.exec(s.name ?? '');
+    if (!m) return;
+    const peer = m[1]!.toLowerCase();
+    if (peer === this.selfEph.toLowerCase()) return;
+    if (!peer.startsWith(this.tag.toLowerCase())) { this.foreign++; return; }
+    if (!Number.isFinite(s.rssi) || s.rssi >= 0 || s.rssi < -127) return;
+    this.heard++;
+    const w = this.opts.window ?? LIVE_WINDOW;
+    const list = this.samples.get(peer) ?? [];
+    list.push(Math.round(s.rssi));
+    if (list.length > w) list.shift();
+    this.samples.set(peer, list);
+    this.firstSampleAt ??= nowMs;
+  }
+
+  /** Peers heard at least minSamples times, median of the last `window` samples. */
+  neighbours(): Neighbour[] {
+    const min = this.opts.minSamples ?? LIVE_MIN_SAMPLES;
+    const out: Neighbour[] = [];
+    for (const [peer, xs] of this.samples) if (xs.length >= min) out.push({ peer_id: peer, rssi_median: median(xs), sample_count: xs.length });
+    return out.sort((a, b) => (a.peer_id < b.peer_id ? -1 : 1)).slice(0, 200);
+  }
+
+  get nearby(): number { return this.neighbours().length; }
+
+  /** A report to send now, or null: only when the neighbour set or a median changed, at most every LIVE_REPORT_INTERVAL_MS;
+   *  the very first one goes out as soon as 3 neighbours qualify (or after 1 s in a sparse room). */
+  poll(nowMs: number, canSend = true): Neighbour[] | null {
+    if (!canSend) return null;
+    const nb = this.neighbours();
+    if (!nb.length) return null;
+    const key = JSON.stringify(nb.map((n) => [n.peer_id, n.rssi_median]));
+    if (key === this.lastKey) return null;
+    if (this.lastEmit === null) {
+      if (nb.length < LIVE_FIRST_NEIGHBOURS && nowMs - (this.firstSampleAt ?? nowMs) < LIVE_REPORT_INTERVAL_MS) return null;
+    } else if (nowMs - this.lastEmit < LIVE_REPORT_INTERVAL_MS) return null;
+    this.lastKey = key;
+    this.lastEmit = nowMs;
+    return nb;
+  }
+
+  /** The last report did not get through: allow the same content to be sent again. */
+  markUnsent(): void { this.lastKey = ''; }
+}
+
+
+// ======================================================================= diagnostics =======================================================================
+/** What the phone is doing right now, for the "what is happening" panel. Pure data; the app draws it. */
+export interface LiveDiag {
+  radio: 'off' | 'starting' | 'on' | 'error';
+  advertiseAs?: string;
+  adverts: number;                       // adverts of this class heard
+  foreign: number;                       // adverts of another class / session, ignored
+  peers: Array<{ id: string; rssi: number; n: number }>;
+  sent: number; failed: number; lastSentAt?: number;
+  log: string[];                         // newest last, "hh:mm:ss text"
+}
+
+export class DiagBoard {
+  state: LiveDiag = { radio: 'off', adverts: 0, foreign: 0, peers: [], sent: 0, failed: 0, log: [] };
+  private last = 0;
+  constructor(private readonly onChange?: (d: LiveDiag) => void, private readonly now: () => number = () => Date.now()) {}
+  private push() { this.state = { ...this.state }; this.onChange?.(this.state); this.last = this.now(); }
+  log(msg: string) {
+    const d = new Date(this.now());
+    const t = [d.getHours(), d.getMinutes(), d.getSeconds()].map((x) => String(x).padStart(2, '0')).join(':');
+    this.state.log = [...this.state.log.slice(-39), `${t} ${msg}`];
+    this.push();
+  }
+  set(p: Partial<LiveDiag>) { Object.assign(this.state, p); this.push(); }
+  /** called often; updates the numbers at most 4 times a second */
+  sample(c: LiveCollector) {
+    if (this.now() - this.last < 250) return;
+    this.state.adverts = c.heard; this.state.foreign = c.foreign;
+    this.state.peers = c.neighbours().map((n) => ({ id: n.peer_id.slice(4), rssi: n.rssi_median, n: n.sample_count }));
+    this.push();
+  }
+  reset() { this.state = { radio: 'off', adverts: 0, foreign: 0, peers: [], sent: 0, failed: 0, log: this.state.log }; this.push(); }
+}
+
+type Api = Pick<NetPresenceApi, 'report'>;
+
+/** Uploads incremental signed reports while `isDone()` is false. Never blocks: one request in flight, newest content wins. */
+async function reportLoop(o: { api: Api; keys: KeyStore; clock: Clock; sessionId: string; reporterId: string; collector: LiveCollector;
+  isDone: () => boolean; onNearby?: (n: number) => void; diag?: DiagBoard }): Promise<void> {
+  let inflight = false;
+  while (!o.isDone()) {
+    const nb = o.collector.poll(o.clock.now(), !inflight);
+    o.onNearby?.(o.collector.nearby);
+    o.diag?.sample(o.collector);
+    if (nb) {
+      inflight = true;
+      void (async () => {
+        try {
+          await o.api.report(o.sessionId, o.reporterId, nb, await o.keys.signB64(reportMessage(o.sessionId, o.reporterId, nb)));
+          if (o.diag) { const first = o.diag.state.sent === 0; o.diag.set({ sent: o.diag.state.sent + 1, lastSentAt: o.clock.now() }); if (first) o.diag.log(`first report sent (${nb.length} phones heard)`); }
+        } catch (e) {
+          o.collector.markUnsent();
+          if (o.diag) { o.diag.set({ failed: o.diag.state.failed + 1 }); o.diag.log(`report failed: ${e instanceof Error ? e.message : 'error'}`); }
+        } finally { inflight = false; }
+      })();
+    }
+    await o.clock.sleep(LIVE_TICK_MS);
+  }
+}
+
+// ======================================================================= student =======================================================================
+export type StudentPhase = 'signing_in' | 'idle' | 'joining' | 'live' | 'closed' | 'not_in_class' | 'not_registered' | 'confirming' | 'need_biometric' | 'offline' | 'error';
+export interface StudentState {
+  phase: StudentPhase;
+  subject?: { code: string; name: string };
+  sessionId?: string;
+  nearby: number;
+  status?: 'PENDING' | 'PRESENT' | 'FLAGGED' | 'ABSENT';
+  /** ms from tapping nothing (auto check-in) to the server saying PRESENT */
+  timeToPresentMs?: number;
+  result?: string;
+  message?: string;
+}
+
+export type StudentApi = Pick<NetPresenceApi, 'health' | 'studentLogin' | 'meSession' | 'checkin' | 'report' | 'myStatus'>;
+export interface StudentDeps { api: StudentApi; keys: KeyStore; radio: Radio; studentId: string; clock?: Clock; onState?: (s: StudentState) => void; diag?: DiagBoard;
+  /** Asked at the start of EVERY roll call, before the phone checks in: fingerprint / face / screen lock. 'unavailable' = none is set up, which blocks joining. */
+  confirm?: (subjectLabel: string) => Promise<'ok' | 'cancel' | 'unavailable'> }
+
+export class StudentRunner {
+  private token: string | null = null;
+  private stopped = false;
+  private ctl = typeof AbortController !== 'undefined' ? new AbortController() : undefined;
+  private readonly skip = new Set<string>();
+  private readonly clock: Clock;
+  state: StudentState = { phase: 'signing_in', nearby: 0 };
+  constructor(private readonly d: StudentDeps) { this.clock = d.clock ?? systemClock; }
+
+  private retry?: () => void;
+  stop() { this.stopped = true; this.ctl?.abort(); this.retry?.(); }
+  /** The person tapped "Use fingerprint" after cancelling the prompt. */
+  retryConfirm() { this.retry?.(); }
+  private emit(p: Partial<StudentState>) { this.state = { ...this.state, ...p }; this.d.onState?.(this.state); }
+
+  private async login(): Promise<string> {
+    const attempt = async (ts: number) => this.d.api.studentLogin(this.d.studentId, ts, await this.d.keys.signB64(loginMessage(this.d.studentId, ts)));
+    try {
+      return (await attempt(Math.floor(this.clock.now() / 1000))).token;
+    } catch (e) {
+      if (!(e instanceof ApiError) || e.status !== 400) throw e;   // phone clock more than 60 s off: use the server's time
+      const h = await this.d.api.health();
+      return (await attempt(Math.floor(h.server_time ?? this.clock.now() / 1000))).token;
+    }
+  }
+
+  /** Runs until stop(). Never sleeps between polls; network trouble shows "offline" and retries with 0.5 -> 5 s backoff. */
+  async run(): Promise<void> {
+    void this.d.radio.prepare?.().catch(() => undefined);
+    let backoff = 500;
+    while (!this.stopped) {
+      try {
+        if (!this.token) {
+          this.emit({ phase: 'signing_in', message: undefined });
+          this.d.diag?.log('signing in with this phone\'s key');
+          try {
+            this.token = await this.login();
+          } catch (e) {
+            if (e instanceof ApiError && (e.status === 404 || e.status === 401)) {   // the server does not know this phone / it is another phone's roll number
+              this.d.diag?.log(`not recognised: ${e.message}`);
+              this.emit({ phase: 'not_registered', message: e.status === 404
+                ? 'The server does not have this phone registered (it may have been reset). Register it again.'
+                : 'This roll number is registered to a different phone. Ask your teacher to reset it, then register again.' });
+              await this.clock.sleep(3000);
+              continue;
+            }
+            throw e;
+          }
+          this.d.diag?.log('signed in - waiting for the teacher to start a class');
+        }
+        const polled = this.clock.now();
+        const s = await this.d.api.meSession(this.token, LONGPOLL_WAIT_S, this.ctl?.signal);
+        backoff = 500;
+        if (s.status !== 'open' && this.clock.now() - polled < 1000) await this.clock.sleep(1000 - (this.clock.now() - polled)); // a proxy that ignores long-poll must not make us spin
+        if (s.session_id && this.skip.has(s.session_id)) { await this.clock.sleep(3000); continue; }   // keep showing why
+        if (s.status !== 'open' || !s.session_id) {
+          if (this.state.phase !== 'closed') this.emit({ phase: 'idle', message: undefined, sessionId: undefined, status: undefined, nearby: 0, timeToPresentMs: undefined });
+          continue;   // a finished roll call keeps its result on screen until the next one opens
+        }
+        await this.rollCall(s as Required<Pick<typeof s, 'session_id' | 'nonce'>> & typeof s);
+      } catch (e) {
+        if (this.stopped) return;
+        if (e instanceof ApiError && e.status === 401) { this.token = null; this.d.diag?.log('login expired - signing in again'); continue; }
+        if (e instanceof ApiError && e.transient) {
+          this.d.diag?.log('cannot reach the server - retrying');
+          this.emit({ phase: 'offline', message: 'Cannot reach the server. Check the Wi-Fi - trying again.' });
+          await this.clock.sleep(backoff);
+          backoff = Math.min(backoff * 2, 5000);
+          continue;
+        }
+        this.d.diag?.log(`error: ${e instanceof Error ? e.message : 'something went wrong'}`);
+        this.emit({ phase: 'error', message: e instanceof Error ? e.message : 'Something went wrong.' });
+        await this.clock.sleep(3000);
+      }
+    }
+  }
+
+  private async rollCall(s: { session_id: string; nonce?: string; tag?: string; subject?: { code: string; name: string } }) {
+    const sid = s.session_id;
+    this.d.diag?.reset();
+    this.d.diag?.log(`class started${s.subject ? ': ' + s.subject.code : ''}`);
+    if (this.d.confirm) {                    // every roll call: prove the owner is holding the phone before it joins
+      const subj = s.subject && { code: s.subject.code, name: s.subject.name };
+      this.emit({ phase: 'confirming', sessionId: sid, subject: subj, status: undefined, nearby: 0, message: undefined });
+      this.d.diag?.log('waiting for your fingerprint / face / screen lock');
+      for (;;) {
+        const r = await this.d.confirm(subj ? `Confirm it is you to join ${subj.code}` : 'Confirm it is you to join this class');
+        if (this.stopped) return;
+        if (r === 'ok') { this.d.diag?.log('confirmed'); break; }
+        this.d.diag?.log(r === 'unavailable' ? 'no fingerprint or screen lock is set up on this phone' : 'not confirmed');
+        this.emit({ phase: 'need_biometric', message: r === 'unavailable'
+          ? 'Set up a fingerprint, face or screen lock in your phone settings, then tap the button.'
+          : 'Confirm with your fingerprint, face or screen lock to join this class.' });
+        await new Promise<void>((res) => { this.retry = res; });
+        this.retry = undefined;
+        if (this.stopped) return;
+        this.emit({ phase: 'confirming', message: undefined });
+      }
+    }
+    const t0 = this.clock.now();            // time-to-Present is measured from here: the person's own unlock is not system latency
+    this.d.diag?.log('joining');
+    this.emit({ phase: 'joining', sessionId: sid, subject: s.subject && { code: s.subject.code, name: s.subject.name }, status: 'PENDING', nearby: 0 });
+    let res;
+    try {
+      res = await this.d.api.checkin(sid, this.d.studentId, await this.d.keys.signB64(checkinMessage(sid, s.nonce ?? '')));
+    } catch (e) {
+      if (e instanceof ApiError && (e.status === 403 || e.status === 400)) {   // not on the roster / roll call already over
+        this.skip.add(sid);
+        this.d.diag?.log(`refused: ${e.message}`);
+        this.emit({ phase: e.status === 403 ? 'not_in_class' : 'idle', message: e.message });
+        return;
+      }
+      throw e;
+    }
+    const collector = new LiveCollector(res.eph_id, (res as { tag?: string }).tag ?? s.tag ?? res.eph_id.slice(0, 4));
+    this.d.diag?.log(`checked in - broadcasting as ${res.advertise_name}`);
+    this.d.diag?.set({ radio: 'starting', advertiseAs: res.advertise_name });
+    try {
+      await this.d.radio.start(res.advertise_name, res.advertise_uuid ?? advertiseUuid(res.eph_id), (smp) => collector.add(smp, this.clock.now()));
+    } catch (e) {
+      this.d.diag?.set({ radio: 'error' });
+      this.d.diag?.log(`Bluetooth failed: ${e instanceof Error ? e.message : 'error'}`);
+      throw e;
+    }
+    this.d.diag?.set({ radio: 'on' });
+    this.d.diag?.log('Bluetooth on - listening for nearby phones');
+    this.emit({ phase: 'live' });
+    let done = false;
+    const token = this.token!;
+    const status = async () => {
+      let since = 0;
+      while (!done && !this.stopped) {
+        let r: MyStatus;
+        try { r = await this.d.api.myStatus(token, sid, since, LONGPOLL_WAIT_S, this.ctl?.signal); }
+        catch (e) {
+          if (this.stopped) return;
+          if (e instanceof ApiError && e.status === 401) { this.token = null; done = true; return; }
+          if (e instanceof ApiError && e.transient) { this.emit({ message: 'Connection lost - retrying.' }); await this.clock.sleep(500); continue; }
+          throw e;
+        }
+        since = r.rev;
+        if (r.status !== this.state.status && r.status !== 'NONE') this.d.diag?.log(`server says: ${r.status}`);
+        if (r.status === 'CLOSED') { done = true; this.emit({ phase: 'closed', result: r.result ?? undefined, message: undefined }); return; }
+        if (r.status !== 'NONE') {
+          const first = r.status === 'PRESENT' && this.state.status !== 'PRESENT';
+          this.emit({ status: r.status, message: undefined, ...(first ? { timeToPresentMs: this.clock.now() - t0 } : {}) });
+        }
+      }
+    };
+    try {
+      await Promise.all([
+        reportLoop({ api: this.d.api, keys: this.d.keys, clock: this.clock, sessionId: sid, reporterId: this.d.studentId, collector,
+          isDone: () => done || this.stopped, diag: this.d.diag, onNearby: (n) => { if (n !== this.state.nearby) this.emit({ nearby: n }); } }),
+        status().finally(() => { done = true; }),
+      ]);
+    } finally {
+      await this.d.radio.stop().catch(() => undefined);
+      this.d.diag?.set({ radio: 'off' });
+      this.d.diag?.log('roll call finished - Bluetooth off');
+    }
+  }
+}
+
+// ======================================================================= teacher =======================================================================
+export type TeacherApi = Pick<NetPresenceApi, 'startSubject' | 'teacherLive' | 'teacherFinish' | 'teacherAdjudicate' | 'report'>;
+export interface TeacherDeps {
+  api: TeacherApi; keys: KeyStore; radio: Radio; token: string; model: string; clock?: Clock;
+  onLive?: (l: TeacherLive) => void; onError?: (message: string, offline: boolean) => void; diag?: DiagBoard;
+}
+
+/** The teacher phone: the seed. It advertises and scans like a student phone and watches the class fill up. */
+export class TeacherRoll {
+  private done = false;
+  private ctl = typeof AbortController !== 'undefined' ? new AbortController() : undefined;
+  private readonly clock: Clock;
+  start!: TeacherStart;
+  last: TeacherLive | null = null;
+  constructor(private readonly d: TeacherDeps) { this.clock = d.clock ?? systemClock; }
+
+  async begin(subjectId: string): Promise<TeacherStart> {
+    void this.d.radio.prepare?.().catch(() => undefined);
+    const dg = this.d.diag;
+    dg?.log('starting the class on the server');
+    this.start = await this.d.api.startSubject(this.d.token, subjectId, { public_key: await this.d.keys.publicKeyB64(), model: this.d.model });
+    dg?.log(`class open: ${this.start.subject.code}, ${this.start.subject.roster_size} students on the roster - students are being woken`);
+    const collector = new LiveCollector(this.start.teacher_eph, this.start.tag);
+    dg?.set({ radio: 'starting', advertiseAs: this.start.advertise_name });
+    try {
+      await this.d.radio.start(this.start.advertise_name, this.start.advertise_uuid, (s) => collector.add(s, this.clock.now()));
+    } catch (e) {
+      dg?.set({ radio: 'error' }); dg?.log(`Bluetooth failed: ${e instanceof Error ? e.message : 'error'}`);
+      throw e;
+    }
+    dg?.set({ radio: 'on' });
+    dg?.log(`Bluetooth on - broadcasting as ${this.start.advertise_name}, you are the root`);
+    void reportLoop({ api: this.d.api, keys: this.d.keys, clock: this.clock, sessionId: this.start.session_id,
+      reporterId: this.start.teacher_student_id, collector, diag: dg, isDone: () => this.done })
+      .finally(() => { dg?.set({ radio: 'off' }); dg?.log('Bluetooth off'); return this.d.radio.stop().catch(() => undefined); });
+    void this.watch();
+    return this.start;
+  }
+
+  private async watch() {
+    let since = -1;
+    let backoff = 500;
+    while (!this.done) {
+      try {
+        const l = await this.d.api.teacherLive(this.d.token, this.start.session_id, since, LONGPOLL_WAIT_S, this.ctl?.signal);
+        backoff = 500;
+        since = l.rev;
+        if (this.last && l.counts.PRESENT !== this.last.counts.PRESENT) this.d.diag?.log(`present: ${l.counts.PRESENT} of ${l.roster_size}`);
+        else if (!this.last) this.d.diag?.log(`first update: present ${l.counts.PRESENT ?? 0} of ${l.roster_size}`);
+        this.last = l;
+        this.d.onLive?.(l);
+        if (l.status === 'closed') { this.done = true; return; }
+      } catch (e) {
+        if (this.done) return;
+        const transient = e instanceof ApiError && e.transient;
+        this.d.onError?.(transient ? 'Cannot reach the server - trying again.' : e instanceof Error ? e.message : 'Something went wrong.', transient);
+        await this.clock.sleep(backoff);
+        backoff = Math.min(backoff * 2, 5000);
+      }
+    }
+  }
+
+  adjudicate(studentId: string, status: 'PRESENT' | 'ABSENT') {
+    return this.d.api.teacherAdjudicate(this.d.token, this.start.session_id, studentId, status);
+  }
+
+  async finish() {
+    this.d.diag?.log('finishing the roll call');
+    const out = await this.d.api.teacherFinish(this.d.token, this.start.session_id);
+    this.d.diag?.log('roll call saved');
+    this.done = true;
+    this.ctl?.abort();
+    return out;
+  }
+}
+
+export type { LiveRow };
+
+/** CSV of a finished roll call (RFC 4180 quoting). */
+export function attendanceCsv(subjectCode: string, rows: Array<{ student_id: string; name: string; status: string }>): string {
+  const q = (v: string) => (/[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v);
+  return ['student_id,name,status,subject', ...rows.map((r) => [r.student_id, r.name, r.status, subjectCode].map(q).join(','))].join('\n') + '\n';
+}
+
+/** The whole register as CSV: one row per student, one column per finished roll call (header = date), then present count and percentage. */
+export function sheetCsv(sheet: AttendanceSheet, fmt: (at: number | null) => string = (at) => (at ? new Date(at * 1000).toISOString().slice(0, 16).replace('T', ' ') : '')): string {
+  const q = (v: string) => (/[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v);
+  const head = ['student_id', 'name', ...sheet.sessions.map((x) => fmt(x.at) || x.session_id.slice(-6)), 'present', 'held', 'percent'];
+  const rows = sheet.students.map((r) => [r.student_id, r.name, ...r.marks, String(r.present), String(r.marks.filter((m) => m !== '-').length), r.pct == null ? '' : String(r.pct)]);
+  return [head, ...rows].map((r) => r.map(q).join(',')).join('\n') + '\n';
+}

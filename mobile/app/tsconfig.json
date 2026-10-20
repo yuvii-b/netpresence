@@ -1,0 +1,17 @@
+{
+  "extends": "@react-native/typescript-config/tsconfig.json",
+  "compilerOptions": {
+    "types": [
+      "react-native"
+    ],
+    "noEmit": true
+  },
+  "include": [
+    "App.tsx",
+    "src",
+    "../core/src"
+  ],
+  "exclude": [
+    "../core/src/node.ts"
+  ]
+}

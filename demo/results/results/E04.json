@@ -1,0 +1,859 @@
+{
+ "check": {
+  "0.0/0.0/False": 14,
+  "0.0/0.0/True": 14,
+  "0.0/12.0/False": 14,
+  "0.0/12.0/True": 14,
+  "0.0/18.0/False": 14,
+  "0.0/18.0/True": 14,
+  "0.0/6.0/False": 14,
+  "0.0/6.0/True": 14,
+  "0.25/0.0/False": 19,
+  "0.25/0.0/True": 14,
+  "0.25/12.0/False": 852,
+  "0.25/12.0/True": 14,
+  "0.25/18.0/False": 852,
+  "0.25/18.0/True": 14,
+  "0.25/6.0/False": 852,
+  "0.25/6.0/True": 14,
+  "0.5/0.0/False": 35,
+  "0.5/0.0/True": 13,
+  "0.5/12.0/False": 1051,
+  "0.5/12.0/True": 13,
+  "0.5/18.0/False": 1051,
+  "0.5/18.0/True": 13,
+  "0.5/6.0/False": 1051,
+  "0.5/6.0/True": 13,
+  "0.75/0.0/False": 73,
+  "0.75/0.0/True": 13,
+  "0.75/12.0/False": 876,
+  "0.75/12.0/True": 13,
+  "0.75/18.0/False": 876,
+  "0.75/18.0/True": 13,
+  "0.75/6.0/False": 876,
+  "0.75/6.0/True": 13,
+  "1.0/0.0/False": 13,
+  "1.0/0.0/True": 13,
+  "1.0/12.0/False": 13,
+  "1.0/12.0/True": 13,
+  "1.0/18.0/False": 13,
+  "1.0/18.0/True": 13,
+  "1.0/6.0/False": 13,
+  "1.0/6.0/True": 13,
+  "table/20/False": 301,
+  "table/20/True": 44,
+  "table/35/False": 80,
+  "table/35/True": 9,
+  "table/60/False": 31,
+  "table/60/True": 12,
+  "table/93/False": 34,
+  "table/93/True": 14
+ },
+ "rows": [
+  {
+   "asym_db": 0.0,
+   "classrooms": 40,
+   "far": {
+    "est": 0.00393,
+    "hi": 0.006455,
+    "lo": 0.001685,
+    "n": 40
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "ios_share": 0.0,
+   "selfcal": true
+  },
+  {
+   "asym_db": 0.0,
+   "classrooms": 40,
+   "far": {
+    "est": 0.00393,
+    "hi": 0.006455,
+    "lo": 0.001685,
+    "n": 40
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "ios_share": 0.0,
+   "selfcal": false
+  },
+  {
+   "asym_db": 6.0,
+   "classrooms": 40,
+   "far": {
+    "est": 0.00393,
+    "hi": 0.006455,
+    "lo": 0.001685,
+    "n": 40
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "ios_share": 0.0,
+   "selfcal": true
+  },
+  {
+   "asym_db": 6.0,
+   "classrooms": 40,
+   "far": {
+    "est": 0.00393,
+    "hi": 0.006455,
+    "lo": 0.001685,
+    "n": 40
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "ios_share": 0.0,
+   "selfcal": false
+  },
+  {
+   "asym_db": 12.0,
+   "classrooms": 40,
+   "far": {
+    "est": 0.00393,
+    "hi": 0.006455,
+    "lo": 0.001685,
+    "n": 40
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "ios_share": 0.0,
+   "selfcal": true
+  },
+  {
+   "asym_db": 12.0,
+   "classrooms": 40,
+   "far": {
+    "est": 0.00393,
+    "hi": 0.006455,
+    "lo": 0.001685,
+    "n": 40
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "ios_share": 0.0,
+   "selfcal": false
+  },
+  {
+   "asym_db": 18.0,
+   "classrooms": 40,
+   "far": {
+    "est": 0.00393,
+    "hi": 0.006455,
+    "lo": 0.001685,
+    "n": 40
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "ios_share": 0.0,
+   "selfcal": true
+  },
+  {
+   "asym_db": 18.0,
+   "classrooms": 40,
+   "far": {
+    "est": 0.00393,
+    "hi": 0.006455,
+    "lo": 0.001685,
+    "n": 40
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "ios_share": 0.0,
+   "selfcal": false
+  },
+  {
+   "asym_db": 0.0,
+   "classrooms": 40,
+   "far": {
+    "est": 0.00393,
+    "hi": 0.006455,
+    "lo": 0.001685,
+    "n": 40
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "ios_share": 0.25,
+   "selfcal": true
+  },
+  {
+   "asym_db": 0.0,
+   "classrooms": 40,
+   "far": {
+    "est": 0.005334,
+    "hi": 0.008418,
+    "lo": 0.002807,
+    "n": 40
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "ios_share": 0.25,
+   "selfcal": false
+  },
+  {
+   "asym_db": 6.0,
+   "classrooms": 40,
+   "far": {
+    "est": 0.00393,
+    "hi": 0.006455,
+    "lo": 0.001685,
+    "n": 40
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "ios_share": 0.25,
+   "selfcal": true
+  },
+  {
+   "asym_db": 6.0,
+   "classrooms": 40,
+   "far": {
+    "est": 0.239191,
+    "hi": 0.287008,
+    "lo": 0.206786,
+    "n": 40
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "ios_share": 0.25,
+   "selfcal": false
+  },
+  {
+   "asym_db": 12.0,
+   "classrooms": 40,
+   "far": {
+    "est": 0.00393,
+    "hi": 0.006455,
+    "lo": 0.001685,
+    "n": 40
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "ios_share": 0.25,
+   "selfcal": true
+  },
+  {
+   "asym_db": 12.0,
+   "classrooms": 40,
+   "far": {
+    "est": 0.239191,
+    "hi": 0.287008,
+    "lo": 0.206786,
+    "n": 40
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "ios_share": 0.25,
+   "selfcal": false
+  },
+  {
+   "asym_db": 18.0,
+   "classrooms": 40,
+   "far": {
+    "est": 0.00393,
+    "hi": 0.006455,
+    "lo": 0.001685,
+    "n": 40
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "ios_share": 0.25,
+   "selfcal": true
+  },
+  {
+   "asym_db": 18.0,
+   "classrooms": 40,
+   "far": {
+    "est": 0.239191,
+    "hi": 0.287008,
+    "lo": 0.206786,
+    "n": 40
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "ios_share": 0.25,
+   "selfcal": false
+  },
+  {
+   "asym_db": 0.0,
+   "classrooms": 40,
+   "far": {
+    "est": 0.00365,
+    "hi": 0.005897,
+    "lo": 0.001684,
+    "n": 40
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "ios_share": 0.5,
+   "selfcal": true
+  },
+  {
+   "asym_db": 0.0,
+   "classrooms": 40,
+   "far": {
+    "est": 0.009826,
+    "hi": 0.013476,
+    "lo": 0.006457,
+    "n": 40
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "ios_share": 0.5,
+   "selfcal": false
+  },
+  {
+   "asym_db": 6.0,
+   "classrooms": 40,
+   "far": {
+    "est": 0.00365,
+    "hi": 0.005897,
+    "lo": 0.001684,
+    "n": 40
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "ios_share": 0.5,
+   "selfcal": true
+  },
+  {
+   "asym_db": 6.0,
+   "classrooms": 40,
+   "far": {
+    "est": 0.295059,
+    "hi": 0.369191,
+    "lo": 0.228017,
+    "n": 40
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "ios_share": 0.5,
+   "selfcal": false
+  },
+  {
+   "asym_db": 12.0,
+   "classrooms": 40,
+   "far": {
+    "est": 0.00365,
+    "hi": 0.005897,
+    "lo": 0.001684,
+    "n": 40
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "ios_share": 0.5,
+   "selfcal": true
+  },
+  {
+   "asym_db": 12.0,
+   "classrooms": 40,
+   "far": {
+    "est": 0.295059,
+    "hi": 0.369191,
+    "lo": 0.228017,
+    "n": 40
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "ios_share": 0.5,
+   "selfcal": false
+  },
+  {
+   "asym_db": 18.0,
+   "classrooms": 40,
+   "far": {
+    "est": 0.00365,
+    "hi": 0.005897,
+    "lo": 0.001684,
+    "n": 40
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "ios_share": 0.5,
+   "selfcal": true
+  },
+  {
+   "asym_db": 18.0,
+   "classrooms": 40,
+   "far": {
+    "est": 0.295059,
+    "hi": 0.369191,
+    "lo": 0.228017,
+    "n": 40
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "ios_share": 0.5,
+   "selfcal": false
+  },
+  {
+   "asym_db": 0.0,
+   "classrooms": 40,
+   "far": {
+    "est": 0.00365,
+    "hi": 0.005897,
+    "lo": 0.001684,
+    "n": 40
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "ios_share": 0.75,
+   "selfcal": true
+  },
+  {
+   "asym_db": 0.0,
+   "classrooms": 40,
+   "far": {
+    "est": 0.020494,
+    "hi": 0.02554,
+    "lo": 0.016007,
+    "n": 40
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "ios_share": 0.75,
+   "selfcal": false
+  },
+  {
+   "asym_db": 6.0,
+   "classrooms": 40,
+   "far": {
+    "est": 0.00365,
+    "hi": 0.005897,
+    "lo": 0.001684,
+    "n": 40
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "ios_share": 0.75,
+   "selfcal": true
+  },
+  {
+   "asym_db": 6.0,
+   "classrooms": 40,
+   "far": {
+    "est": 0.245929,
+    "hi": 0.267475,
+    "lo": 0.223812,
+    "n": 40
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "ios_share": 0.75,
+   "selfcal": false
+  },
+  {
+   "asym_db": 12.0,
+   "classrooms": 40,
+   "far": {
+    "est": 0.00365,
+    "hi": 0.005897,
+    "lo": 0.001684,
+    "n": 40
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "ios_share": 0.75,
+   "selfcal": true
+  },
+  {
+   "asym_db": 12.0,
+   "classrooms": 40,
+   "far": {
+    "est": 0.245929,
+    "hi": 0.267475,
+    "lo": 0.223812,
+    "n": 40
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "ios_share": 0.75,
+   "selfcal": false
+  },
+  {
+   "asym_db": 18.0,
+   "classrooms": 40,
+   "far": {
+    "est": 0.00365,
+    "hi": 0.005897,
+    "lo": 0.001684,
+    "n": 40
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "ios_share": 0.75,
+   "selfcal": true
+  },
+  {
+   "asym_db": 18.0,
+   "classrooms": 40,
+   "far": {
+    "est": 0.245929,
+    "hi": 0.267475,
+    "lo": 0.223812,
+    "n": 40
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "ios_share": 0.75,
+   "selfcal": false
+  },
+  {
+   "asym_db": 0.0,
+   "classrooms": 40,
+   "far": {
+    "est": 0.00365,
+    "hi": 0.005897,
+    "lo": 0.001684,
+    "n": 40
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "ios_share": 1.0,
+   "selfcal": true
+  },
+  {
+   "asym_db": 0.0,
+   "classrooms": 40,
+   "far": {
+    "est": 0.00365,
+    "hi": 0.005897,
+    "lo": 0.001684,
+    "n": 40
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "ios_share": 1.0,
+   "selfcal": false
+  },
+  {
+   "asym_db": 6.0,
+   "classrooms": 40,
+   "far": {
+    "est": 0.00365,
+    "hi": 0.005897,
+    "lo": 0.001684,
+    "n": 40
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "ios_share": 1.0,
+   "selfcal": true
+  },
+  {
+   "asym_db": 6.0,
+   "classrooms": 40,
+   "far": {
+    "est": 0.00365,
+    "hi": 0.005897,
+    "lo": 0.001684,
+    "n": 40
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "ios_share": 1.0,
+   "selfcal": false
+  },
+  {
+   "asym_db": 12.0,
+   "classrooms": 40,
+   "far": {
+    "est": 0.00365,
+    "hi": 0.005897,
+    "lo": 0.001684,
+    "n": 40
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "ios_share": 1.0,
+   "selfcal": true
+  },
+  {
+   "asym_db": 12.0,
+   "classrooms": 40,
+   "far": {
+    "est": 0.00365,
+    "hi": 0.005897,
+    "lo": 0.001684,
+    "n": 40
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "ios_share": 1.0,
+   "selfcal": false
+  },
+  {
+   "asym_db": 18.0,
+   "classrooms": 40,
+   "far": {
+    "est": 0.00365,
+    "hi": 0.005897,
+    "lo": 0.001684,
+    "n": 40
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "ios_share": 1.0,
+   "selfcal": true
+  },
+  {
+   "asym_db": 18.0,
+   "classrooms": 40,
+   "far": {
+    "est": 0.00365,
+    "hi": 0.005897,
+    "lo": 0.001684,
+    "n": 40
+   },
+   "fpr": {
+    "est": 0.0,
+    "hi": 0.0,
+    "lo": 0.0,
+    "n": 40
+   },
+   "ios_share": 1.0,
+   "selfcal": false
+  }
+ ],
+ "table_rows": [
+  {
+   "far": {
+    "est": 0.061538,
+    "hi": 0.118646,
+    "lo": 0.023567,
+    "n": 40
+   },
+   "model_table": true,
+   "students": 20
+  },
+  {
+   "far": {
+    "est": 0.420979,
+    "hi": 0.526464,
+    "lo": 0.306933,
+    "n": 40
+   },
+   "model_table": false,
+   "students": 20
+  },
+  {
+   "far": {
+    "est": 0.006865,
+    "hi": 0.012242,
+    "lo": 0.002297,
+    "n": 40
+   },
+   "model_table": true,
+   "students": 35
+  },
+  {
+   "far": {
+    "est": 0.061022,
+    "hi": 0.10284,
+    "lo": 0.031439,
+    "n": 40
+   },
+   "model_table": false,
+   "students": 35
+  },
+  {
+   "far": {
+    "est": 0.005236,
+    "hi": 0.00785,
+    "lo": 0.002629,
+    "n": 40
+   },
+   "model_table": true,
+   "students": 60
+  },
+  {
+   "far": {
+    "est": 0.013525,
+    "hi": 0.017513,
+    "lo": 0.009182,
+    "n": 40
+   },
+   "model_table": false,
+   "students": 60
+  },
+  {
+   "far": {
+    "est": 0.00393,
+    "hi": 0.006455,
+    "lo": 0.001685,
+    "n": 40
+   },
+   "model_table": true,
+   "students": 93
+  },
+  {
+   "far": {
+    "est": 0.009545,
+    "hi": 0.013199,
+    "lo": 0.006173,
+    "n": 40
+   },
+   "model_table": false,
+   "students": 93
+  }
+ ],
+ "timing": {
+  "seconds": 93.27
+ }
+}

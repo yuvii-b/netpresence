@@ -1,3 +1,5 @@
+> **Note:** this file describes the original acoustic (v1) system. The current design is in `docs/V2.md`; v1 now lives under `/api/acoustic`, and several limitations below (no auth, in-memory state) were fixed in the v2 rewrite.
+
 # NetPresence — Status Notes
 
 Last reviewed: 2026-08-17, against `NetPresence-12-Week-Plan.pdf` (Weeks 1-4). Legacy `fskEncoder.js` / `fskDecoder.js` are excluded — the live audio path is `toneEncoder.js` / `toneDecoder.js`.

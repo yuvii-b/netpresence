@@ -1,0 +1,51 @@
+{
+  "public_key_spki_b64": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE+PKK3N1UPEol+lcrTGWn/otoyEqp8w5JsmF0Gf20pGlDxmtQlXf+fFUFBzRwUy+XcMrMtypEVsISlOksuIsIWA==",
+  "neighbours": [
+    {
+      "peer_id": "ff00aa11",
+      "rssi_median": -71,
+      "sample_count": 9
+    },
+    {
+      "peer_id": "0a1b2c3d",
+      "rssi_median": -58,
+      "sample_count": 14
+    },
+    {
+      "peer_id": "0a1b2c3d",
+      "rssi_median": -60,
+      "sample_count": 3
+    },
+    {
+      "peer_id": "7c7c7c7c",
+      "rssi_median": -64,
+      "sample_count": 20
+    }
+  ],
+  "messages": {
+    "register": "register:21CT042:Redmi Note 9",
+    "checkin": "checkin:S-1a2b3c4d5e:9f8e7d6c5b4a39281706f5e4d3c2b1a0",
+    "login": "login:21CT042:1760000000",
+    "report": "report:S-1a2b3c4d5e:21CT042:[[\"0a1b2c3d\",-60,3],[\"0a1b2c3d\",-58,14],[\"7c7c7c7c\",-64,20],[\"ff00aa11\",-71,9]]"
+  },
+  "signatures_by_python": {
+    "register": "MEQCIGUlc6otSh3noiLtyo8renBejt0LkczQjKPsYvMMLNlIAiBQi8FdJGm4/xemm+y1R+urxoaCTSIMlKUlU5ovFZTgBw==",
+    "checkin": "MEUCIHEatyv/GwZS/4j4f1+Q/Vx9DRGX1Cvo5CUD5FXwSi4bAiEAgtjD+JVMtbHEX7HBnKY7G5Zpb4wmm4eBMrVFZUQHHfE=",
+    "login": "MEUCIGdPUPnFiNpICYqIya3wZ0Gm/2Wa7odTZTQ1aYg+9R2TAiEAyleH4cwSey4xweCX2C/LyLPwLKZWyfAjO4CHsf3aDGw=",
+    "report": "MEUCIQDHgZDc9pMROOhtropHrgTBp2Moi/9mB6Rqkalox8hw6wIgFHXkgGbNp1VnhSH44g0nMS/SQG0bWcHx/R0RVjOpvLE="
+  },
+  "advertise_uuid": [
+    {
+      "eph_id": "00000000",
+      "uuid": "6e657470-7265-7365-6e63-650000000000"
+    },
+    {
+      "eph_id": "1a2b3c4d",
+      "uuid": "6e657470-7265-7365-6e63-65001a2b3c4d"
+    },
+    {
+      "eph_id": "ffffffff",
+      "uuid": "6e657470-7265-7365-6e63-6500ffffffff"
+    }
+  ]
+}
