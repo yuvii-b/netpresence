@@ -49,6 +49,16 @@ class Settings:
     COLOCATION_DB: float = float(os.getenv("COLOCATION_DB", "2.5"))   # relay/Sybil defence threshold (0 = off)
     AUTOCAL: bool = os.getenv("AUTOCAL", "1") not in ("0", "false", "False")
 
+    # --- protocol v3: live roll call per subject (docs/PIVOT_PLAN.md) ---
+    LIVE_REPORT_INTERVAL_MS: int = 1000   # phone uploads its current neighbour list this often (only if changed)
+    LIVE_EVAL_DEBOUNCE_MS: int = 300      # server re-evaluates at most this often per session
+    LIVE_MAX_SECONDS: int = int(os.getenv("LIVE_MAX_SECONDS", "120"))   # auto-finish
+    LONGPOLL_WAIT_S: int = 25
+    TOKEN_TTL_S: int = 12 * 3600          # bearer tokens (teacher code login, student signed login)
+    LOGIN_MAX_FAILS: int = 5              # wrong teacher codes per LOGIN_WINDOW_S per IP
+    LOGIN_WINDOW_S: int = 600
+    SEED_DEMO: bool = os.getenv("NP_SEED_DEMO", "0") == "1"
+
 
 settings = Settings()
 

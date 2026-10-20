@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 
 from app.config import settings
 from app.db.mongo import connect_to_mongo, close_mongo_connection
-from app.routers import acoustic, devices, sessions
+from app.routers import acoustic, auth, devices, me, sessions, teacher
 
 logging.basicConfig(
     level=getattr(logging, settings.LOG_LEVEL.upper(), logging.INFO),
@@ -44,6 +44,9 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
 app.include_router(devices.router)
 app.include_router(sessions.router)
 app.include_router(acoustic.router)
+app.include_router(auth.router)
+app.include_router(teacher.router)
+app.include_router(me.router)
 
 @app.get("/api/health")
 async def health_check():

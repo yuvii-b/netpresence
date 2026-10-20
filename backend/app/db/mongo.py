@@ -26,6 +26,13 @@ async def ensure_indexes(db) -> None:
     await db.reports.create_index([("session_id", 1), ("student_id", 1)], unique=True)
     await db.attendance.create_index([("session_id", 1), ("student_id", 1)], unique=True)
     await db.device_calibration.create_index("model", unique=True)
+    # v3
+    await db.teachers.create_index("teacher_id", unique=True)
+    await db.subjects.create_index("subject_id", unique=True)
+    await db.students.create_index("device_id", unique=True, sparse=True)
+    await db.students.create_index("install_id", unique=True, sparse=True)
+    await db.tokens.create_index("token_hash", unique=True)
+    await db.tokens.create_index("exp_dt", expireAfterSeconds=0)
     # v1 acoustic
     await db.acoustic_sessions.create_index("session_id", unique=True)
     await db.acoustic_attendance.create_index([("session_id", 1), ("student_id", 1)], unique=True)
@@ -43,6 +50,9 @@ async def connect_to_mongo():
         db_instance.db = db_instance.client[settings.DB_NAME]
         logger.info("Connected to MongoDB.")
     await ensure_indexes(db_instance.db)
+    if settings.SEED_DEMO:
+        from app.services.seed import seed_demo
+        await seed_demo(db_instance.db)
 
 
 async def close_mongo_connection():

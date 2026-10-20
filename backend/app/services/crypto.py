@@ -8,6 +8,7 @@ base64 ASN.1-DER ECDSA over SHA-256 (what both platforms produce natively).
 """
 import base64
 import binascii
+import hashlib
 import json
 
 from cryptography.exceptions import InvalidSignature, UnsupportedAlgorithm
@@ -49,6 +50,16 @@ def register_message(student_id: str, model: str) -> str:
 
 def checkin_message(session_id: str, nonce: str) -> str:
     return f"checkin:{session_id}:{nonce}"
+
+
+def login_message(student_id: str, ts: int) -> str:
+    return f"login:{student_id}:{int(ts)}"
+
+
+def device_id_of(public_key_b64: str) -> str:
+    """Stable id of a phone's hardware key: sha256 of the uncompressed P-256 point (same for SPKI and raw encodings)."""
+    raw = load_public_key(public_key_b64).public_bytes(serialization.Encoding.X962, serialization.PublicFormat.UncompressedPoint)
+    return hashlib.sha256(raw).hexdigest()
 
 
 def report_message(session_id: str, student_id: str, neighbours: list[dict]) -> str:

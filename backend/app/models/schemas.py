@@ -46,6 +46,8 @@ class DeviceRegister(BaseModel):
     public_key: str = Field(..., pattern=B64)
     signature: str = Field(..., pattern=B64)   # over register:{student_id}:{model}
     enrol_code: Optional[str] = Field(None, max_length=64)   # required when the server sets ENROL_CODE
+    install_id: Optional[str] = Field(None, pattern=r"^[A-Za-z0-9\-_.]{1,64}$")   # ANDROID_ID / identifierForVendor
+    platform: Optional[Literal["android", "ios"]] = None
 
 
 class StartSession(BaseModel):
@@ -100,3 +102,35 @@ class Adjudicate(BaseModel):
 class Calibration(BaseModel):
     model: str = Field(..., pattern=MODEL_PATTERN)
     rssi_offset_db: float = Field(..., ge=-30, le=30)
+
+
+# ---------------- protocol v3: logins, subjects, live sessions ----------------
+class TeacherLogin(BaseModel):
+    code: str = Field(..., min_length=1, max_length=64)
+
+
+class StudentLogin(BaseModel):
+    student_id: str = Field(..., pattern=STUDENT_ID_PATTERN)
+    ts: int
+    signature: str = Field(..., pattern=B64)   # over login:{student_id}:{ts}
+
+
+class TeacherDevice(BaseModel):
+    public_key: str = Field(..., pattern=B64)
+    model: str = Field(..., pattern=MODEL_PATTERN)
+
+
+class StartSubject(BaseModel):
+    device: TeacherDevice
+
+
+class AdminTeacher(BaseModel):
+    name: str = Field(..., min_length=1, max_length=100)
+    code: str = Field(..., min_length=3, max_length=64)
+
+
+class AdminSubject(BaseModel):
+    teacher_code: str = Field(..., min_length=1, max_length=64)
+    code: str = Field(..., min_length=1, max_length=32)
+    name: str = Field(..., min_length=1, max_length=100)
+    roster: list[str] = Field(..., max_length=2000)

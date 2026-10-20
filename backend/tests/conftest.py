@@ -12,6 +12,13 @@ from sim.phone import Device  # noqa: F401  (re-exported for the tests)
 TEACHER = {"X-Teacher-Token": settings.TEACHER_TOKEN}
 
 
+@pytest.fixture(autouse=True)
+def _fresh_limiter():
+    from app.services.auth import limiter
+    limiter.reset()
+    yield
+
+
 @pytest_asyncio.fixture
 async def client():
     db_instance.db = AsyncMongoMockClient()["test"]

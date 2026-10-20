@@ -21,11 +21,19 @@ async def register_device(payload: DeviceRegister, db=Depends(get_db)):
         raise HTTPException(status_code=403, detail="Wrong or missing class code.")
     if not crypto.verify(payload.public_key, crypto.register_message(payload.student_id, payload.model), payload.signature):
         raise HTTPException(status_code=400, detail="Invalid key or signature.")
+    device_id = crypto.device_id_of(payload.public_key)
+    other = await db.students.find_one({"$or": [{"device_id": device_id}] + ([{"install_id": payload.install_id}] if payload.install_id else [])},
+                                       {"_id": 0, "student_id": 1})
+    if other and other["student_id"] != payload.student_id:   # one phone, one student
+        raise HTTPException(status_code=409, detail="This phone is already registered to another student. Ask your teacher to reset it.")
+    doc = {"student_id": payload.student_id, "name": payload.name, "model": payload.model,
+           "public_key": payload.public_key, "device_id": device_id}
+    if payload.install_id:
+        doc["install_id"] = payload.install_id
+    if payload.platform:
+        doc["platform"] = payload.platform
     try:
-        await db.students.insert_one({
-            "student_id": payload.student_id, "name": payload.name, "model": payload.model,
-            "public_key": payload.public_key,
-        })
+        await db.students.insert_one(doc)
     except DuplicateKeyError:
         raise HTTPException(status_code=409, detail="Student already enrolled; ask the teacher to reset the device.")
     return {"status": "enrolled", "student_id": payload.student_id}

@@ -139,3 +139,10 @@ without the co-location check: 100% of relay proxies succeed.
 Server overload errors (429/5xx), relay/wormhole attacks,
 baselines other than the existing studies. `sim.room`, `sim.orientation`, `sim.platforms` are thin wrappers over netsim and
 their acceptance criteria are unchanged.
+
+## Not modelled yet: protocol v3 live roll call (docs/PIVOT_PLAN.md)
+
+The server now has teacher code login, subjects/rosters, one-phone-one-student binding, the 16-bit session tag + 16-bit member id,
+live sessions (incremental reports every 1 s, debounced re-evaluation, long-poll pushes, teacher phone as the seed). The simulator
+and netsim still model the old window flow only (`flow = "window"`); the live flow, the teacher-phone seed and the time-to-present
+metric are added in milestone P5. Until then no result in this repository says anything about the live flow's latency or accuracy.
