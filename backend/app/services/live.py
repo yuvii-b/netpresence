@@ -23,6 +23,7 @@ class _State:
         self.stat: dict[str, list] = {}     # student -> [per-student rev, status, at]
         self.result: dict[str, str] = {}
         self.closed = False
+        self.latched: set[str] = set()      # students shown PRESENT: they stay PRESENT (see Hub._latch)
 
 
 class Hub:
@@ -147,9 +148,34 @@ class Hub:
         if st.snap is None and not st.closed:
             await self.evaluate(db, s["session_id"])
 
+    @staticmethod
+    def _latch(st: _State, rows: list[dict]) -> list[dict]:
+        """Once a student is shown PRESENT they stay PRESENT for the rest of the roll call: their phone just keeps relaying for the
+        others and is never "checked" again (borderline links used to flicker Present -> Checking -> Present). Two things still apply
+        at once: FLAGGED (co-location = a relayed phone, which is often admitted before its readings are sharp enough to catch it)
+        and the teacher's own decision."""
+        out = []
+        for r in rows:
+            sid = r["student_id"]
+            if r["status"] == "PRESENT":
+                st.latched.add(sid)
+            elif sid in st.latched and r["status"] in ("PENDING", "ABSENT", "NOT_JOINED") and r.get("decided_by") != "teacher":
+                r = {**r, "status": "PRESENT", "latched": True}
+            elif sid in st.latched:                       # FLAGGED or a teacher decision: the latch is released
+                st.latched.discard(sid)
+            out.append(r)
+        return out
+
+    def latch_final(self, sid: str, rows: list[dict]) -> list[dict]:
+        """Finish: the final verdict keeps everyone the phones and the teacher screen showed as Present."""
+        st = self.state(sid)
+        return [({**r, "status": "PRESENT", "latched": True} if r["status"] == "ABSENT" and r["student_id"] in st.latched
+                 and r.get("decided_by") != "teacher" else r) for r in rows]
+
     async def apply(self, sid: str, rows: list[dict]):
         st = self.state(sid)
         now = time.time()
+        rows = self._latch(st, rows)
         changed = st.snap is None
         counts = {"PRESENT": 0, "PENDING": 0, "FLAGGED": 0, "NOT_JOINED": 0, "ABSENT": 0}
         prev = {r["student_id"]: r["status"] for r in st.snap["rows"]} if st.snap else {}

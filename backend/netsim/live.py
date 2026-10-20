@@ -11,7 +11,8 @@ same REAL engine (app.services.graph.evaluate) - what changes is time:
   report          first report as soon as LIVE_FIRST_NEIGHBOURS peers are reportable, then every LIVE_REPORT_INTERVAL_MS.
                   Delivery takes connection set-up + one-way delay; with probability `loss` it needs REQUEST_TIMEOUT_MS plus the
                   first retry delay (session.ts retry policy).
-  server          at most one evaluation per LIVE_EVAL_DEBOUNCE_MS (config.py) on the LATEST report of every phone.
+  server          at most one evaluation per LIVE_EVAL_DEBOUNCE_MS (config.py) on the LATEST report of every phone. Once a student is shown
+                  Present they stay Present (Hub._latch); a co-location flag releases the latch.
   finish          the teacher taps Finish when the Present count has not changed for `stable_s` (the app shows "stable for N s"),
                   or at `horizon_s` / LIVE_MAX_S at the latest. Not-yet-present students are ABSENT at finish.
 
@@ -164,6 +165,7 @@ def live_trial(cfg: RoomConfig, lc: LiveConfig, p: Params, seed: int, calibrate:
     outs = [k for k, v in nodes.items() if not v["inside"] and k not in friends]
     evals, present_hist, t_first_present = [], [], {}
     last_res: dict = {"present": {}, "colocated": {}}
+    latched: set = set()
     te = 0.0
     fin_t = None
     last_change_t = 0.0
@@ -189,7 +191,11 @@ def live_trial(cfg: RoomConfig, lc: LiveConfig, p: Params, seed: int, calibrate:
         for pi, val in zip(sel, np.rint(r)):
             reports[ids[hear[pi]]][ids[src[pi]]] = int(val)
         last_res = evaluate(seeds, reports, p, plat) if reports else {"present": {}, "colocated": {}}
-        pres = frozenset(last_res["present"])
+        # server rule (app/services/live.py Hub._latch): once shown Present a student stays Present; only a co-location flag releases it
+        flagged = set(last_res.get("colocated", {}))
+        latched -= flagged
+        latched |= set(last_res["present"]) - flagged
+        pres = frozenset((set(last_res["present"]) | latched) - flagged)
         evals.append(te); present_hist.append(pres)
         for k in pres:
             t_first_present.setdefault(k, te)

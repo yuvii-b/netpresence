@@ -26,6 +26,13 @@ Run 1 of `sim.live` FAILED the relay criterion (80 % flagged, 20 % admitted) whi
 criterion: `LIVE_WINDOW = 100` and the app's Finish button says "most accurate in N s" until `LIVE_BEST_AFTER_S = 15`. A sweep (40 classrooms each): window 20 -> 8 admitted,
 window 100 + finish at 15 s -> 0 admitted, 40 flagged. Students are not slowed down: they are Present after ~2 s; only the teacher's Finish waits for the sharper relay check.
 
+## What the first field test found (kept on purpose)
+On real phones a student already shown Present bounced back to "Checking" and again to Present. The simulator showed no flicker (0 students in 40 classrooms), so
+it could not predict this: real RSSI near the edge-admission threshold is noisier than the simulator's. Fix (server, `Hub._latch`): once a student is shown
+Present they stay Present for the rest of the roll call and their phone just keeps relaying; the final result keeps them too. Only a co-location flag (relay
+defence) or the teacher's own decision releases the latch. Trade-off: a corridor phone admitted early by a lucky reading would also stay Present; the simulator's corridor
+number (0.94 %) already includes this rule, but it is still simulated, not measured.
+
 ## Known weak spots (honest)
 * Sparse classes (about 20 students): the co-location detector can flag an honest pair and the k-witness pruning then removes students who depended on them; classroom seed 1
   of the default 20-student config collapsed to the teacher only. Over 24 random classrooms of 20 students the live flow had 4.2 % false-absent (the old window flow: 7.8 %) and none collapsed,

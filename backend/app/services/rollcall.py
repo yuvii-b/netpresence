@@ -111,6 +111,8 @@ async def finish(db, s: dict, headcount: Optional[int] = None) -> dict:
     from app.services.ws_manager import ws_manager
     sid = s["session_id"]
     out = await compute(db, s, final=True)
+    if s.get("live"):
+        out["rows"] = hub.latch_final(sid, out["rows"])
     seeds = list(s.get("seeds", []))
     gap = flag_for_review(out["rows"], seeds, headcount)
     for row in out["rows"]:

@@ -330,3 +330,53 @@ async def test_attendance_sheet_lists_every_roster_student_against_each_finished
     th2 = th
     empty = (await client.get(f"/api/teacher/subjects/{sub2}/sheet", headers=th2)).json()
     assert empty["sessions"] == [] and all(r["pct"] is None and r["marks"] == [] for r in empty["students"])
+
+
+async def test_present_is_latched_once_shown_flagged_and_teacher_decisions_still_apply(client):
+    """Real Bluetooth is noisy: once a student is Present they stay Present (their phone just relays); the engine does not bounce them
+    back to Checking. A teacher decision is never overridden."""
+    roster, devs, sub = await seed(client, 5)
+    th, _ = await login(client)
+    teacher, s = await start(client, th, sub)
+    teacher.eph = s["teacher_eph"]
+    near = devs[:4]
+    for d in near:
+        await join(client, s, d)
+    for me, nb in mesh(near, teacher):
+        await send(client, s, me, nb)
+    await asyncio.sleep(0.5)
+    sid = s["session_id"]
+
+    async def status_of(d):
+        return {r["student_id"]: r["status"] for r in (await client.get(f"/api/teacher/sessions/{sid}/live?since=-1", headers=th)).json()["rows"]}[d.student_id]
+
+    assert await status_of(near[3]) == "PRESENT"
+    rest = near[:3]                                        # every link to near[3] vanishes, and it reports nothing
+    for me, nb in mesh(rest, teacher):
+        await send(client, s, me, nb)
+    await send(client, s, near[3], [])
+    await asyncio.sleep(0.6)
+    assert await status_of(near[3]) == "PRESENT", "latched: no bounce back to Checking"
+    st = (await client.get(f"/api/sessions/{sid}/me?since=0&wait=0", headers=await student_headers(client, near[3]))).json()
+    assert st["status"] == "PRESENT"
+    out = (await client.post(f"/api/teacher/sessions/{sid}/finish", headers=th)).json()
+    by = {r["student_id"]: r["status"] for r in out["rows"]}
+    assert by[near[3].student_id] == "PRESENT" and by["s4"] == "ABSENT", "finish keeps what everyone saw"
+
+
+async def test_teacher_decision_beats_the_latch(client):
+    roster, devs, sub = await seed(client, 4)
+    th, _ = await login(client)
+    teacher, s = await start(client, th, sub)
+    teacher.eph = s["teacher_eph"]
+    for d in devs:
+        await join(client, s, d)
+    for me, nb in mesh(devs, teacher):
+        await send(client, s, me, nb)
+    await asyncio.sleep(0.5)
+    sid = s["session_id"]
+    r = await client.post(f"/api/teacher/sessions/{sid}/adjudicate", json={"student_id": devs[0].student_id, "status": "ABSENT"}, headers=th)
+    assert r.status_code == 200
+    await asyncio.sleep(0.6)
+    rows = {x["student_id"]: x["status"] for x in (await client.get(f"/api/teacher/sessions/{sid}/live?since=-1", headers=th)).json()["rows"]}
+    assert rows[devs[0].student_id] == "ABSENT" and rows[devs[1].student_id] == "PRESENT"

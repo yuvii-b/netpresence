@@ -441,7 +441,7 @@ function describe(st: StudentState, t: Theme, radioErr: string | null) {
     case 'idle': return { ...base, icon: '·', title: 'You\'re all set', sub: 'Nothing to do. Your attendance is taken automatically when your teacher starts the class. Keep Bluetooth on.' };
     case 'joining': return { ...base, spin: true, title: 'Joining…', sub: st.subject ? st.subject.name : 'Class is starting' };
     case 'live':
-      if (st.status === 'PRESENT') return { ...base, bg: t.okBg, fg: t.ok, icon: '✓', title: 'Present', sub: st.timeToPresentMs != null ? `Confirmed in ${(st.timeToPresentMs / 1000).toFixed(1)} s. Stay in the room until the teacher finishes.` : 'Stay in the room until the teacher finishes.' };
+      if (st.status === 'PRESENT') return { ...base, bg: t.okBg, fg: t.ok, icon: '✓', title: 'Present', sub: `${st.timeToPresentMs != null ? `Confirmed in ${(st.timeToPresentMs / 1000).toFixed(1)} s. ` : ''}You are done. Keep the app open: your phone now just helps confirm the students around you.` };
       if (st.status === 'FLAGGED') return { ...base, bg: t.warnBg, fg: t.warn, icon: '!', title: 'Your teacher will confirm', sub: 'Stay where you are.' };
       return { ...base, spin: true, title: 'Reaching nearby phones…', sub: 'Keep the app open.', banner: radioErr ? { kind: 'err' as const, text: radioErr === 'NP-ERR-BT-OFF' ? 'Bluetooth is off. Turn it on.' : `Bluetooth problem (${radioErr}).` } : undefined };
     case 'closed': return { ...base, bg: st.result === 'PRESENT' ? t.okBg : t.surface, fg: st.result === 'PRESENT' ? t.ok : t.sub, icon: st.result === 'PRESENT' ? '✓' : '·', title: st.result === 'PRESENT' ? 'You were marked present' : 'Roll call finished', sub: st.result === 'PRESENT' ? '' : 'See your teacher if this looks wrong.' };
