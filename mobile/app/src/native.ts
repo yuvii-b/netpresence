@@ -8,12 +8,18 @@ const N = NativeModules.NetPresenceNative as {
   startRadio(name: string, serviceUuid: string): Promise<void>;
   stopRadio(): Promise<void>;
   setKeepAwake?(on: boolean): void;
+  installId?(): Promise<string>;
+  confirmBiometric?(reason: string): Promise<'ok' | 'cancel' | 'unavailable'>;
+  prepareRadio?(): Promise<void>;
 };
 
 /** Stops the screen locking mid roll-call (a locked iPhone stops scanning). No-op if the native side lacks it. */
 export const setKeepAwake = (on: boolean) => { try { N.setKeepAwake?.(on); } catch { /* cosmetic */ } };
 
 export const deviceModel = (): Promise<string> => N.deviceModel();
+export const installId = (): Promise<string> => (N.installId ? N.installId() : Promise.resolve('unknown'));
+/** Fingerprint / face check. 'unavailable' = the phone has none set up (registration then needs a screen lock instead). */
+export const confirmBiometric = (reason: string) => (N.confirmBiometric ? N.confirmBiometric(reason) : Promise.resolve('unavailable' as const));
 
 /** Hardware-backed key: Secure Enclave (iOS) / Android Keystore. The private key never leaves the chip. */
 export const nativeKeys: KeyStore = {
@@ -49,6 +55,9 @@ export const describeRadioError = (code: string) => RADIO_ERRORS[code] ?? `Bluet
 export class NativeRadio implements Radio {
   private sub?: { remove(): void };
   lastError: string | null = null;
+
+  /** Warm the radio (permissions, adapter, first advert) while the user is still on the previous screen. */
+  async prepare() { await ensureBlePermissions(); await N.prepareRadio?.(); }
 
   async start(name: string, uuid: string, onSample: (s: RadioSample) => void) {
     await ensureBlePermissions();

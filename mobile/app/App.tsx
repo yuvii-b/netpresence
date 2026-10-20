@@ -1,39 +1,50 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Platform, Pressable, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, Vibration, View, useColorScheme } from 'react-native';
-import { ApiError, NetPresenceApi, NoOpenSession, enroll } from '../core/src';
-import { Phase, runRollCall } from './src/flow';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Platform, Pressable, SafeAreaView, ScrollView, Share, StatusBar, StyleSheet, Text, Vibration, View, useColorScheme } from 'react-native';
+import { ApiError, LIVE_BEST_AFTER_S, NetPresenceApi, StudentRunner, TeacherRoll, attendanceCsv, enroll } from '../core/src';
+import type { StudentState, SubjectInfo, TeacherLive } from '../core/src';
 import Lab from './src/Lab';
-import { NativeRadio, describeRadioError, deviceModel, nativeKeys, setKeepAwake } from './src/native';
-import RollButton from './src/RollButton';
-import { Profile, clearProfile, loadProfile, saveProfile } from './src/storage';
-import { useTheme } from './src/theme';
+import { NativeRadio, confirmBiometric, deviceModel, installId, nativeKeys, setKeepAwake } from './src/native';
+import { Profile, clearProfile, loadProfile, loadServer, saveProfile, saveServer } from './src/storage';
+import { Theme, useTheme } from './src/theme';
 import { Banner, Button, Card, Chip, Field } from './src/ui';
 
-// Test-build convenience: add a missing scheme, and use plain http for LAN / Tailscale addresses
-// (a leftover "https://" on a laptop IP is the most common reason the connection fails).
+// Add a missing scheme, and use plain http for LAN / Tailscale addresses (a leftover "https://" on a laptop IP is the
+// most common reason the connection fails).
 const normalizeUrl = (raw: string) => {
   let u = raw.trim().replace(/\/+$/, '');
   if (!/^https?:\/\//i.test(u)) u = 'http://' + u;
   if (/^https:\/\/(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|100\.)/.test(u)) u = u.replace(/^https:/, 'http:');
   return u;
 };
+const unreachable = (base: string) =>
+  `Can't reach ${base}\n\nOpen that address followed by /docs in this phone's browser. If it doesn't load there either, it's the Wi-Fi or the laptop firewall, not the app.`;
+const explain = (e: unknown, base: string) =>
+  e instanceof ApiError && e.status === 0 ? unreachable(base) : e instanceof Error ? e.message : String(e);
+
+type Route = { name: 'welcome' } | { name: 'student-setup' } | { name: 'student'; profile: Profile; fresh: boolean }
+  | { name: 'teacher-login' } | { name: 'teacher-subjects'; base: string; token: string; teacher: string; subjects: SubjectInfo[] }
+  | { name: 'teacher-room'; base: string; token: string; subject: SubjectInfo } | { name: 'lab' };
 
 export default function App() {
   const t = useTheme();
   const dark = useColorScheme() === 'dark';
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [loaded, setLoaded] = useState(false);
-  const [screen, setScreen] = useState<'main' | 'lab'>('main');
+  const [route, setRoute] = useState<Route | null>(null);
 
-  useEffect(() => { loadProfile().then((p) => { setProfile(p); setLoaded(true); }); }, []);
+  // A phone that is already registered goes straight to the student screen: no tap, no login.
+  useEffect(() => { loadProfile().then((p) => setRoute(p ? { name: 'student', profile: p, fresh: false } : { name: 'welcome' })); }, []);
+  const go = useCallback((r: Route) => setRoute(r), []);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: t.bg }}>
       <StatusBar barStyle={dark ? 'light-content' : 'dark-content'} backgroundColor={t.bg} />
-      {!loaded ? <ActivityIndicator style={{ flex: 1 }} color={t.primary} />
-        : screen === 'lab' ? <><Lab /><View style={{ padding: 16 }}><Button kind="ghost" title="Back" onPress={() => setScreen('main')} /></View></>
-        : !profile ? <Setup onDone={setProfile} />
-        : <Home profile={profile} onLab={() => setScreen('lab')} onSwitch={async () => { await clearProfile(); setProfile(null); }} />}
+      {!route ? <ActivityIndicator style={{ flex: 1 }} color={t.primary} />
+        : route.name === 'welcome' ? <Welcome go={go} />
+        : route.name === 'student-setup' ? <StudentSetup go={go} />
+        : route.name === 'student' ? <StudentHome profile={route.profile} fresh={route.fresh} go={go} />
+        : route.name === 'teacher-login' ? <TeacherLogin go={go} />
+        : route.name === 'teacher-subjects' ? <TeacherSubjects r={route} go={go} />
+        : route.name === 'teacher-room' ? <TeacherRoom r={route} go={go} />
+        : <><Lab /><View style={{ padding: 16 }}><Button kind="ghost" title="Back" onPress={() => go({ name: 'welcome' })} /></View></>}
     </SafeAreaView>
   );
 }
@@ -49,144 +60,308 @@ function Mark() {
   );
 }
 
-function Setup({ onDone }: { onDone: (p: Profile) => void }) {
+function Welcome({ go }: { go: (r: Route) => void }) {
   const t = useTheme();
-  const [form, setForm] = useState<Profile>({ baseUrl: 'http://192.168.', studentId: '', name: '' });
+  return (
+    <ScrollView contentContainerStyle={s.page}>
+      <View style={{ alignItems: 'center', gap: 10, marginTop: 40 }}>
+        <Mark />
+        <Text style={[s.title, { color: t.text }]}>NetPresence</Text>
+        <Text style={[s.lead, { color: t.sub }]}>Attendance, the moment class starts.</Text>
+      </View>
+      <View style={{ gap: 12, marginTop: 24 }}>
+        <Button title="I'm a student" onPress={() => go({ name: 'student-setup' })} />
+        <Button kind="ghost" title="I'm a teacher" onPress={() => go({ name: 'teacher-login' })} />
+      </View>
+      <Pressable onPress={() => go({ name: 'lab' })} hitSlop={12}><Text style={[s.fine, { color: t.sub }]}>Signal lab</Text></Pressable>
+    </ScrollView>
+  );
+}
+
+// ---------------------------------------------------------------------------------------------------------- teacher
+function TeacherLogin({ go }: { go: (r: Route) => void }) {
+  const t = useTheme();
   const [code, setCode] = useState('');
+  const [server, setServer] = useState('http://192.168.');
+  const [showServer, setShowServer] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
-  const ready = form.studentId.trim().length > 0 && form.name.trim().length > 0 && form.baseUrl.trim().length > 8;
+  useEffect(() => { loadServer().then(setServer); }, []);
 
-  const go = async () => {
+  const login = async () => {
     setBusy(true); setErr('');
-    const base = normalizeUrl(form.baseUrl);
-    const api = new NetPresenceApi(base);
+    const base = normalizeUrl(server);
     try {
-      await api.openSession(); // proves the phone can reach the server before we try to register
-    } catch (e: any) {
-      setBusy(false);
-      setErr(e instanceof ApiError && e.status === 0
-        ? `Can't reach ${base}\n\nOpen that address followed by /docs in this phone's browser. If it doesn't load there either, it's the Wi-Fi or the laptop firewall, not the app. Same Wi-Fi? Server started with --host 0.0.0.0?`
-        : `The server at ${base} answered with an error: ${e?.message ?? e}`);
-      return;
-    }
-    try {
-      await enroll(api, nativeKeys, { studentId: form.studentId.trim(), name: form.name.trim(), model: await deviceModel(), enrolCode: code.trim() || undefined });
-      const p = { baseUrl: base, studentId: form.studentId.trim(), name: form.name.trim() };
-      await saveProfile(p); onDone(p);
-    } catch (e: any) {
-      setErr(`Registration failed: ${e?.message ?? String(e)}`);
+      const r = await new NetPresenceApi(base).teacherLogin(code.trim());
+      await saveServer(base);
+      go({ name: 'teacher-subjects', base, token: r.token, teacher: r.teacher.name, subjects: r.subjects });
+    } catch (e) {
+      setErr(e instanceof ApiError && e.status === 429 ? 'Too many tries. Wait a minute and try again.' : explain(e, base));
+      if (e instanceof ApiError && e.status === 0) setShowServer(true);
     } finally { setBusy(false); }
   };
 
   return (
     <ScrollView contentContainerStyle={s.page} keyboardShouldPersistTaps="handled">
-      <View style={{ alignItems: 'center', gap: 10, marginTop: 24 }}>
-        <Mark />
-        <Text style={[s.title, { color: t.text }]}>NetPresence</Text>
-        <Text style={[s.lead, { color: t.sub }]}>Attendance in one tap.{'\n'}Set up this phone once.</Text>
-      </View>
+      <Text style={[s.title, { color: t.text, marginTop: 24 }]}>Teacher</Text>
       <Card style={{ gap: 16 }}>
-        <Field label="ROLL NUMBER" placeholder="e.g. 21CS042" autoCapitalize="characters" value={form.studentId} onChangeText={(studentId) => setForm({ ...form, studentId })} />
-        <Field label="FULL NAME" placeholder="As on the register" value={form.name} onChangeText={(name) => setForm({ ...form, name })} />
-        <Field label="SERVER ADDRESS" placeholder="http://192.168.1.4:8000" autoCapitalize="none" keyboardType="url" value={form.baseUrl}
-          onChangeText={(baseUrl) => setForm({ ...form, baseUrl })} hint="Your teacher or test laptop. Use http:// for a laptop on the same Wi-Fi." />
-        <Field label="CLASS CODE (IF YOUR TEACHER GAVE ONE)" placeholder="optional" autoCapitalize="characters" value={code} onChangeText={setCode} />
+        <Field label="YOUR CODE" placeholder="Enter your code" autoCapitalize="characters" secureTextEntry value={code} onChangeText={setCode} onSubmitEditing={login} />
+        {showServer && <Field label="SERVER ADDRESS" autoCapitalize="none" keyboardType="url" value={server} onChangeText={setServer} />}
         {err ? <Banner kind="err" text={err} /> : null}
-        <Button title={busy ? 'Setting up…' : 'Get started'} onPress={go} disabled={busy || !ready} />
+        <Button title={busy ? 'Checking…' : 'Continue'} onPress={login} disabled={busy || code.trim().length < 4} />
       </Card>
-      <Text style={[s.fine, { color: t.sub }]}>This phone creates a private key that never leaves it. It proves the attendance is really yours.</Text>
+      {!showServer && <Pressable onPress={() => setShowServer(true)} hitSlop={12}><Text style={[s.fine, { color: t.sub }]}>Change server address</Text></Pressable>}
+      <Button kind="ghost" title="Back" onPress={() => go({ name: 'welcome' })} />
     </ScrollView>
   );
 }
 
-function Home({ profile, onLab, onSwitch }: { profile: Profile; onLab: () => void; onSwitch: () => void }) {
+function TeacherSubjects({ r, go }: { r: Extract<Route, { name: 'teacher-subjects' }>; go: (x: Route) => void }) {
   const t = useTheme();
-  const radio = useRef(new NativeRadio()).current;
-  const [phase, setPhase] = useState<Phase>('idle');
-  const [endsAt, setEndsAt] = useState(0);
-  const [now, setNow] = useState(Date.now());
-  const [nearby, setNearby] = useState(0);
-  const [msg, setMsg] = useState('');
-  const [heard, setHeard] = useState(0);
-  const [menu, setMenu] = useState(false);
-
-  useEffect(() => {
-    if (phase !== 'listening') return;
-    const i = setInterval(() => setNow(Date.now()), 250);
-    return () => clearInterval(i);
-  }, [phase]);
-
-  const mark = async () => {
-    setMsg(''); setNearby(0); setHeard(0);
-    setKeepAwake(true);
-    try {
-      const r = await runRollCall({
-        api: new NetPresenceApi(profile.baseUrl), keys: nativeKeys, radio, studentId: profile.studentId,
-        onPhase: (p, j) => { setPhase(p); if (j) setEndsAt(j.discoveryEndsAtMs); },
-        onNearby: setNearby,
-      });
-      setHeard(r.peersHeard); Vibration.vibrate(Platform.OS === 'android' ? [0, 60, 60, 60] : 60);
-      if (radio.lastError) setMsg(describeRadioError(radio.lastError));   // e.g. this phone cannot broadcast
-    } catch (e: any) {
-      setPhase('error');
-      setMsg(e instanceof NoOpenSession ? 'No roll call is open yet. Wait for your teacher to start it, then tap again.'
-        : radio.lastError ? describeRadioError(radio.lastError)
-        : e instanceof ApiError && e.status === 0 ? `Lost connection to ${profile.baseUrl}. Check your Wi-Fi and try again.`
-        : e?.message ?? String(e));
-    } finally { setKeepAwake(false); }
-  };
-
-  const secondsLeft = Math.ceil((endsAt - now) / 1000);
-  const status =
-    phase === 'idle' ? 'Ready when your teacher starts the roll call' :
-    phase === 'joining' ? 'Joining the roll call…' :
-    phase === 'listening' ? 'Listening for nearby phones' :
-    phase === 'sending' ? 'Sending your attendance…' :
-    phase === 'done' ? 'You\'re marked present' : 'Something went wrong';
-
   return (
     <ScrollView contentContainerStyle={s.page}>
       <View style={s.head}>
-        <View>
-          <Text style={[s.hello, { color: t.sub }]}>Hello,</Text>
-          <Text style={[s.name, { color: t.text }]} numberOfLines={1}>{profile.name}</Text>
-        </View>
-        <Pressable accessibilityLabel="Menu" onPress={() => setMenu(!menu)} hitSlop={12}><Text style={{ color: t.sub, fontSize: 28 }}>⋯</Text></Pressable>
+        <View><Text style={[s.hello, { color: t.sub }]}>Welcome,</Text><Text style={[s.name, { color: t.text }]}>{r.teacher}</Text></View>
+        <Pressable onPress={() => go({ name: 'welcome' })} hitSlop={12}><Text style={{ color: t.sub, fontSize: 14 }}>Log out</Text></Pressable>
       </View>
-      <View style={{ flexDirection: 'row', gap: 8 }}><Chip text={profile.studentId} /><Chip text={phase === 'done' ? 'Sent' : 'Not yet marked'} tone={phase === 'done' ? 'ok' : 'neutral'} /></View>
-
-      {menu && (
-        <Card style={{ gap: 10 }}>
-          <Button kind="ghost" title="BLE lab (signal tests)" onPress={onLab} />
-          <Button kind="ghost" title="Switch student" onPress={onSwitch} />
-        </Card>
-      )}
-
-      <RollButton phase={phase} secondsLeft={secondsLeft} onPress={mark} />
-
-      <Text style={[s.status, { color: t.text }]}>{status}</Text>
-      {phase === 'listening' && (<>
-        <View style={{ alignSelf: 'center' }}><Chip text={`${nearby} phone${nearby === 1 ? '' : 's'} nearby`} tone={nearby > 0 ? 'ok' : 'neutral'} /></View>
-        <Banner kind="warn" text="Keep the app open and stay seated until the countdown ends." />
-      </>)}
-      {phase === 'done' && <Banner kind="ok" text={`Heard ${heard} phone${heard === 1 ? '' : 's'} around you. Your teacher confirms the final list.`} />}
-      {phase === 'done' && msg ? <Banner kind="warn" text={msg} /> : null}
-      {phase === 'error' && (<><Banner kind="err" text={msg} /><Button title="Try again" onPress={mark} /></>)}
-      {phase === 'done' && <Button kind="ghost" title="Done" onPress={() => setPhase('idle')} />}
+      <Text style={[s.status, { color: t.text, textAlign: 'left' }]}>Choose a subject</Text>
+      {r.subjects.length === 0 && <Banner kind="warn" text="No subjects are assigned to you yet." />}
+      {r.subjects.map((sub) => (
+        <Pressable key={sub.subject_id} accessibilityRole="button" onPress={() => go({ name: 'teacher-room', base: r.base, token: r.token, subject: sub })}
+          style={({ pressed }) => [s.subject, { backgroundColor: t.surface, borderColor: t.border, opacity: pressed ? 0.85 : 1 }]}>
+          <View style={{ flex: 1 }}>
+            <Text style={[s.subjectName, { color: t.text }]}>{sub.name}</Text>
+            <Text style={{ color: t.sub, fontSize: 14 }}>{sub.code} · {sub.roster_size} students{sub.last_pct != null ? ` · last class ${Math.round(sub.last_pct)}%` : ''}</Text>
+          </View>
+          <Text style={{ color: t.primary, fontSize: 22, fontWeight: '700' }}>›</Text>
+        </Pressable>
+      ))}
     </ScrollView>
   );
+}
+
+const STATUS_ORDER = ['FLAGGED', 'PENDING', 'NOT_JOINED', 'PRESENT', 'ABSENT'];
+const statusLabel: Record<string, string> = { PRESENT: 'Present', PENDING: 'Checking', FLAGGED: 'Check this', NOT_JOINED: 'Not joined', ABSENT: 'Absent' };
+
+function TeacherRoom({ r, go }: { r: Extract<Route, { name: 'teacher-room' }>; go: (x: Route) => void }) {
+  const t = useTheme();
+  const radio = useRef(new NativeRadio()).current;
+  const roll = useRef<TeacherRoll | null>(null);
+  const [live, setLive] = useState<TeacherLive | null>(null);
+  const [err, setErr] = useState('');
+  const [offline, setOffline] = useState(false);
+  const [busy, setBusy] = useState(true);
+  const [finished, setFinished] = useState(false);
+
+  useEffect(() => {
+    let dead = false;
+    setKeepAwake(true);
+    deviceModel().catch(() => 'unknown').then((model) => {
+      const tr = new TeacherRoll({
+        api: new NetPresenceApi(r.base), keys: nativeKeys, radio, token: r.token, model,
+        onLive: (l) => { setLive(l); setOffline(false); },
+        onError: (m, off) => { setOffline(off); if (!off) setErr(m); },
+      });
+      roll.current = tr;
+      return tr.begin(r.subject.subject_id);
+    }).then(() => { if (!dead) setBusy(false); })
+      .catch((e) => { if (!dead) { setBusy(false); setErr(radio.lastError ? 'Bluetooth problem: ' + radio.lastError : explain(e, r.base)); } });
+    return () => { dead = true; setKeepAwake(false); };
+  }, []);
+
+  const finish = async () => {
+    try {
+      const out = await roll.current!.finish();
+      Vibration.vibrate(60);
+      setFinished(true);
+      setLive((l) => (l ? { ...l, rows: (out as { rows?: TeacherLive['rows'] }).rows ?? l.rows, status: 'closed' } : l));
+    } catch (e) { setErr(explain(e, r.base)); }
+  };
+  const share = () => live && Share.share({ message: attendanceCsv(r.subject.code, live.rows.map((x) => ({ student_id: x.student_id, name: x.name, status: x.status === 'PRESENT' ? 'Present' : 'Absent' }))) });
+
+  const c = live?.counts ?? {};
+  const rows = [...(live?.rows ?? [])].sort((a, b) => STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status) || a.name.localeCompare(b.name));
+  return (
+    <ScrollView contentContainerStyle={s.page}>
+      <Text style={[s.hello, { color: t.sub }]}>{r.subject.code}</Text>
+      <Text style={[s.name, { color: t.text }]}>{r.subject.name}</Text>
+      {busy && <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}><ActivityIndicator color={t.primary} /><Text style={{ color: t.sub }}>Starting…</Text></View>}
+      {offline && <Banner kind="warn" text="Cannot reach the server - trying again." />}
+      {err ? <Banner kind="err" text={err} /> : null}
+      <Card style={{ alignItems: 'center', gap: 4 }}>
+        <Text style={{ color: t.ok, fontSize: 56, fontWeight: '800' }}>{c.PRESENT ?? 0}<Text style={{ color: t.sub, fontSize: 24 }}> / {live?.roster_size ?? r.subject.roster_size}</Text></Text>
+        <Text style={{ color: t.sub, fontSize: 15 }}>{finished ? 'Final attendance' : 'present - keep this phone on and near the front'}</Text>
+      </Card>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+        {STATUS_ORDER.map((k) => <Chip key={k} text={`${statusLabel[k]} ${c[k] ?? 0}`} tone={k === 'PRESENT' && (c[k] ?? 0) > 0 ? 'ok' : 'neutral'} />)}
+      </View>
+      {!finished && <Button title={(live?.elapsed_s ?? 0) < LIVE_BEST_AFTER_S ? `Finish (most accurate in ${Math.ceil(LIVE_BEST_AFTER_S - (live?.elapsed_s ?? 0))} s)` : 'Finish roll call'} onPress={finish} disabled={busy || !live} />}
+      {finished && <Button title="Share list (CSV)" onPress={share} />}
+      {finished && <Button kind="ghost" title="Back to subjects" onPress={() => go({ name: 'teacher-login' })} />}
+      {rows.filter((x) => x.status !== 'NOT_JOINED' || finished || (live?.elapsed_s ?? 0) > 20).map((x) => (
+        <View key={x.student_id} style={[s.row, { borderColor: t.border, backgroundColor: t.surface }]}>
+          <View style={{ flex: 1 }}>
+            <Text style={{ color: t.text, fontSize: 16, fontWeight: '600' }} numberOfLines={1}>{x.name}</Text>
+            <Text style={{ color: t.sub, fontSize: 12 }}>{x.student_id}{x.reason ? ` · ${x.reason}` : ''}</Text>
+          </View>
+          {x.status === 'FLAGGED' && !finished ? (
+            <View style={{ flexDirection: 'row', gap: 6 }}>
+              <Pressable onPress={() => roll.current?.adjudicate(x.student_id, 'PRESENT')} style={[s.mini, { backgroundColor: t.okBg }]}><Text style={{ color: t.ok, fontWeight: '700' }}>Present</Text></Pressable>
+              <Pressable onPress={() => roll.current?.adjudicate(x.student_id, 'ABSENT')} style={[s.mini, { backgroundColor: t.errBg }]}><Text style={{ color: t.err, fontWeight: '700' }}>Absent</Text></Pressable>
+            </View>
+          ) : <Text style={{ color: tone(t, x.status), fontWeight: '700' }}>{statusLabel[x.status]}</Text>}
+        </View>
+      ))}
+    </ScrollView>
+  );
+}
+const tone = (t: Theme, st: string) => (st === 'PRESENT' ? t.ok : st === 'FLAGGED' ? t.warn : st === 'ABSENT' ? t.err : t.sub);
+
+// ---------------------------------------------------------------------------------------------------------- student
+function StudentSetup({ go }: { go: (r: Route) => void }) {
+  const t = useTheme();
+  const [form, setForm] = useState({ studentId: '', name: '', code: '' });
+  const [server, setServer] = useState('http://192.168.');
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+  useEffect(() => { loadServer().then(setServer); }, []);
+  const ready = form.studentId.trim() && form.name.trim() && server.trim().length > 8;
+
+  const register = async () => {
+    setBusy(true); setErr('');
+    const base = normalizeUrl(server);
+    const api = new NetPresenceApi(base);
+    try { await api.health(); } catch (e) { setBusy(false); setErr(explain(e, base)); return; }
+    // The fingerprint says "I am the person holding this phone, and I will use only this phone".
+    const bio = await confirmBiometric('Register this phone as yours for attendance');
+    if (bio === 'cancel') { setBusy(false); setErr('Registration needs your fingerprint (or face) to confirm this is your phone.'); return; }
+    try {
+      await enroll(api, nativeKeys, {
+        studentId: form.studentId.trim().toUpperCase(), name: form.name.trim(), model: await deviceModel(),
+        enrolCode: form.code.trim() || undefined, installId: await installId(), platform: Platform.OS,
+      });
+      const p = { baseUrl: base, studentId: form.studentId.trim().toUpperCase(), name: form.name.trim() };
+      await saveProfile(p); await saveServer(base);
+      Vibration.vibrate(60);
+      go({ name: 'student', profile: p, fresh: true });
+    } catch (e) {
+      setErr(e instanceof ApiError && e.status === 403 ? 'That class code is wrong or missing.'
+        : e instanceof ApiError && e.status === 409 ? e.message : explain(e, base));
+    } finally { setBusy(false); }
+  };
+
+  return (
+    <ScrollView contentContainerStyle={s.page} keyboardShouldPersistTaps="handled">
+      <Text style={[s.title, { color: t.text, marginTop: 24 }]}>Register this phone</Text>
+      <Text style={[s.lead, { color: t.sub, textAlign: 'left' }]}>Once. After this, attendance happens by itself.</Text>
+      <Card style={{ gap: 16 }}>
+        <Field label="ROLL NUMBER" placeholder="e.g. 21CS042" autoCapitalize="characters" value={form.studentId} onChangeText={(studentId) => setForm({ ...form, studentId })} />
+        <Field label="FULL NAME" placeholder="As on the register" value={form.name} onChangeText={(name) => setForm({ ...form, name })} />
+        <Field label="CLASS CODE" placeholder="From your teacher" autoCapitalize="characters" value={form.code} onChangeText={(code) => setForm({ ...form, code })} />
+        <Field label="SERVER ADDRESS" autoCapitalize="none" keyboardType="url" value={server} onChangeText={setServer} />
+        {err ? <Banner kind="err" text={err} /> : null}
+        <Button title={busy ? 'Registering…' : 'Verify with fingerprint'} onPress={register} disabled={busy || !ready} />
+      </Card>
+      <Text style={[s.fine, { color: t.sub }]}>This phone is locked to you. If you change phones, your teacher resets it.</Text>
+      <Button kind="ghost" title="Back" onPress={() => go({ name: 'welcome' })} />
+    </ScrollView>
+  );
+}
+
+function StudentHome({ profile, fresh, go }: { profile: Profile; fresh: boolean; go: (r: Route) => void }) {
+  const t = useTheme();
+  const radio = useRef(new NativeRadio()).current;
+  const [st, setSt] = useState<StudentState>({ phase: 'signing_in', nearby: 0 });
+  const [verified, setVerified] = useState(fresh);
+  const [menu, setMenu] = useState(false);
+  const buzzed = useRef<string>('');
+
+  useEffect(() => {
+    if (fresh) { const id = setTimeout(() => setVerified(false), 1800); return () => clearTimeout(id); }
+  }, [fresh]);
+
+  useEffect(() => {
+    const runner = new StudentRunner({ api: new NetPresenceApi(profile.baseUrl), keys: nativeKeys, radio, studentId: profile.studentId, onState: setSt });
+    setKeepAwake(true);
+    void runner.run();
+    return () => { runner.stop(); setKeepAwake(false); };
+  }, [profile.baseUrl, profile.studentId]);
+
+  useEffect(() => {
+    const k = `${st.sessionId}:${st.status}`;
+    if (st.status === 'PRESENT' && buzzed.current !== k) { buzzed.current = k; Vibration.vibrate(Platform.OS === 'android' ? [0, 50, 50, 50] : 50); }
+  }, [st.status, st.sessionId]);
+
+  const view = describe(st, t, radio.lastError);
+  const reset = async () => { await clearProfile(); go({ name: 'welcome' }); };
+
+  if (verified) {
+    return (
+      <View style={s.center}>
+        <View style={[s.orb, { backgroundColor: t.okBg, borderColor: t.ok }]}><Text style={{ color: t.ok, fontSize: 64 }}>✓</Text></View>
+        <Text style={[s.title, { color: t.text }]}>Phone verified</Text>
+        <Text style={[s.lead, { color: t.sub }]}>{profile.name}, this phone is yours now.{'\n'}Getting ready…</Text>
+      </View>
+    );
+  }
+  return (
+    <ScrollView contentContainerStyle={[s.page, { flexGrow: 1 }]}>
+      <View style={s.head}>
+        <View><Text style={[s.hello, { color: t.sub }]}>{profile.studentId}</Text><Text style={[s.name, { color: t.text }]} numberOfLines={1}>{profile.name}</Text></View>
+        <Pressable accessibilityLabel="Menu" onPress={() => setMenu(!menu)} hitSlop={12}><Text style={{ color: t.sub, fontSize: 28 }}>⋯</Text></Pressable>
+      </View>
+      {menu && (
+        <Card style={{ gap: 10 }}>
+          <Button kind="ghost" title="Signal lab" onPress={() => go({ name: 'lab' })} />
+          <Button kind="ghost" title="Remove this phone's registration" onPress={reset} />
+        </Card>
+      )}
+      <View style={s.center}>
+        <View style={[s.orb, { backgroundColor: view.bg, borderColor: view.fg }]}>
+          {view.spin ? <ActivityIndicator size="large" color={view.fg} /> : <Text style={{ color: view.fg, fontSize: 64 }}>{view.icon}</Text>}
+        </View>
+        <Text style={[s.title, { color: t.text, textAlign: 'center' }]}>{view.title}</Text>
+        <Text style={[s.lead, { color: t.sub }]}>{view.sub}</Text>
+        {st.phase === 'live' && <Chip text={`${st.nearby} phone${st.nearby === 1 ? '' : 's'} nearby`} tone={st.nearby > 0 ? 'ok' : 'neutral'} />}
+        {st.subject && st.phase !== 'idle' && <Chip text={`${st.subject.code} · ${st.subject.name}`} />}
+      </View>
+      {view.banner ? <Banner kind={view.banner.kind} text={view.banner.text} /> : null}
+    </ScrollView>
+  );
+}
+
+function describe(st: StudentState, t: Theme, radioErr: string | null) {
+  const base = { bg: t.surface, fg: t.primary, icon: '', spin: false, title: '', sub: '', banner: undefined as undefined | { kind: 'err' | 'warn' | 'ok'; text: string } };
+  switch (st.phase) {
+    case 'signing_in': return { ...base, spin: true, title: 'Signing in', sub: 'Just a moment' };
+    case 'idle': return { ...base, icon: '·', title: 'You\'re all set', sub: 'Nothing to do. Your attendance is taken automatically when your teacher starts the class. Keep Bluetooth on.' };
+    case 'joining': return { ...base, spin: true, title: 'Joining…', sub: st.subject ? st.subject.name : 'Class is starting' };
+    case 'live':
+      if (st.status === 'PRESENT') return { ...base, bg: t.okBg, fg: t.ok, icon: '✓', title: 'Present', sub: st.timeToPresentMs != null ? `Confirmed in ${(st.timeToPresentMs / 1000).toFixed(1)} s. Stay in the room until the teacher finishes.` : 'Stay in the room until the teacher finishes.' };
+      if (st.status === 'FLAGGED') return { ...base, bg: t.warnBg, fg: t.warn, icon: '!', title: 'Your teacher will confirm', sub: 'Stay where you are.' };
+      return { ...base, spin: true, title: 'Reaching nearby phones…', sub: 'Keep the app open.', banner: radioErr ? { kind: 'err' as const, text: radioErr === 'NP-ERR-BT-OFF' ? 'Bluetooth is off. Turn it on.' : `Bluetooth problem (${radioErr}).` } : undefined };
+    case 'closed': return { ...base, bg: st.result === 'PRESENT' ? t.okBg : t.surface, fg: st.result === 'PRESENT' ? t.ok : t.sub, icon: st.result === 'PRESENT' ? '✓' : '·', title: st.result === 'PRESENT' ? 'You were marked present' : 'Roll call finished', sub: st.result === 'PRESENT' ? '' : 'See your teacher if this looks wrong.' };
+    case 'not_in_class': return { ...base, bg: t.errBg, fg: t.err, icon: '✕', title: 'Not in this class', sub: st.message ?? 'You are not on the list for this subject.' };
+    case 'offline': return { ...base, bg: t.warnBg, fg: t.warn, icon: '⚠', title: 'No connection', sub: st.message ?? 'Trying again.' };
+    default: return { ...base, bg: t.errBg, fg: t.err, icon: '!', title: 'Something went wrong', sub: st.message ?? 'Trying again.' };
+  }
 }
 
 const s = StyleSheet.create({
   page: { padding: 20, gap: 16, paddingBottom: 40 },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16, padding: 24, minHeight: 420 },
+  orb: { width: 168, height: 168, borderRadius: 84, borderWidth: 4, alignItems: 'center', justifyContent: 'center' },
   title: { fontSize: 30, fontWeight: '800', letterSpacing: -0.5 },
   lead: { fontSize: 15, textAlign: 'center', lineHeight: 22 },
-  fine: { fontSize: 12, textAlign: 'center', lineHeight: 18, paddingHorizontal: 12 },
+  fine: { fontSize: 13, textAlign: 'center', lineHeight: 18, paddingHorizontal: 12, paddingVertical: 8 },
   head: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 },
   hello: { fontSize: 14 }, name: { fontSize: 26, fontWeight: '800', maxWidth: 280 },
-  status: { fontSize: 18, fontWeight: '700', textAlign: 'center' },
+  status: { fontSize: 18, fontWeight: '700' },
   mark: { width: 76, height: 76, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
   dot: { width: 10, height: 10, borderRadius: 5, position: 'absolute' },
   arc: { position: 'absolute', borderWidth: 3, borderLeftColor: 'transparent', borderBottomColor: 'transparent', transform: [{ rotate: '-45deg' }] },
+  subject: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderRadius: 18, padding: 18, gap: 12 },
+  subjectName: { fontSize: 18, fontWeight: '700', marginBottom: 2 },
+  row: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderRadius: 14, padding: 12, gap: 10 },
+  mini: { borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8 },
 });
