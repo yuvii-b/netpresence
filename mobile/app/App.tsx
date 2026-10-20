@@ -1,10 +1,11 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, SafeAreaView, ScrollView, Share, StatusBar, StyleSheet, Text, Vibration, View, useColorScheme } from 'react-native';
-import { ApiError, LIVE_BEST_AFTER_S, NetPresenceApi, StudentRunner, TeacherRoll, attendanceCsv, enroll } from '../core/src';
-import type { StudentState, SubjectInfo, TeacherLive } from '../core/src';
+import { ApiError, DiagBoard, LIVE_BEST_AFTER_S, NetPresenceApi, StudentRunner, TeacherRoll, attendanceCsv, enroll, sheetCsv } from '../core/src';
+import type { AttendanceSheet, LiveDiag, StudentState, SubjectInfo, TeacherLive } from '../core/src';
+import LivePanel from './src/LivePanel';
 import Lab from './src/Lab';
 import { NativeRadio, confirmBiometric, deviceModel, installId, nativeKeys, setKeepAwake } from './src/native';
-import { Profile, clearProfile, loadProfile, loadServer, saveProfile, saveServer } from './src/storage';
+import { Profile, clearProfile, clearTeacher, loadProfile, loadServer, loadTeacher, saveProfile, saveServer, saveTeacher } from './src/storage';
 import { Theme, useTheme } from './src/theme';
 import { Banner, Button, Card, Chip, Field } from './src/ui';
 
@@ -16,6 +17,8 @@ const normalizeUrl = (raw: string) => {
   if (/^https:\/\/(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|100\.)/.test(u)) u = u.replace(/^https:/, 'http:');
   return u;
 };
+/** Haptics are cosmetic: a missing permission or a phone without a vibrator must never take the app down. */
+const buzz = (p: number | number[]) => { try { Vibration.vibrate(p); } catch { /* cosmetic */ } };
 const unreachable = (base: string) =>
   `Can't reach ${base}\n\nOpen that address followed by /docs in this phone's browser. If it doesn't load there either, it's the Wi-Fi or the laptop firewall, not the app.`;
 const explain = (e: unknown, base: string) =>
@@ -23,7 +26,7 @@ const explain = (e: unknown, base: string) =>
 
 type Route = { name: 'welcome' } | { name: 'student-setup' } | { name: 'student'; profile: Profile; fresh: boolean }
   | { name: 'teacher-login' } | { name: 'teacher-subjects'; base: string; token: string; teacher: string; subjects: SubjectInfo[] }
-  | { name: 'teacher-room'; base: string; token: string; subject: SubjectInfo } | { name: 'lab' };
+  | { name: 'teacher-room'; base: string; token: string; subject: SubjectInfo } | { name: 'teacher-sheet'; from: Extract<Route, { name: 'teacher-subjects' }>; subject: SubjectInfo } | { name: 'lab' };
 
 export default function App() {
   const t = useTheme();
@@ -31,7 +34,23 @@ export default function App() {
   const [route, setRoute] = useState<Route | null>(null);
 
   // A phone that is already registered goes straight to the student screen: no tap, no login.
-  useEffect(() => { loadProfile().then((p) => setRoute(p ? { name: 'student', profile: p, fresh: false } : { name: 'welcome' })); }, []);
+  useEffect(() => {
+    (async () => {
+      const p = await loadProfile();
+      if (p) return setRoute({ name: 'student', profile: p, fresh: false });
+      const tsess = await loadTeacher();               // a teacher stays signed in: straight to the subjects
+      if (tsess) {
+        try {
+          const subjects = await new NetPresenceApi(tsess.baseUrl).teacherSubjects(tsess.token);
+          return setRoute({ name: 'teacher-subjects', base: tsess.baseUrl, token: tsess.token, teacher: tsess.name, subjects });
+        } catch (e) {
+          if (e instanceof ApiError && e.status === 401) await clearTeacher();   // expired: ask for the code again
+          return setRoute({ name: 'teacher-login' });
+        }
+      }
+      setRoute({ name: 'welcome' });
+    })();
+  }, []);
   const go = useCallback((r: Route) => setRoute(r), []);
 
   return (
@@ -44,6 +63,7 @@ export default function App() {
         : route.name === 'teacher-login' ? <TeacherLogin go={go} />
         : route.name === 'teacher-subjects' ? <TeacherSubjects r={route} go={go} />
         : route.name === 'teacher-room' ? <TeacherRoom r={route} go={go} />
+        : route.name === 'teacher-sheet' ? <SheetScreen r={route} go={go} />
         : <><Lab /><View style={{ padding: 16 }}><Button kind="ghost" title="Back" onPress={() => go({ name: 'welcome' })} /></View></>}
     </SafeAreaView>
   );
@@ -94,6 +114,7 @@ function TeacherLogin({ go }: { go: (r: Route) => void }) {
     try {
       const r = await new NetPresenceApi(base).teacherLogin(code.trim());
       await saveServer(base);
+      await saveTeacher({ baseUrl: base, token: r.token, name: r.teacher.name });
       go({ name: 'teacher-subjects', base, token: r.token, teacher: r.teacher.name, subjects: r.subjects });
     } catch (e) {
       setErr(e instanceof ApiError && e.status === 429 ? 'Too many tries. Wait a minute and try again.' : explain(e, base));
@@ -122,7 +143,7 @@ function TeacherSubjects({ r, go }: { r: Extract<Route, { name: 'teacher-subject
     <ScrollView contentContainerStyle={s.page}>
       <View style={s.head}>
         <View><Text style={[s.hello, { color: t.sub }]}>Welcome,</Text><Text style={[s.name, { color: t.text }]}>{r.teacher}</Text></View>
-        <Pressable onPress={() => go({ name: 'welcome' })} hitSlop={12}><Text style={{ color: t.sub, fontSize: 14 }}>Log out</Text></Pressable>
+        <Pressable onPress={async () => { await clearTeacher(); go({ name: 'welcome' }); }} hitSlop={12}><Text style={{ color: t.sub, fontSize: 14 }}>Log out</Text></Pressable>
       </View>
       <Text style={[s.status, { color: t.text, textAlign: 'left' }]}>Choose a subject</Text>
       {r.subjects.length === 0 && <Banner kind="warn" text="No subjects are assigned to you yet." />}
@@ -133,10 +154,81 @@ function TeacherSubjects({ r, go }: { r: Extract<Route, { name: 'teacher-subject
             <Text style={[s.subjectName, { color: t.text }]}>{sub.name}</Text>
             <Text style={{ color: t.sub, fontSize: 14 }}>{sub.code} · {sub.roster_size} students{sub.last_pct != null ? ` · last class ${Math.round(sub.last_pct)}%` : ''}</Text>
           </View>
+          <Pressable accessibilityRole="button" onPress={() => go({ name: 'teacher-sheet', from: r, subject: sub })} hitSlop={8}
+            style={[s.mini, { backgroundColor: t.input, borderWidth: 1, borderColor: t.border }]}><Text style={{ color: t.text, fontWeight: '700' }}>Register</Text></Pressable>
           <Text style={{ color: t.primary, fontSize: 22, fontWeight: '700' }}>›</Text>
         </Pressable>
       ))}
     </ScrollView>
+  );
+}
+
+
+// ---------------------------------------------------------------------------------------------------------- the register
+const MARK = { P: 'ok', A: 'err', F: 'warn', '-': 'sub' } as const;
+const dayLabel = (at: number | null) => { if (!at) return ['?', '']; const d = new Date(at * 1000); const p2 = (n: number) => String(n).padStart(2, '0'); return [`${d.getDate()}/${d.getMonth() + 1}`, `${p2(d.getHours())}:${p2(d.getMinutes())}`]; };
+const localStamp = (at: number | null) => { const [a, b] = dayLabel(at); return at ? `${a} ${b}` : ''; };
+
+function SheetScreen({ r, go }: { r: Extract<Route, { name: 'teacher-sheet' }>; go: (x: Route) => void }) {
+  const t = useTheme();
+  const [sheet, setSheet] = useState<AttendanceSheet | null>(null);
+  const [err, setErr] = useState('');
+  const load = useCallback(() => {
+    setErr('');
+    new NetPresenceApi(r.from.base).teacherSheet(r.from.token, r.subject.subject_id).then(setSheet)
+      .catch((e) => setErr(explain(e, r.from.base)));
+  }, [r]);
+  useEffect(load, [load]);
+  const W = { roll: 92, name: 140, mark: 40, pct: 52 };
+  const cell = (txt: string, w: number, color?: string, bold = false, align: 'left' | 'center' = 'center') =>
+    <Text numberOfLines={1} style={{ width: w, color: color ?? t.text, fontSize: 13, fontWeight: bold ? '700' : '400', textAlign: align, paddingVertical: 8 }}>{txt}</Text>;
+  const held = sheet?.sessions.length ?? 0;
+  return (
+    <View style={{ flex: 1 }}>
+      <View style={{ padding: 20, paddingBottom: 8, gap: 4 }}>
+        <Text style={[s.hello, { color: t.sub }]}>{r.subject.code} · register</Text>
+        <Text style={[s.name, { color: t.text }]} numberOfLines={1}>{r.subject.name}</Text>
+        {sheet && <Text style={{ color: t.sub, fontSize: 13 }}>{held} class{held === 1 ? '' : 'es'} held · {sheet.students.length} students</Text>}
+      </View>
+      {err ? <View style={{ paddingHorizontal: 20 }}><Banner kind="err" text={err} /></View> : null}
+      {!sheet && !err && <ActivityIndicator style={{ marginTop: 40 }} color={t.primary} />}
+      {sheet && held === 0 && <View style={{ paddingHorizontal: 20 }}><Banner kind="warn" text="No finished roll calls yet. Start a class and tap Finish to fill the register." /></View>}
+      {sheet && held > 0 && (
+        <ScrollView>
+          <ScrollView horizontal showsHorizontalScrollIndicator>
+            <View>
+              <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderColor: t.border, backgroundColor: t.surface }}>
+                {cell('Roll no', W.roll, t.sub, true, 'left')}{cell('Name', W.name, t.sub, true, 'left')}
+                {sheet.sessions.map((x) => { const [a, b] = dayLabel(x.at); return (
+                  <View key={x.session_id} style={{ width: W.mark, alignItems: 'center', paddingVertical: 4 }}>
+                    <Text style={{ color: t.sub, fontSize: 11, fontWeight: '700' }}>{a}</Text><Text style={{ color: t.sub, fontSize: 9 }}>{b}</Text>
+                  </View>); })}
+                {cell('%', W.pct, t.sub, true)}
+              </View>
+              <View style={{ flexDirection: 'row', backgroundColor: t.input }}>
+                {cell('', W.roll)}{cell('Present', W.name, t.sub, false, 'left')}
+                {sheet.sessions.map((x) => <View key={x.session_id}>{cell(String(x.present), W.mark, t.ok, true)}</View>)}
+                {cell('', W.pct)}
+              </View>
+              {sheet.students.map((st) => (
+                <View key={st.student_id} style={{ flexDirection: 'row', borderTopWidth: StyleSheet.hairlineWidth, borderColor: t.border }}>
+                  {cell(st.student_id, W.roll, t.text, false, 'left')}{cell(st.name, W.name, t.text, false, 'left')}
+                  {st.marks.map((m, i) => <View key={i}>{cell(m, W.mark, t[MARK[m as keyof typeof MARK] ?? 'sub'], m !== '-')}</View>)}
+                  {cell(st.pct == null ? '-' : `${st.pct}`, W.pct, st.pct != null && st.pct < 75 ? t.err : t.text, true)}
+                </View>
+              ))}
+            </View>
+          </ScrollView>
+        </ScrollView>
+      )}
+      <View style={{ padding: 16, gap: 10 }}>
+        {sheet && held > 0 && <Button title="Share register (CSV)" onPress={() => Share.share({ message: sheetCsv(sheet, localStamp) })} />}
+        <View style={{ flexDirection: 'row', gap: 10 }}>
+          <View style={{ flex: 1 }}><Button kind="ghost" title="Refresh" onPress={load} /></View>
+          <View style={{ flex: 1 }}><Button kind="ghost" title="Back" onPress={() => go(r.from)} /></View>
+        </View>
+      </View>
+    </View>
   );
 }
 
@@ -152,13 +244,15 @@ function TeacherRoom({ r, go }: { r: Extract<Route, { name: 'teacher-room' }>; g
   const [offline, setOffline] = useState(false);
   const [busy, setBusy] = useState(true);
   const [finished, setFinished] = useState(false);
+  const [diag, setDiag] = useState<LiveDiag>({ radio: 'off', adverts: 0, foreign: 0, peers: [], sent: 0, failed: 0, log: [] });
+  const board = useRef(new DiagBoard(setDiag)).current;
 
   useEffect(() => {
     let dead = false;
     setKeepAwake(true);
     deviceModel().catch(() => 'unknown').then((model) => {
       const tr = new TeacherRoll({
-        api: new NetPresenceApi(r.base), keys: nativeKeys, radio, token: r.token, model,
+        api: new NetPresenceApi(r.base), keys: nativeKeys, radio, token: r.token, model, diag: board,
         onLive: (l) => { setLive(l); setOffline(false); },
         onError: (m, off) => { setOffline(off); if (!off) setErr(m); },
       });
@@ -172,7 +266,7 @@ function TeacherRoom({ r, go }: { r: Extract<Route, { name: 'teacher-room' }>; g
   const finish = async () => {
     try {
       const out = await roll.current!.finish();
-      Vibration.vibrate(60);
+      buzz(60);
       setFinished(true);
       setLive((l) => (l ? { ...l, rows: (out as { rows?: TeacherLive['rows'] }).rows ?? l.rows, status: 'closed' } : l));
     } catch (e) { setErr(explain(e, r.base)); }
@@ -186,6 +280,7 @@ function TeacherRoom({ r, go }: { r: Extract<Route, { name: 'teacher-room' }>; g
       <Text style={[s.hello, { color: t.sub }]}>{r.subject.code}</Text>
       <Text style={[s.name, { color: t.text }]}>{r.subject.name}</Text>
       {busy && <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}><ActivityIndicator color={t.primary} /><Text style={{ color: t.sub }}>Starting…</Text></View>}
+      <LivePanel d={diag} />
       {offline && <Banner kind="warn" text="Cannot reach the server - trying again." />}
       {err ? <Banner kind="err" text={err} /> : null}
       <Card style={{ alignItems: 'center', gap: 4 }}>
@@ -197,7 +292,13 @@ function TeacherRoom({ r, go }: { r: Extract<Route, { name: 'teacher-room' }>; g
       </View>
       {!finished && <Button title={(live?.elapsed_s ?? 0) < LIVE_BEST_AFTER_S ? `Finish (most accurate in ${Math.ceil(LIVE_BEST_AFTER_S - (live?.elapsed_s ?? 0))} s)` : 'Finish roll call'} onPress={finish} disabled={busy || !live} />}
       {finished && <Button title="Share list (CSV)" onPress={share} />}
-      {finished && <Button kind="ghost" title="Back to subjects" onPress={() => go({ name: 'teacher-login' })} />}
+      {finished && <Button kind="ghost" title="Back to subjects" onPress={async () => {
+        try {
+          const subjects = await new NetPresenceApi(r.base).teacherSubjects(r.token);
+          const ts = await loadTeacher();
+          go({ name: 'teacher-subjects', base: r.base, token: r.token, teacher: ts?.name ?? 'Teacher', subjects });
+        } catch { go({ name: 'teacher-login' }); }
+      }} />}
       {rows.filter((x) => x.status !== 'NOT_JOINED' || finished || (live?.elapsed_s ?? 0) > 20).map((x) => (
         <View key={x.student_id} style={[s.row, { borderColor: t.border, backgroundColor: t.surface }]}>
           <View style={{ flex: 1 }}>
@@ -242,7 +343,7 @@ function StudentSetup({ go }: { go: (r: Route) => void }) {
       });
       const p = { baseUrl: base, studentId: form.studentId.trim().toUpperCase(), name: form.name.trim() };
       await saveProfile(p); await saveServer(base);
-      Vibration.vibrate(60);
+      buzz(60);
       go({ name: 'student', profile: p, fresh: true });
     } catch (e) {
       setErr(e instanceof ApiError && e.status === 403 ? 'That class code is wrong or missing.'
@@ -275,13 +376,15 @@ function StudentHome({ profile, fresh, go }: { profile: Profile; fresh: boolean;
   const [verified, setVerified] = useState(fresh);
   const [menu, setMenu] = useState(false);
   const buzzed = useRef<string>('');
+  const [diag, setDiag] = useState<LiveDiag>({ radio: 'off', adverts: 0, foreign: 0, peers: [], sent: 0, failed: 0, log: [] });
+  const board = useRef(new DiagBoard(setDiag)).current;
 
   useEffect(() => {
     if (fresh) { const id = setTimeout(() => setVerified(false), 1800); return () => clearTimeout(id); }
   }, [fresh]);
 
   useEffect(() => {
-    const runner = new StudentRunner({ api: new NetPresenceApi(profile.baseUrl), keys: nativeKeys, radio, studentId: profile.studentId, onState: setSt });
+    const runner = new StudentRunner({ api: new NetPresenceApi(profile.baseUrl), keys: nativeKeys, radio, studentId: profile.studentId, onState: setSt, diag: board });
     setKeepAwake(true);
     void runner.run();
     return () => { runner.stop(); setKeepAwake(false); };
@@ -289,7 +392,7 @@ function StudentHome({ profile, fresh, go }: { profile: Profile; fresh: boolean;
 
   useEffect(() => {
     const k = `${st.sessionId}:${st.status}`;
-    if (st.status === 'PRESENT' && buzzed.current !== k) { buzzed.current = k; Vibration.vibrate(Platform.OS === 'android' ? [0, 50, 50, 50] : 50); }
+    if (st.status === 'PRESENT' && buzzed.current !== k) { buzzed.current = k; buzz(Platform.OS === 'android' ? [0, 50, 50, 50] : 50); }
   }, [st.status, st.sessionId]);
 
   const view = describe(st, t, radio.lastError);
@@ -326,6 +429,7 @@ function StudentHome({ profile, fresh, go }: { profile: Profile; fresh: boolean;
         {st.subject && st.phase !== 'idle' && <Chip text={`${st.subject.code} · ${st.subject.name}`} />}
       </View>
       {view.banner ? <Banner kind={view.banner.kind} text={view.banner.text} /> : null}
+      <LivePanel d={diag} />
     </ScrollView>
   );
 }

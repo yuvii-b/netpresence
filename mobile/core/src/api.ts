@@ -1,4 +1,4 @@
-import type { MySession, MyStatus, Neighbour, OpenSession, SubjectInfo, TeacherLive, TeacherStart } from './types';
+import type { AttendanceSheet, MySession, MyStatus, Neighbour, OpenSession, SubjectInfo, TeacherLive, TeacherStart } from './types';
 
 export class ApiError extends Error {
   constructor(public status: number, message: string) {
@@ -92,6 +92,9 @@ export class NetPresenceApi {
   }
   teacherSubjects(token: string) {
     return this.call<SubjectInfo[]>('GET', '/api/teacher/subjects', undefined, { bearer: token });
+  }
+  teacherSheet(token: string, subjectId: string) {
+    return this.call<AttendanceSheet>('GET', `/api/teacher/subjects/${subjectId}/sheet`, undefined, { bearer: token });
   }
   startSubject(token: string, subjectId: string, device: { public_key: string; model: string }) {
     return this.call<TeacherStart>('POST', `/api/teacher/subjects/${subjectId}/start`, { device }, { bearer: token });

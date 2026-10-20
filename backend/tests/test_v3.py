@@ -288,3 +288,45 @@ async def test_auto_finish_and_teacher_can_reset_a_roster_students_phone(client,
     assert doc["status"] == "closed"
     assert (await client.post("/api/teacher/students/s1/reset-device", headers=th)).status_code == 200
     assert (await client.post("/api/teacher/students/nobody/reset-device", headers=th)).status_code == 404
+
+
+async def test_attendance_sheet_lists_every_roster_student_against_each_finished_class(client):
+    roster, devs, sub = await seed(client, 5)
+    th, _ = await login(client)
+    # class 1: s0..s2 present
+    teacher, s1 = await start(client, th, sub)
+    teacher.eph = s1["teacher_eph"]
+    near = devs[:3]
+    for d in near:
+        assert (await join(client, s1, d)).status_code == 200
+    for me, nb in mesh(near, teacher):
+        await send(client, s1, me, nb)
+    await asyncio.sleep(0.5)
+    await client.post(f"/api/teacher/sessions/{s1['session_id']}/finish", headers=th)
+    # class 2: only s0, s1 present
+    teacher2, s2 = await start(client, th, sub)
+    teacher2.eph = s2["teacher_eph"]
+    near2 = devs[:2]
+    for d in near2:
+        assert (await join(client, s2, d)).status_code == 200
+    for me, nb in mesh(near2, teacher2):
+        await send(client, s2, me, nb)
+    await asyncio.sleep(0.5)
+    await client.post(f"/api/teacher/sessions/{s2['session_id']}/finish", headers=th)
+
+    sheet = (await client.get(f"/api/teacher/subjects/{sub}/sheet", headers=th)).json()
+    assert [x["session_id"] for x in sheet["sessions"]] == [s1["session_id"], s2["session_id"]]    # oldest first
+    marks = {r["student_id"]: r["marks"] for r in sheet["students"]}
+    assert marks["s0"] == ["P", "P"] and marks["s2"][0] == "P" and marks["s2"][1] == "A" and marks["s4"] == ["A", "A"]
+    pct = {r["student_id"]: r["pct"] for r in sheet["students"]}
+    assert pct["s0"] == 100 and pct["s4"] == 0
+    assert [x["present"] for x in sheet["sessions"]][1] == 2 and sheet["sessions"][0]["total"] == 5
+    # another teacher cannot read it
+    await client.post("/api/admin/teachers", json={"name": "Other", "code": "OTHER-CODE"}, headers=TEACHER)
+    oh, _ = await login(client, "OTHER-CODE")
+    assert (await client.get(f"/api/teacher/subjects/{sub}/sheet", headers=oh)).status_code == 404
+    # nothing finished yet -> an empty register, not an error
+    sub2 = (await client.post("/api/admin/subjects", json={"teacher_code": "T-CODE-1", "code": "NW204", "name": "CN", "roster": ["s0", "s1"]}, headers=TEACHER)).json()["subject_id"]
+    th2 = th
+    empty = (await client.get(f"/api/teacher/subjects/{sub2}/sheet", headers=th2)).json()
+    assert empty["sessions"] == [] and all(r["pct"] is None and r["marks"] == [] for r in empty["students"])

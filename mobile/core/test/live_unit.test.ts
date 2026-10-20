@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ApiError } from '../src/api';
-import { attendanceCsv, LIVE_WINDOW, LiveCollector, StudentRunner, TeacherRoll, type StudentState } from '../src/live';
+import { attendanceCsv, sheetCsv, DiagBoard, LIVE_WINDOW, LiveCollector, StudentRunner, TeacherRoll, type StudentState } from '../src/live';
 import type { KeyStore, Radio, RadioSample } from '../src/types';
 
 const TAG = 'ab12';
@@ -77,6 +77,30 @@ function studentApi(over: Record<string, any> = {}) {
   };
   return { api, calls };
 }
+
+describe('StudentRunner diagnostics', () => {
+  it('tells the person what is happening and keeps the finished result on screen', async () => {
+    let polls = 0, tick = 0;
+    const { api } = studentApi({ meSession: async () => { polls++; return polls === 2 ? { status: 'open', session_id: 'S-1', nonce: 'N', tag: TAG, subject: { code: 'CS301', name: 'OS' } } : { status: 'none' }; } });
+    const radio = new FakeRadio();
+    const board = new DiagBoard(undefined, () => (tick += 300));   // every call is 300 ms later: the 250 ms throttle never skips
+    const r = new StudentRunner({ api, keys, radio, studentId: 'stu', diag: board });
+    const run = r.run();
+    await until(() => radio.started === 1);
+    for (const m of ['0002', '0003', '0004']) for (let i = 0; i < 3; i++) radio.cb!({ name: nm(m), rssi: -60 });
+    await until(() => r.state.phase === 'closed');
+    await wait(1300);                                      // another poll finds no open class: the result must stay
+    expect(r.state.phase).toBe('closed');
+    r.stop(); await run;
+    const text = board.state.log.join('\n');
+    for (const needle of ['signed in', 'class started: CS301', 'broadcasting as', 'Bluetooth on', 'first report sent', 'server says: PRESENT', 'Bluetooth off'])
+      expect(text).toContain(needle);
+    expect(board.state.radio).toBe('off');
+    expect(board.state.sent).toBeGreaterThanOrEqual(1);
+    expect(board.state.peers).toHaveLength(3);
+    expect(board.state.adverts).toBe(9);
+  });
+});
 
 describe('StudentRunner', () => {
   it('auto check-in, radio on, reports, Present, closed - without any tap', async () => {
@@ -161,5 +185,19 @@ describe('TeacherRoll', () => {
 describe('attendanceCsv', () => {
   it('quotes commas and quotes', () => {
     expect(attendanceCsv('CS301', [{ student_id: '1', name: 'Rao, A "Ace"', status: 'PRESENT' }])).toBe('student_id,name,status,subject\n1,"Rao, A ""Ace""",PRESENT,CS301\n');
+  });
+});
+
+describe('sheetCsv', () => {
+  it('one row per student, one column per class, quoting names with commas', () => {
+    const csv = sheetCsv({
+      subject: { subject_id: 'x', code: 'CS301', name: 'OS' },
+      sessions: [{ session_id: 'S-aaaaaa', at: 1_900_000_000, present: 1, total: 2 }, { session_id: 'S-bbbbbb', at: null, present: 2, total: 2 }],
+      students: [{ student_id: '21CT001', name: 'Rao, A', marks: ['P', 'P'], present: 2, pct: 100 }, { student_id: '21CT002', name: 'B', marks: ['A', '-'], present: 0, pct: 0 }],
+    });
+    const lines = csv.trim().split('\n');
+    expect(lines[0]).toBe('student_id,name,2030-03-17 17:46,bbbbbb,present,held,percent');
+    expect(lines[1]).toBe('21CT001,"Rao, A",P,P,2,2,100');
+    expect(lines[2]).toBe('21CT002,B,A,-,0,1,0');
   });
 });

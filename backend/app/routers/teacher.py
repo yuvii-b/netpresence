@@ -116,6 +116,34 @@ async def live_view(session_id: str, since: int = -1, wait: int = 0, user=Depend
             "roster_size": len(rows), "ends_in_s": round(max(0.0, s["report_deadline"] - 5 - now), 1)}
 
 
+@router.get("/teacher/subjects/{subject_id}/sheet")
+async def attendance_sheet(subject_id: str, limit: int = 30, user=Depends(require_teacher_user), db=Depends(get_db)):
+    """The register: every roster student against the last `limit` finished roll calls of this subject (oldest first).
+    marks: P present, A absent, F flagged (teacher never settled it), - not on that day's record."""
+    sub = await _own_subject(db, user, subject_id)
+    limit = max(1, min(limit, 120))
+    sess = await db.sessions.find({"subject_id": subject_id, "status": "closed", "live": True}, {"_id": 0}).sort("closed_at", -1).to_list(length=limit)
+    sess.reverse()
+    sids = [x["session_id"] for x in sess]
+    by: dict[tuple, str] = {}
+    async for a in db.attendance.find({"session_id": {"$in": sids}}, {"_id": 0, "session_id": 1, "student_id": 1, "status": 1}):
+        by[(a["session_id"], a["student_id"])] = a["status"]
+    names = {st["student_id"]: st["name"] async for st in db.students.find({"student_id": {"$in": sub["roster"]}}, {"_id": 0, "student_id": 1, "name": 1})}
+    code = {"PRESENT": "P", "ABSENT": "A", "FLAGGED": "F"}
+    students = []
+    for sid_ in sorted(sub["roster"]):
+        marks = [code.get(by.get((sess_id, sid_)), "-") for sess_id in sids]
+        held = sum(1 for m in marks if m != "-")
+        pres = marks.count("P")
+        students.append({"student_id": sid_, "name": names.get(sid_, sid_), "marks": marks, "present": pres,
+                         "pct": round(100 * pres / held) if held else None})
+    return {"subject": {"subject_id": subject_id, "code": sub["code"], "name": sub["name"]},
+            "sessions": [{"session_id": x["session_id"], "at": x.get("created_at") or x.get("closed_at"),
+                          "present": sum(1 for sid_ in sub["roster"] if by.get((x["session_id"], sid_)) == "PRESENT"),
+                          "total": len(sub["roster"])} for x in sess],
+            "students": students}
+
+
 @router.post("/teacher/sessions/{session_id}/finish")
 async def finish_session(session_id: str, payload: CloseRequest | None = None, user=Depends(require_teacher_user), db=Depends(get_db)):
     s = await _own_session(db, user, session_id)

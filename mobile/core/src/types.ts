@@ -86,3 +86,10 @@ export interface MySession {
   subject?: { subject_id: string; code: string; name: string };
 }
 export interface MyStatus { rev: number; status: 'NONE' | 'PENDING' | 'PRESENT' | 'FLAGGED' | 'ABSENT' | 'CLOSED'; at: number | null; result?: string | null }
+
+/** The register: roster students x finished roll calls (GET /teacher/subjects/{id}/sheet). marks: P present, A absent, F flagged, - no record. */
+export interface AttendanceSheet {
+  subject: { subject_id: string; code: string; name: string };
+  sessions: Array<{ session_id: string; at: number | null; present: number; total: number }>;
+  students: Array<{ student_id: string; name: string; marks: string[]; present: number; pct: number | null }>;
+}

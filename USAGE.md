@@ -91,6 +91,9 @@ Full guide and troubleshooting: `docs/INSTALL.md`.
   Your own: `python -m tools.admin add-teacher --name "Dr Rao" --code RAO-2026` and `add-subject --teacher-code RAO-2026 --code CS301 --name "Operating Systems" --roster roster.csv`.
 * Teacher phone: I'm a teacher -> enter the code -> pick the subject -> the class starts. The teacher phone is the root of trust; keep it near the front.
   Watch the Present count climb; the Finish button says when the result is most accurate (15 s). FLAGGED students can be set Present/Absent in place. Share list = CSV.
+* Every screen has a **What's happening** panel: Bluetooth on/off, the name this phone broadcasts as, the phones it hears (with signal), reports sent/failed and a time-stamped log. Send me a screenshot of it when something looks wrong.
+* **Register** button on each subject card: a sheet of every roster student against every finished class (P present, A absent, F flagged), with each student's percentage and a CSV share. Under 75 % shows red.
+* The teacher stays signed in for about 11 hours (Log out on the subjects screen clears it). A student keeps the registered phone until you choose Remove this phone's registration.
 * Student phone (first time): I'm a student -> roll number, name, class code -> **Verify with fingerprint** -> "Phone verified". After that the app needs no taps:
   when the teacher starts the subject the phone joins by itself, starts transmitting and shows **Present**. A student who is not on that subject's roster is refused
   ("Not in this class"). One phone = one student (a second student on the same phone, or a second phone for the same student, is refused; the teacher resets with
