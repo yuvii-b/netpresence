@@ -102,6 +102,40 @@ describe('StudentRunner diagnostics', () => {
   });
 });
 
+describe('StudentRunner biometric at every roll call', () => {
+  it('never checks in before the fingerprint passes; cancel and "none set up" both wait for the button, then it joins', async () => {
+    const { api, calls } = studentApi();
+    const radio = new FakeRadio();
+    const asked: string[] = [];
+    const answers: Array<'ok' | 'cancel' | 'unavailable'> = ['cancel', 'unavailable', 'ok'];
+    const r = new StudentRunner({ api, keys, radio, studentId: 'stu', confirm: async (label) => { asked.push(label); return answers.shift()!; } });
+    const run = r.run();
+    await until(() => r.state.phase === 'need_biometric');
+    expect(calls.checkin).toHaveLength(0);
+    expect(radio.started).toBe(0);
+    expect(asked[0]).toContain('CS301');
+    r.retryConfirm();
+    await until(() => asked.length === 2 && r.state.phase === 'need_biometric' && /Set up a fingerprint/.test(r.state.message ?? ''));
+    expect(calls.checkin).toHaveLength(0);
+    r.retryConfirm();
+    await until(() => radio.started === 1);
+    expect(calls.checkin).toHaveLength(1);
+    r.stop(); await run;
+  });
+
+  it('asks again at the next roll call', async () => {
+    let polls = 0;
+    const { api } = studentApi({ meSession: async () => { polls++; return polls === 1 ? { status: 'none' } : { status: 'open', session_id: `S-${polls}`, nonce: 'N', tag: TAG, subject: { code: 'CS301', name: 'OS' } }; },
+      myStatus: async () => ({ rev: 9, status: 'CLOSED', at: 1, result: 'PRESENT' }) });
+    let asked = 0;
+    const r = new StudentRunner({ api, keys, radio: new FakeRadio(), studentId: 'stu', confirm: async () => { asked++; return 'ok'; } });
+    const run = r.run();
+    await until(() => asked >= 2, 8000);
+    r.stop(); await run;
+    expect(asked).toBeGreaterThanOrEqual(2);
+  });
+});
+
 describe('StudentRunner login errors', () => {
   it('a phone the server does not know shows "not registered" and retries slowly instead of hammering the login', async () => {
     let logins = 0;

@@ -149,3 +149,5 @@ The server now has teacher code login, subjects/rosters, one-phone-one-student b
 live sessions (incremental reports every 1 s, debounced re-evaluation, long-poll pushes, teacher phone as the seed). The simulator
 and netsim still model the old window flow only (`flow = "window"`); the live flow, the teacher-phone seed and the time-to-present
 metric are added in milestone P5. Until then no result in this repository says anything about the live flow's latency or accuracy.
+
+M11 note: the per-roll-call fingerprint is modelled as an assumed unlock delay (`LiveConfig.bio_s_lo/hi`, default 0); see docs/LATENCY.md for the numbers.

@@ -94,6 +94,17 @@ async def test_wrong_codes_are_rate_limited_and_tokens_expire(client):
     assert (await client.get("/api/teacher/subjects", headers=h)).status_code == 401
 
 
+async def test_biometric_registration_is_recorded(client):
+    from app.db.mongo import db_instance
+    a, b = Device("bio-a"), Device("bio-b")
+    assert (await client.post("/api/devices/register", json={**a.register_body(), "biometric": True})).status_code == 201
+    assert (await client.post("/api/devices/register", json=b.register_body())).status_code == 201   # older app: still enrols, but unflagged
+    da = await db_instance.db.students.find_one({"student_id": a.student_id})
+    db_ = await db_instance.db.students.find_one({"student_id": b.student_id})
+    assert da["bio_registered"] is True and da["bio_at"] > 0
+    assert "bio_registered" not in db_
+
+
 async def test_one_phone_one_student_and_admin_reset(client):
     a = Device("a1")
     assert (await client.post("/api/devices/register", json={**a.register_body(), "install_id": "droid-1", "platform": "android"})).status_code == 201

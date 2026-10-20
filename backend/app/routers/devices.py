@@ -1,4 +1,5 @@
 import hmac
+import time
 
 from fastapi import APIRouter, Depends, HTTPException
 from pymongo.errors import DuplicateKeyError
@@ -32,6 +33,9 @@ async def register_device(payload: DeviceRegister, db=Depends(get_db)):
         doc["install_id"] = payload.install_id
     if payload.platform:
         doc["platform"] = payload.platform
+    if payload.biometric:
+        doc["bio_registered"] = True      # attested by the phone, not provable by the server; see docs/LATENCY.md
+        doc["bio_at"] = time.time()
     mine = await db.students.find_one({"student_id": payload.student_id}, {"_id": 0, "device_id": 1})
     if mine:
         if mine["device_id"] == device_id:      # the same student on the same phone key registering again (cleared data, "remove registration"): fine

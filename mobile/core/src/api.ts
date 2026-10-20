@@ -65,7 +65,7 @@ export class NetPresenceApi {
     return json as T;
   }
 
-  register(body: { student_id: string; name: string; model: string; public_key: string; signature: string; enrol_code?: string; install_id?: string; platform?: string }) {
+  register(body: { student_id: string; name: string; model: string; public_key: string; signature: string; enrol_code?: string; install_id?: string; platform?: string; biometric?: boolean }) {
     return this.call<{ status: string }>('POST', '/api/devices/register', body);
   }
   openSession() {

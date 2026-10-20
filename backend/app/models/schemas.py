@@ -48,6 +48,7 @@ class DeviceRegister(BaseModel):
     enrol_code: Optional[str] = Field(None, max_length=64)   # required when the server sets ENROL_CODE
     install_id: Optional[str] = Field(None, pattern=r"^[A-Za-z0-9\-_.]{1,64}$")   # ANDROID_ID / identifierForVendor
     platform: Optional[Literal["android", "ios"]] = None
+    biometric: Optional[bool] = None   # the phone says the owner passed its fingerprint / face / screen-lock prompt just now (client-attested)
 
 
 class StartSession(BaseModel):

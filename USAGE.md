@@ -117,3 +117,8 @@ Full guide and troubleshooting: `docs/INSTALL.md`.
 | nobody shows as nearby | screens on, 1-2 m apart, Bluetooth on; Android 11- needs Location on |
 | `omnet_run` says model not built | build it once (section 6) or set `NETPRESENCE_BIN` |
 | "already enrolled" | teacher resets the device in the console (`DELETE /api/devices/{id}`) |
+
+### Fingerprint (registered once, asked every class)
+Registering needs the phone's fingerprint / face / screen lock (a phone with none set up is refused with a message) and the
+server stores that the phone confirmed it. Every time a roll call starts, the student phone shows "Confirm it is you" and only
+joins after the unlock; cancel it and a "Use fingerprint" button appears. The teacher phone is not asked (it logs in with the code).

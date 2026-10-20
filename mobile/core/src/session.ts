@@ -6,7 +6,7 @@ import type { Clock, Joined, KeyStore, Neighbour, Radio } from './types';
 import { systemClock } from './types';
 
 /** One-time enrolment: binds this phone's hardware key to the student id. */
-export async function enroll(api: NetPresenceApi, keys: KeyStore, who: { studentId: string; name: string; model: string; enrolCode?: string; installId?: string; platform?: string }) {
+export async function enroll(api: NetPresenceApi, keys: KeyStore, who: { studentId: string; name: string; model: string; enrolCode?: string; installId?: string; platform?: string; biometric?: boolean }) {
   return api.register({
     student_id: who.studentId, name: who.name, model: who.model,
     public_key: await keys.publicKeyB64(),
@@ -14,6 +14,7 @@ export async function enroll(api: NetPresenceApi, keys: KeyStore, who: { student
     ...(who.enrolCode ? { enrol_code: who.enrolCode } : {}),
     ...(who.installId ? { install_id: who.installId } : {}),
     ...(who.platform ? { platform: who.platform } : {}),
+    ...(who.biometric ? { biometric: true } : {}),
   });
 }
 

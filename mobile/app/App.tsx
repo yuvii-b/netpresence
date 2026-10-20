@@ -343,10 +343,11 @@ function StudentSetup({ go }: { go: (r: Route) => void }) {
     // The fingerprint says "I am the person holding this phone, and I will use only this phone".
     const bio = await confirmBiometric('Register this phone as yours for attendance');
     if (bio === 'cancel') { setBusy(false); setErr('Registration needs your fingerprint (or face) to confirm this is your phone.'); return; }
+    if (bio === 'unavailable') { setBusy(false); setErr('Set up a fingerprint, face or screen lock in your phone settings first. Attendance asks for it every class.'); return; }
     try {
       await enroll(api, nativeKeys, {
         studentId: form.studentId.trim().toUpperCase(), name: form.name.trim(), model: await deviceModel(),
-        enrolCode: form.code.trim() || undefined, installId: await installId(), platform: Platform.OS,
+        enrolCode: form.code.trim() || undefined, installId: await installId(), platform: Platform.OS, biometric: true,
       });
       const p = { baseUrl: base, studentId: form.studentId.trim().toUpperCase(), name: form.name.trim() };
       await saveProfile(p); await saveServer(base);
@@ -390,8 +391,10 @@ function StudentHome({ profile, fresh, go }: { profile: Profile; fresh: boolean;
     if (fresh) { const id = setTimeout(() => setVerified(false), 1800); return () => clearTimeout(id); }
   }, [fresh]);
 
+  const runnerRef = useRef<StudentRunner | null>(null);
   useEffect(() => {
-    const runner = new StudentRunner({ api: new NetPresenceApi(profile.baseUrl), keys: nativeKeys, radio, studentId: profile.studentId, onState: setSt, diag: board });
+    const runner = new StudentRunner({ api: new NetPresenceApi(profile.baseUrl), keys: nativeKeys, radio, studentId: profile.studentId, onState: setSt, diag: board, confirm: confirmBiometric });
+    runnerRef.current = runner;
     setKeepAwake(true);
     void runner.run();
     return () => { runner.stop(); setKeepAwake(false); };
@@ -436,6 +439,7 @@ function StudentHome({ profile, fresh, go }: { profile: Profile; fresh: boolean;
         {st.subject && st.phase !== 'idle' && <Chip text={`${st.subject.code} · ${st.subject.name}`} />}
       </View>
       {view.banner ? <Banner kind={view.banner.kind} text={view.banner.text} /> : null}
+      {st.phase === 'need_biometric' && <Button title="Use fingerprint" onPress={() => runnerRef.current?.retryConfirm()} />}
       {st.phase === 'not_registered' && <Button title="Register this phone again" onPress={async () => { await clearProfile(); go({ name: 'student-setup' }); }} />}
       <LivePanel d={diag} />
     </ScrollView>
@@ -447,6 +451,8 @@ function describe(st: StudentState, t: Theme, radioErr: string | null) {
   switch (st.phase) {
     case 'signing_in': return { ...base, spin: true, title: 'Signing in', sub: 'Just a moment' };
     case 'idle': return { ...base, icon: '·', title: 'You\'re all set', sub: 'Nothing to do. Your attendance is taken automatically when your teacher starts the class. Keep Bluetooth on.' };
+    case 'confirming': return { ...base, icon: '☝', title: 'Confirm it is you', sub: st.subject ? `Use your fingerprint, face or screen lock to join ${st.subject.name}.` : 'Use your fingerprint, face or screen lock to join this class.' };
+    case 'need_biometric': return { ...base, bg: t.warnBg, fg: t.warn, icon: '☝', title: 'Confirm to join', sub: st.message ?? 'Use your fingerprint, face or screen lock.' };
     case 'joining': return { ...base, spin: true, title: 'Joining…', sub: st.subject ? st.subject.name : 'Class is starting' };
     case 'live':
       if (st.status === 'PRESENT') return { ...base, bg: t.okBg, fg: t.ok, icon: '✓', title: 'Present', sub: `${st.timeToPresentMs != null ? `Confirmed in ${(st.timeToPresentMs / 1000).toFixed(1)} s. ` : ''}You are done. Keep the app open: your phone now just helps confirm the students around you.` };

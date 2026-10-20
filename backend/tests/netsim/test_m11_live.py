@@ -77,3 +77,11 @@ def test_a_lossy_network_delays_present_by_the_request_timeout():
 def test_live_constants_are_read_from_the_phone_code():
     assert protocol.LIVE_WINDOW >= 100, "the relay check needs a long rolling median (sim.live run 1 failed with 20)"
     assert protocol.LIVE_REPORT_INTERVAL_MS == protocol.SERVER_LIVE_REPORT_INTERVAL_MS
+
+
+def test_unlock_delay_is_off_by_default_and_shifts_joining_when_on():
+    cfg = _cfg()
+    base = live_trial(cfg, LiveConfig(), _p(cfg), 3)
+    assert base == live_trial(cfg, LiveConfig(bio_s_lo=0.0, bio_s_hi=0.0), _p(cfg), 3), "default must equal the pre-declared study"
+    slow = live_trial(cfg, LiveConfig(bio_s_lo=1.0, bio_s_hi=4.0), _p(cfg), 3)
+    assert slow["inside"] == base["inside"] and slow["false_present"] == 0

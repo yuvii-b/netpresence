@@ -33,6 +33,22 @@ Present they stay Present for the rest of the roll call and their phone just kee
 defence) or the teacher's own decision releases the latch. Trade-off: a corridor phone admitted early by a lucky reading would also stay Present; the simulator's corridor
 number (0.94 %) already includes this rule, but it is still simulated, not measured.
 
+## Fingerprint at every roll call (simulated, assumed unlock times)
+Each roll call now asks the student for the phone's fingerprint / face / screen lock BEFORE the phone checks in (`live.ts`
+phase `confirming`; `need_biometric` if cancelled or none is set up - it never joins without it). The app counts
+time-to-Present from after the unlock, so the person's own touch is not system latency, but it spreads when phones join.
+`LiveConfig.bio_s_lo/hi` (assumed, default 0 = the pre-declared study is unchanged) models it; 93 students, good Wi-Fi, 12 classrooms:
+
+| unlock time per student | false-absent | time-to-Present p50 | p95 |
+|---|---|---|---|
+| none (pre-declared study) | 0.0 % | 1.79 s | 2.10 s |
+| uniform 1-4 s | 0.0 % | 2.15 s | 3.36 s |
+| uniform 1-8 s | 0.0 % | 2.20 s | 5.01 s (just over the 5 s criterion) |
+
+The unlock times are ASSUMED, not measured on phones. The server cannot see the fingerprint: registration stores a
+client-attested `bio_registered` flag, and the roll-call prompt is enforced by the app. A modified app could skip it; the
+strong version (a signing key that the OS only releases after a fresh fingerprint) is not built.
+
 ## Known weak spots (honest)
 * Sparse classes (about 20 students): the co-location detector can flag an honest pair and the k-witness pruning then removes students who depended on them; classroom seed 1
   of the default 20-student config collapsed to the teacher only. Over 24 random classrooms of 20 students the live flow had 4.2 % false-absent (the old window flow: 7.8 %) and none collapsed,

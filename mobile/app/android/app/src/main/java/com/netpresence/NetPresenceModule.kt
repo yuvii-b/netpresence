@@ -117,7 +117,7 @@ class NetPresenceModule(private val ctx: ReactApplicationContext) : ReactContext
             legacyCredential = true
           } else { promise.resolve("none"); return@runOnUiThread }
         } else if (bm.canAuthenticate(auth) != BiometricManager.BIOMETRIC_SUCCESS) { promise.resolve("none"); return@runOnUiThread }
-        val info = BiometricPrompt.PromptInfo.Builder().setTitle("Bind this phone").setSubtitle(reason)
+        val info = BiometricPrompt.PromptInfo.Builder().setTitle("Confirm it is you").setSubtitle(reason)
         @Suppress("DEPRECATION")
         if (legacyCredential) info.setDeviceCredentialAllowed(true)
         else {

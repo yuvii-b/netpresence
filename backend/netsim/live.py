@@ -43,6 +43,8 @@ class LiveConfig:
     seed_mode: str = "teacher_phone"        # who the server trusts as roots (the real server: teacher phone + seeds the teacher verified)
     push_ms_lo: float = 50.0                # long-poll wake -> response leaves the server [assumed; test_m6 pins it < 100 ms on the dev server]
     push_ms_hi: float = 150.0
+    bio_s_lo: float = 0.0                   # student unlocks with fingerprint / face / lock before joining: 0 = not modelled in the pre-declared study [assumed]
+    bio_s_hi: float = 0.0
     startup_s: float = 0.4                  # check-in answered -> radio advertising + scanning (prepareRadio already ran) [assumed]
     teacher_startup_s: float = 0.3          # start response -> teacher radio on [assumed]
     teacher_front_m: float = 1.0            # teacher phone stands this far in front of the middle bench column [assumed]
@@ -59,7 +61,7 @@ class LiveConfig:
 
 
 LIVE_TAGS = {
-    "seed_mode": "spec", "push_ms_lo": "assumed", "push_ms_hi": "assumed", "startup_s": "assumed", "teacher_startup_s": "assumed",
+    "seed_mode": "spec", "push_ms_lo": "assumed", "push_ms_hi": "assumed", "bio_s_lo": "assumed", "bio_s_hi": "assumed", "startup_s": "assumed", "teacher_startup_s": "assumed",
     "teacher_front_m": "assumed", "report_phase_s": "spec", "eval_step_s": "spec", "stable_s": "assumed", "min_finish_s": "spec",
     "horizon_s": "assumed", "relays": "spec",
 }
@@ -101,6 +103,8 @@ def live_trial(cfg: RoomConfig, lc: LiveConfig, p: Params, seed: int, calibrate:
     rtt = np.array([(q["rtt_ms"] / 1000.0) * math.exp(g_net.normal(0, q["rtt_sigma"])) if q["rtt_ms"] > 0 else 0.0 for q in pr])
     loss = np.array([q["loss"] for q in pr])
     push = g_net.uniform(lc.push_ms_lo, lc.push_ms_hi, N) / 1000.0 + rtt / 2.0           # session start -> phone knows
+    if lc.bio_s_hi > 0:                                                                  # the person's own unlock comes before the phone joins (live.ts 'confirming')
+        push = push + g_net.uniform(lc.bio_s_lo, lc.bio_s_hi, N)                         # ttp below counts from the unlock, like the app
     joined_at = push + (uplink.CONN_RTTS + 1.0) * rtt + uplink.VERIFY_MS / 1000.0         # check-in answered
     on = joined_at + lc.startup_s
     ti = ix["teacher"]

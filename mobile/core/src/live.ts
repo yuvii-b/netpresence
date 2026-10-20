@@ -139,7 +139,7 @@ async function reportLoop(o: { api: Api; keys: KeyStore; clock: Clock; sessionId
 }
 
 // ======================================================================= student =======================================================================
-export type StudentPhase = 'signing_in' | 'idle' | 'joining' | 'live' | 'closed' | 'not_in_class' | 'not_registered' | 'offline' | 'error';
+export type StudentPhase = 'signing_in' | 'idle' | 'joining' | 'live' | 'closed' | 'not_in_class' | 'not_registered' | 'confirming' | 'need_biometric' | 'offline' | 'error';
 export interface StudentState {
   phase: StudentPhase;
   subject?: { code: string; name: string };
@@ -153,7 +153,9 @@ export interface StudentState {
 }
 
 export type StudentApi = Pick<NetPresenceApi, 'health' | 'studentLogin' | 'meSession' | 'checkin' | 'report' | 'myStatus'>;
-export interface StudentDeps { api: StudentApi; keys: KeyStore; radio: Radio; studentId: string; clock?: Clock; onState?: (s: StudentState) => void; diag?: DiagBoard }
+export interface StudentDeps { api: StudentApi; keys: KeyStore; radio: Radio; studentId: string; clock?: Clock; onState?: (s: StudentState) => void; diag?: DiagBoard;
+  /** Asked at the start of EVERY roll call, before the phone checks in: fingerprint / face / screen lock. 'unavailable' = none is set up, which blocks joining. */
+  confirm?: (subjectLabel: string) => Promise<'ok' | 'cancel' | 'unavailable'> }
 
 export class StudentRunner {
   private token: string | null = null;
@@ -164,7 +166,10 @@ export class StudentRunner {
   state: StudentState = { phase: 'signing_in', nearby: 0 };
   constructor(private readonly d: StudentDeps) { this.clock = d.clock ?? systemClock; }
 
-  stop() { this.stopped = true; this.ctl?.abort(); }
+  private retry?: () => void;
+  stop() { this.stopped = true; this.ctl?.abort(); this.retry?.(); }
+  /** The person tapped "Use fingerprint" after cancelling the prompt. */
+  retryConfirm() { this.retry?.(); }
   private emit(p: Partial<StudentState>) { this.state = { ...this.state, ...p }; this.d.onState?.(this.state); }
 
   private async login(): Promise<string> {
@@ -230,10 +235,29 @@ export class StudentRunner {
   }
 
   private async rollCall(s: { session_id: string; nonce?: string; tag?: string; subject?: { code: string; name: string } }) {
-    const t0 = this.clock.now();
     const sid = s.session_id;
     this.d.diag?.reset();
-    this.d.diag?.log(`class started${s.subject ? ': ' + s.subject.code : ''} - joining`);
+    this.d.diag?.log(`class started${s.subject ? ': ' + s.subject.code : ''}`);
+    if (this.d.confirm) {                    // every roll call: prove the owner is holding the phone before it joins
+      const subj = s.subject && { code: s.subject.code, name: s.subject.name };
+      this.emit({ phase: 'confirming', sessionId: sid, subject: subj, status: undefined, nearby: 0, message: undefined });
+      this.d.diag?.log('waiting for your fingerprint / face / screen lock');
+      for (;;) {
+        const r = await this.d.confirm(subj ? `Confirm it is you to join ${subj.code}` : 'Confirm it is you to join this class');
+        if (this.stopped) return;
+        if (r === 'ok') { this.d.diag?.log('confirmed'); break; }
+        this.d.diag?.log(r === 'unavailable' ? 'no fingerprint or screen lock is set up on this phone' : 'not confirmed');
+        this.emit({ phase: 'need_biometric', message: r === 'unavailable'
+          ? 'Set up a fingerprint, face or screen lock in your phone settings, then tap the button.'
+          : 'Confirm with your fingerprint, face or screen lock to join this class.' });
+        await new Promise<void>((res) => { this.retry = res; });
+        this.retry = undefined;
+        if (this.stopped) return;
+        this.emit({ phase: 'confirming', message: undefined });
+      }
+    }
+    const t0 = this.clock.now();            // time-to-Present is measured from here: the person's own unlock is not system latency
+    this.d.diag?.log('joining');
     this.emit({ phase: 'joining', sessionId: sid, subject: s.subject && { code: s.subject.code, name: s.subject.name }, status: 'PENDING', nearby: 0 });
     let res;
     try {
