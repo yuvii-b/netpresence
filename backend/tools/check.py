@@ -1,6 +1,6 @@
 """One command for every check that does not need a real phone.
 
-    python -m tools.check            # ~2.5 min: tests, both acceptance studies, phone protocol vs live server
+    python -m tools.check            # ~6 min: tests, the three acceptance studies, phone protocol vs live server
     python -m tools.check --full     # + the teacher console driven in headless Chromium (needs Playwright)
 
 The studies always run at their declared trial counts: leaks are bursty, so fewer trials fail on noise.
@@ -39,6 +39,7 @@ def main() -> int:
         ("server + engine + simulator tests", [py, "-m", "pytest", "-q"], BACKEND, None),
         ("93-student room study", [py, "-m", "sim.orientation"], BACKEND, None),
         ("Android + iOS fleet study", [py, "-m", "sim.platforms"], BACKEND, None),
+        ("live roll call study (protocol v3)", [py, "-m", "sim.live"], BACKEND, None),
     ]
     npx = shutil.which("npx")
     if npx and os.path.isdir(os.path.join(CORE, "node_modules")):

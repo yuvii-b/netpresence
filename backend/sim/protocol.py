@@ -76,3 +76,16 @@ ANDROID_SCAN_WINDOW_MS, ANDROID_SCAN_INTERVAL_MS = AOSP_SCAN_WINDOW_INTERVAL_MS[
 
 # --- phone network client (TypeScript): per-request timeout, used by netsim.uplink ---------------------------------------
 REQUEST_TIMEOUT_MS = int(_find(CORE / "api.ts", r"REQUEST_TIMEOUT_MS = (\d+)", "REQUEST_TIMEOUT_MS"))
+
+# --- live roll call (protocol v3): server timing, phone reporter, native flush ---------------------------------------------
+LIVE_REPORT_INTERVAL_MS = int(_find(CORE / "live.ts", r"LIVE_REPORT_INTERVAL_MS = (\d+)", "phone live report interval"))
+LIVE_TICK_MS = int(_find(CORE / "live.ts", r"LIVE_TICK_MS = (\d+)", "phone live reporter tick"))
+LIVE_FIRST_NEIGHBOURS = int(_find(CORE / "live.ts", r"LIVE_FIRST_NEIGHBOURS = (\d+)", "neighbours needed for the first live report"))
+LIVE_MIN_SAMPLES = int(_find(CORE / "live.ts", r"LIVE_MIN_SAMPLES = (\d+)", "samples per peer before it is reported live"))
+SERVER_LIVE_REPORT_INTERVAL_MS = int(settings.LIVE_REPORT_INTERVAL_MS)
+LIVE_EVAL_DEBOUNCE_MS = int(settings.LIVE_EVAL_DEBOUNCE_MS)
+LIVE_MAX_S = float(settings.LIVE_MAX_SECONDS)
+ANDROID_FLUSH_MS = int(_find(ANDROID, r"FLUSH_MS = (\d+)L", "Android sample flush interval"))
+IOS_FLUSH_MS = int(round(1000 * float(_find(IOS, r"scheduledTimerWithTimeInterval:([0-9.]+) target:self selector:@selector\(flush\)", "iOS flush interval"))))
+LIVE_WINDOW = int(_find(CORE / "live.ts", r"LIVE_WINDOW = (\d+)", "rolling samples kept per peer"))
+LIVE_BEST_AFTER_S = float(_find(CORE / "live.ts", r"LIVE_BEST_AFTER_S = (\d+)", "seconds until the live result is at its best"))

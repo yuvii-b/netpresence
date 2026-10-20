@@ -61,7 +61,7 @@ def test_digest_ignores_float_noise_and_key_order():
 
 def test_every_experiment_is_declared_completely():
     exps = load()
-    assert [e["id"] for e in exps] == [f"E{i:02d}" for i in range(1, 15)] and len(IDS) == 14
+    assert [e["id"] for e in exps] == [f"E{i:02d}" for i in range(1, 17)] and len(IDS) == 16
     for e in exps:
         for k in ("title", "question", "trials_quick", "trials_full", "run", "plot", "table"):
             assert k in e, (e["id"], k)

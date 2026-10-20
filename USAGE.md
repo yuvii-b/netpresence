@@ -86,6 +86,17 @@ green = present, red = absent, orange = flagged, and draws the proximity graph. 
 5. Stress test the server on your Wi-Fi: `python -m netsim.loadtest --server http://<ip>:8000 --token dev-teacher-token --phones 93`.
 Full guide and troubleshooting: `docs/INSTALL.md`.
 
+### 7b. The two-login app (protocol v3, `docs/PIVOT_PLAN.md`)
+* Server: `python -m tools.dev_server --host 0.0.0.0` seeds a demo teacher (code `DEMO-TEACH`) with subjects CS301 and NW204 and a roster.
+  Your own: `python -m tools.admin add-teacher --name "Dr Rao" --code RAO-2026` and `add-subject --teacher-code RAO-2026 --code CS301 --name "Operating Systems" --roster roster.csv`.
+* Teacher phone: I'm a teacher -> enter the code -> pick the subject -> the class starts. The teacher phone is the root of trust; keep it near the front.
+  Watch the Present count climb; the Finish button says when the result is most accurate (15 s). FLAGGED students can be set Present/Absent in place. Share list = CSV.
+* Student phone (first time): I'm a student -> roll number, name, class code -> **Verify with fingerprint** -> "Phone verified". After that the app needs no taps:
+  when the teacher starts the subject the phone joins by itself, starts transmitting and shows **Present**. A student who is not on that subject's roster is refused
+  ("Not in this class"). One phone = one student (a second student on the same phone, or a second phone for the same student, is refused; the teacher resets with
+  `python -m tools.admin reset-device --student 21CT042`).
+* Simulated latency and accuracy of this flow: `python -m sim.live` (about 3 min) and `docs/LATENCY.md`.
+
 ## 8. A 10-minute demo for the professor
 1. (1 min) Pitch: `paper-material/PAPER_MATERIAL.md` section 1, the "how it works" in `docs/DEMO.md`.
 2. (3 min) OMNeT++ window: class93 run, then `--relays 2`. Say what the colours mean.

@@ -1,4 +1,4 @@
-"""Paper experiments E01..E14 (docs/SIM_PLAN.md section 6). Each module exposes EXPERIMENT = {id, title, question,
+"""Paper experiments E01..E16 (docs/SIM_PLAN.md section 6). Each module exposes EXPERIMENT = {id, title, question,
 trials_quick, trials_full, run(ctx) -> dict, plot(result, figdir) -> [files], table(result) -> (markdown, latex)}.
 `python -m paper.make` runs them; each is also runnable alone: python -m paper.make --only E03."""
 from __future__ import annotations
@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from netsim.runner import Cache
 
 IDS = ["e01_accuracy", "e02_mechanisms", "e03_attacks", "e04_platforms", "e05_speed", "e06_uplink", "e07_ble",
-       "e08_robustness", "e09_baselines", "e10_backbench", "e11_scalability", "e12_simreal", "e13_traces", "e14_energy"]
+       "e08_robustness", "e09_baselines", "e10_backbench", "e11_scalability", "e12_simreal", "e13_traces", "e14_energy", "e15_live_latency", "e16_seed_mode"]
 
 
 @dataclass

@@ -18,9 +18,10 @@ class20 lab6 exam`, or a TOML file in `netsim/presets/` or passed with `--toml`.
 | M4 phone + uplink | done: exact `NeighbourCollector` port + retry schedule + report size pinned to the real TypeScript by generated vectors; `uplink=wifi_good\|wifi_congested\|cell_4g` (mixes allowed) |
 | M5 attacks + co-location defence | done: `netsim/attacks.py` (A2-A5, relay), `colocation_db` in the real engine/API/console, native scanners report every UUID match |
 | M6 baselines | done: `netsim/baselines.py` B0 manual, B1 beacon, B2 acoustic, B3/B4 ablations, B5 QR, same rooms and seeds |
-| M7 paper pipeline | done: `backend/paper/make.py` runs E01-E14 (`netsim/experiments/`), bootstrap CIs over classrooms, cached by config+code hash, tables (md/tex) and figures (pdf/png) |
+| M7 paper pipeline | done: `backend/paper/make.py` runs E01-E16 (`netsim/experiments/`), bootstrap CIs over classrooms, cached by config+code hash, tables (md/tex) and figures (pdf/png) |
 | M8 Windows CI hash parity | done in the workflow, NOT yet seen green: `tests.yml` jobs `paper` (ubuntu + windows, `paper.make --quick`) and `paper-parity` (`python -m paper.compare_hashes`); first CI run decides |
 | M10 OMNeT++ model | done: `omnet/` (Phone, BleMedium, Server modules; animated in OMNeT++ Qtenv) + `netsim.omnet_export/omnet_eval/omnet_run`; the real engine decides the verdict; see `omnet/README.md` |
+| M11 live roll call (protocol v3) | done: `netsim/live.py` (time-resolved: join by push, rolling reports every 1 s, debounced real-engine evaluation, teacher-phone seed, relay), constants read from `live.ts`/Kotlin/ObjC/`config.py` via `sim/protocol.py`, `python -m sim.live` acceptance study in `tools.check`, experiments E15/E16. NOT modelled in the OMNeT++ model yet |
 | M9 loadtest | done: `python -m netsim.loadtest` (virtual phones with real keys against a real server over the real network), `paper/real/README.md` defines the measurement formats |
 
 ## Paper pipeline (M7)
@@ -52,6 +53,8 @@ unit, never the student); comparisons between variants are paired on the same se
 | E12 | simulator vs real phones (`paper/real/sessions.csv`; says "NO REAL DATA" when absent) |
 | E13 | trace-driven vs parametric channel (trace is labelled SYNTHETIC unless `paper/real/traces/*.csv` exists) |
 | E14 | energy per roll call (arithmetic on assumed currents) |
+| E15 | live flow: time from "phone learned of the roll call" to Present, by class size (35/60/93) and uplink |
+| E16 | live flow: teacher phone alone vs verified front bench vs both as the root of trust |
 
 Quick runs have few classrooms, so their CIs are wide: they prove the pipeline, not the conclusions.
 

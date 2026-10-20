@@ -67,3 +67,9 @@ def test_native_scanners_report_every_uuid_match_not_just_the_first():
     m = P.IOS.read_text(encoding="utf-8")
     block = m[m.index("didDiscoverPeripheral"):m.index("peripheralManagerDidUpdateState")]
     assert "return;" not in block
+
+
+def test_live_flow_constants_come_from_the_code():
+    assert P.LIVE_REPORT_INTERVAL_MS == P.SERVER_LIVE_REPORT_INTERVAL_MS == 1000   # phone and server agree
+    assert P.LIVE_TICK_MS <= 100 and P.LIVE_MIN_SAMPLES >= 1
+    assert P.ANDROID_FLUSH_MS == P.IOS_FLUSH_MS == 100          # a sample reaches the reporter within 100 ms

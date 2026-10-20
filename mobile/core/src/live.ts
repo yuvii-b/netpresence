@@ -7,7 +7,8 @@ import { systemClock } from './types';
 
 export const LIVE_REPORT_INTERVAL_MS = 1000;   // = backend LIVE_REPORT_INTERVAL_MS (tests/test_parity.py pins it)
 export const LIVE_TICK_MS = 100;               // how often the reporter looks at the collector
-export const LIVE_WINDOW = 20;                 // rolling samples kept per peer
+export const LIVE_WINDOW = 100;                // rolling samples kept per peer (20 made the relay check miss 20 % in sim.live run 1)
+export const LIVE_BEST_AFTER_S = 15;           // the teacher is told accuracy (relay check) is best after this many seconds
 export const LIVE_MIN_SAMPLES = 3;
 export const LIVE_FIRST_NEIGHBOURS = 3;        // send the first report as soon as this many neighbours have LIVE_MIN_SAMPLES
 

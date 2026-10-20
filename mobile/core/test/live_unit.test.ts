@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ApiError } from '../src/api';
-import { attendanceCsv, LiveCollector, StudentRunner, TeacherRoll, type StudentState } from '../src/live';
+import { attendanceCsv, LIVE_WINDOW, LiveCollector, StudentRunner, TeacherRoll, type StudentState } from '../src/live';
 import type { KeyStore, Radio, RadioSample } from '../src/types';
 
 const TAG = 'ab12';
@@ -18,14 +18,14 @@ describe('LiveCollector', () => {
     expect(c.foreign).toBe(5);
   });
 
-  it('uses the median of the last 20 samples and needs 3 samples', () => {
+  it('uses the median of the last LIVE_WINDOW samples and needs 3 samples', () => {
     const c = new LiveCollector(`${TAG}0001`, TAG);
     c.add({ name: nm('0002'), rssi: -60 }); c.add({ name: nm('0002'), rssi: -61 });
     expect(c.neighbours()).toEqual([]);
     c.add({ name: nm('0002'), rssi: -80 });
     expect(c.neighbours()[0]).toMatchObject({ rssi_median: -61, sample_count: 3 });
-    for (let i = 0; i < 30; i++) c.add({ name: nm('0002'), rssi: -70 });   // old samples roll out
-    expect(c.neighbours()[0]).toMatchObject({ rssi_median: -70, sample_count: 20 });
+    for (let i = 0; i < LIVE_WINDOW + 10; i++) c.add({ name: nm('0002'), rssi: -70 });   // old samples roll out
+    expect(c.neighbours()[0]).toMatchObject({ rssi_median: -70, sample_count: LIVE_WINDOW });
   });
 
   it('sends the first report as soon as 3 neighbours qualify, then at most once a second and only on change', () => {

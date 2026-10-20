@@ -26,7 +26,7 @@ def build(res: Path) -> str:
     def load(i):
         f = res / "results" / f"E{i:02d}.json"
         return json.loads(f.read_text(encoding="utf-8")) if f.is_file() else None
-    e = {i: load(i) for i in range(1, 15)}
+    e = {i: load(i) for i in range(1, 17)}
     hashes = res / "results" / "hashes.json"
     quick = json.loads(hashes.read_text()).get("quick") if hashes.is_file() else None
     out = ["# Key numbers", "",
@@ -60,6 +60,12 @@ def build(res: Path) -> str:
              lambda m=m: (lambda r: f"{pct(r['far'], 1)} / {pct(r['fpr'], 1)} / {pct(r['proxy'], 0)} / {r['time_s']['est']:.0f}")(pick(e[9]["rows"], door="open", method=m)))
     line("E11 200 students false-absent, ttl 8 -> ttl 12", lambda: f"{pct(pick(e[11]['rows'], students=200)['far'], 1)} -> {pct(pick(e[11]['rows'], students=200)['far_ttl12'], 1)}")
     line("E14 energy per roll call (assumed currents)", lambda: (lambda r: f"{r['mAh']} mAh = {r['pct_day']}% of a 4000 mAh battery per day (6 lectures)")(pick(e[14]["rows"], method="NetPresence")))
+    line("E15 live flow, 93 students, good Wi-Fi: time to Present p50 / p95 (s); false-absent at finish",
+         lambda: (lambda r: f"{r['ttp_p50']:.1f} / {r['ttp_p95']:.1f}; {pct(r['false_absent'], 2)}")(pick(e[15]["rows"], students=93, uplink="good Wi-Fi")))
+    line("E15 live flow, 93 students, congested Wi-Fi: time to Present p50 / p95 (s)",
+         lambda: (lambda r: f"{r['ttp_p50']:.1f} / {r['ttp_p95']:.1f}")(pick(e[15]["rows"], students=93, uplink="congested Wi-Fi")))
+    line("E16 seed = teacher phone alone, door closed: false-absent / corridor present",
+         lambda: (lambda r: f"{pct(r['far'], 2)} / {pct(r['fpr'], 2)}")(pick(e[16]["rows"], mode="teacher phone", door_open=False)))
     out += ["", "## Not measured on real phones", "E12 (simulator vs real sessions) and E13 (trace-driven channel) need data in `paper/real/`;"
             " until then they are labelled NO REAL DATA / SYNTHETIC.", ""]
     if missing:

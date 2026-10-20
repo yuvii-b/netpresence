@@ -185,3 +185,8 @@ milestone it contains.
   given day (that would cost a prompt per roll call).
 * iOS advertises and scans only in the foreground: students must keep the app open during the roll call.
 * All latency numbers are simulated or measured on virtual phones until a real class is run.
+
+
+## 8. Status (updated as milestones land)
+P1+P2 server `ae441a3`; P3 phone core + native `5f9eebc`; P4 app screens (Metro bundles for Android and iOS, tsc clean, native code compiled only by CI);
+P5 simulator parity, `sim.live` (all pre-declared criteria pass after one design fix, see `docs/LATENCY.md`), E15/E16, tests, docs. P6 = delivery zip.

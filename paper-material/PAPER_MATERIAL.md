@@ -26,6 +26,8 @@ verified front-bench students; a student is present only with k = 2 vertex-disjo
 | RQ12 | Does the simulator predict real phones? | E12 | needs real data |
 | RQ13 | Do measured RSSI tables change the conclusions? | E13 | needs real data |
 | RQ14 | Battery cost per roll call | E14 | arithmetic on assumed currents |
+| RQ15 | Can the roll call run live, with no tap and no window, and how fast does a student see Present? | E15 + `python -m sim.live` | `e15_live_latency`, `docs/LATENCY.md` |
+| RQ16 | Is the teacher's phone alone enough as the root of trust? | E16 | table `e16` |
 
 ## 3. Contributions you can claim (and the evidence)
 1. **Server-side proximity-graph attendance that runs identically on Android and iOS** (iOS cannot advertise custom payloads or set TX power): identity in the 128-bit service UUID. Evidence: design (`docs/V2.md`), E04.
@@ -34,6 +36,11 @@ verified front-bench students; a student is present only with k = 2 vertex-disjo
 4. **Co-location (relay) detection** from the robust spread of reading differences over common observers: E03 (relay admitted vs flagged, honest false-flag rate, ROC).
 5. **A reusable network-simulator methodology**: channel (path loss, bodies, wall, correlated shadowing, orientation), packet-level BLE advertising channel, phone code port pinned to the real TypeScript by generated vectors, uplink with the app's real retry policy, the real server engine in the loop, two independent implementations (Python and OMNeT++) cross-validated on identical rooms. Evidence: `docs/NETSIM.md`, E07, OMNeT++ `--compare`.
 6. **Honest provenance:** every parameter tagged spec / assumed / measured; E08 sweeps the assumed ones.
+
+## 3b. Live protocol (v3) results to quote (simulated, assumed values; `docs/LATENCY.md`)
+93 students, 30 % iPhones, good Wi-Fi, teacher phone as the only seed: time to Present p50 2.0 s / p95 2.6 s; false-absent 0.05 %; corridor 0.94 %; relayed absent friend flagged 100 %.
+A useful negative result for the paper: with a 20-sample rolling median the relay check missed 20 % of relays; a 100-sample median fixed it (design iteration, kept in `docs/LATENCY.md`).
+Not measured on real phones; sparse classes (~20) remain a weak spot of the co-location detector.
 
 ## 4. Method facts you will need (all in the repo)
 * **Protocol:** window 20 s + discovery tail 5 s + report grace 10 s; min 3 samples per peer; median RSSI; report <= 200 neighbours; retry 0.5 s doubling to 4 s; request timeout 5 s (constants read from the code by `sim/protocol.py`).
